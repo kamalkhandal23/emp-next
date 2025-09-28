@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
+import profilePic1 from '../../assets/profilePic1.jpeg'
+import profilePic2 from '../../assets/profilePic2.jpeg'
+import profilePic3 from '../../assets/profilePic3.jpeg'
+
 
 export default function NextGenLanding() {
   const [activeFeature, setActiveFeature] = useState(0)
@@ -80,21 +84,21 @@ export default function NextGenLanding() {
       course: 'Full Stack Development',
       content: 'NextGenFreeEdu transformed my career. The practical approach and industry projects gave me real-world experience.',
       rating: 5,
-      image: '👩‍💻'
+      image: profilePic1
     },
     {
       name: 'Rahul Kumar',
       course: 'Cybersecurity',
       content: 'The hands-on labs and expert mentorship helped me land my dream job in cybersecurity.',
       rating: 5,
-      image: '👨‍💼'
+      image: profilePic2
     },
     {
       name: 'Anita Patel',
       course: 'Digital Marketing',
       content: 'Excellent course structure with real client projects. I started my own digital agency after completion.',
       rating: 5,
-      image: '👩‍🎨'
+      image: profilePic3
     }
   ]
 
@@ -197,6 +201,11 @@ export default function NextGenLanding() {
           </div>
         </div>
       </section>
+
+      {/* Registration count */}
+      
+
+
 
       {/* Available Courses */}
       <section className="section">
@@ -308,7 +317,16 @@ export default function NextGenLanding() {
                 gap: '1rem',
                 marginBottom: '1rem'
               }}>
-                <div style={{ fontSize: '3rem' }}>{testimonial.image}</div>
+                {typeof testimonial.image === 'string' && (testimonial.image.endsWith('.png') || testimonial.image.endsWith('.jpeg') || testimonial.image.endsWith('.jpg') || testimonial.image.endsWith('.svg')) ? (
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    style={{ width: '3rem', height: '3rem', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{ fontSize: '3rem' }}>{testimonial.image}</div>
+                )}
+
                 <div>
                   <div style={{ fontWeight: '600', color: '#374151' }}>{testimonial.name}</div>
                   <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>{testimonial.course}</div>
