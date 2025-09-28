@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import profilePic1 from '../../assets/profilePic1.jpeg'
 import profilePic2 from '../../assets/profilePic2.jpeg'
 import profilePic3 from '../../assets/profilePic3.jpeg'
@@ -102,6 +102,49 @@ export default function NextGenLanding() {
     }
   ]
 
+    function getTimeLeft(targetDate) {
+    const now = new Date().getTime()
+    const distance = targetDate - now
+
+    if (distance < 0) {
+      return null // time's up
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+      return { days, hours, minutes, seconds }
+    } 
+
+    const [registrationCount, setRegistrationCount] = useState(12345)
+
+    const enrollmentCloseDate = new Date(2025, 9, 30, 23, 59, 59) 
+
+    const [timeLeft, setTimeLeft] = useState(getTimeLeft(enrollmentCloseDate.getTime()))
+
+    useEffect(() => {
+    // Update countdown every second
+    const timer = setInterval(() => {
+      const updatedTimeLeft = getTimeLeft(enrollmentCloseDate.getTime())
+
+      if (updatedTimeLeft) {
+        setTimeLeft(updatedTimeLeft)
+      } else {
+        setTimeLeft(null)
+        clearInterval(timer)
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+   const countdownDisplay = timeLeft
+    ? `${timeLeft.days} Days ${timeLeft.hours} Hours ${timeLeft.minutes} Minutes ${timeLeft.seconds} Seconds`
+    : 'Enrollment Closed'
+
+
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       {/* Hero Section */}
@@ -140,7 +183,7 @@ export default function NextGenLanding() {
           ))}
         </div>
       </section>
-
+      
       {/* Why Choose NextGenFreeEdu */}
       <section className="section">
         <h2 className="section-title">Why Choose NextGenFreeEdu?</h2>
@@ -203,7 +246,12 @@ export default function NextGenLanding() {
       </section>
 
       {/* Registration count */}
-      
+        <section className="section" style={{ textAlign: 'center', margin: '2rem 0' }}>
+        <h2 className="section-title">Registration Count</h2>
+        <p style={{ fontSize: '2rem', color: '#d97706', fontWeight: '700' }}>
+          {registrationCount.toLocaleString()} Students Registered
+        </p>
+      </section>
 
 
 
@@ -301,6 +349,14 @@ export default function NextGenLanding() {
         </div>
       </section>
 
+      {/*Closing Timer*/}
+      <section className="section" style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h2 className="section-title">Enrollment Closes In</h2>
+        <div id="closing-timer" style={{ fontSize: '2rem', color: '#ef4444', fontWeight: '700' }}>
+          {countdownDisplay}
+        </div>
+      </section>
+
       {/* Student Success Stories */}
       <section className="section">
         <h2 className="section-title">Student Success Stories</h2>
@@ -378,6 +434,9 @@ export default function NextGenLanding() {
           ))}
         </div>
       </section>
+      
+      
+
 
       {/* Call to Action */}
       <section className="section" style={{ textAlign: 'center', marginTop: '4rem' }}>
@@ -390,12 +449,27 @@ export default function NextGenLanding() {
             <Link to="/nextgen/enroll" className="btn-primary">
               Enroll Now - Completely Free
             </Link>
+            <button 
+                className="btn-secondary" 
+                onClick={() => alert('You will be notified when enrollment opens!')}
+              >
+                Notify Me
+            </button>
+
             <Link to="/nextgen/login" className="btn-secondary">
               Already Enrolled? Login
             </Link>
           </div>
         </div>
       </section>
+
+      {/*Footer*/}
+      <footer style={{ textAlign: 'center', padding: '2rem 0', fontSize: '0.875rem', color: '#6b7280' }}>
+        <Link to="/privacy-policy" style={{ margin: '0 1rem' }}>Privacy Policy</Link> | 
+        <Link to="/terms-of-service" style={{ margin: '0 1rem' }}>Terms of Service</Link> | 
+        <Link to="/contact" style={{ margin: '0 1rem' }}>Contact Us</Link>
+      </footer>
+
     </div>
   )
 }
