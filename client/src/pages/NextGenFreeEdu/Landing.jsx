@@ -1,0 +1,383 @@
+import { Link } from 'react-router-dom'
+import { useState } from 'react'
+
+export default function NextGenLanding() {
+  const [activeFeature, setActiveFeature] = useState(0)
+
+  const features = [
+    {
+      title: 'Interactive Learning Platform',
+      description: 'Engage with hands-on projects and real-world scenarios that prepare you for industry challenges.',
+      icon: '💻',
+      benefits: ['Live coding sessions', 'Project-based learning', 'Industry mentorship', 'Peer collaboration']
+    },
+    {
+      title: 'Smart Assessment System',
+      description: 'Transparent evaluation with instant feedback and detailed performance analytics.',
+      icon: '📊',
+      benefits: ['Real-time scoring', 'Detailed feedback', 'Progress tracking', 'Skill gap analysis']
+    },
+    {
+      title: 'AICTE Integration',
+      description: 'Officially recognized programs with AICTE support for enhanced credibility.',
+      icon: '🎓',
+      benefits: ['Official certification', 'Industry recognition', 'Academic credits', 'Career support']
+    },
+    {
+      title: 'Flexible Learning',
+      description: 'Learn at your own pace with 24/7 access to course materials and resources.',
+      icon: '⏰',
+      benefits: ['Self-paced learning', '24/7 access', 'Mobile compatibility', 'Offline resources']
+    }
+  ]
+
+  const courses = [
+    {
+      title: 'Full Stack Development',
+      duration: '6 months',
+      level: 'Beginner to Advanced',
+      students: '500+',
+      rating: 4.8,
+      description: 'Master modern web development with React, Node.js, and cloud technologies.',
+      skills: ['React & Redux', 'Node.js & Express', 'MongoDB & PostgreSQL', 'AWS Deployment', 'API Development'],
+      price: 'Free',
+      icon: '🌐'
+    },
+    {
+      title: 'Cybersecurity Fundamentals',
+      duration: '4 months',
+      level: 'Intermediate',
+      students: '300+',
+      rating: 4.9,
+      description: 'Learn essential cybersecurity concepts and hands-on security practices.',
+      skills: ['Network Security', 'Ethical Hacking', 'Risk Assessment', 'Security Tools', 'Incident Response'],
+      price: 'Free',
+      icon: '🔒'
+    },
+    {
+      title: 'Digital Marketing & Media',
+      duration: '3 months',
+      level: 'Beginner',
+      students: '400+',
+      rating: 4.7,
+      description: 'Create compelling digital content and master modern marketing strategies.',
+      skills: ['Content Creation', 'Social Media Marketing', 'SEO & Analytics', 'Video Production', 'Brand Strategy'],
+      price: 'Free',
+      icon: '📱'
+    }
+  ]
+
+  const stats = [
+    { number: '1000+', label: 'Active Students', icon: '👨‍🎓' },
+    { number: '50+', label: 'Industry Projects', icon: '💼' },
+    { number: '95%', label: 'Completion Rate', icon: '✅' },
+    { number: '4.8/5', label: 'Student Rating', icon: '⭐' }
+  ]
+
+  const testimonials = [
+    {
+      name: 'Priya Sharma',
+      course: 'Full Stack Development',
+      content: 'NextGenFreeEdu transformed my career. The practical approach and industry projects gave me real-world experience.',
+      rating: 5,
+      image: '👩‍💻'
+    },
+    {
+      name: 'Rahul Kumar',
+      course: 'Cybersecurity',
+      content: 'The hands-on labs and expert mentorship helped me land my dream job in cybersecurity.',
+      rating: 5,
+      image: '👨‍💼'
+    },
+    {
+      name: 'Anita Patel',
+      course: 'Digital Marketing',
+      content: 'Excellent course structure with real client projects. I started my own digital agency after completion.',
+      rating: 5,
+      image: '👩‍🎨'
+    }
+  ]
+
+  return (
+    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+      {/* Hero Section */}
+      <section className="hero-section">
+        <h1 className="hero-title">NextGenFreeEdu</h1>
+        <p className="hero-subtitle">
+          Revolutionizing education through practical, accessible learning experiences. 
+          Master in-demand skills with hands-on projects, transparent evaluation, and industry mentorship.
+        </p>
+        <div className="hero-buttons">
+          <Link to="/nextgen/enroll" className="btn-primary">
+            Enroll Now - It's Free!
+          </Link>
+          <Link to="/nextgen/login" className="btn-outline">
+            Student Login →
+          </Link>
+        </div>
+        
+        {/* Stats */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+          gap: '2rem',
+          marginTop: '3rem',
+          padding: '2rem',
+          background: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: '1rem',
+          backdropFilter: 'blur(10px)'
+        }}>
+          {stats.map((stat, index) => (
+            <div key={index} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{stat.icon}</div>
+              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#d97706' }}>{stat.number}</div>
+              <div style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Why Choose NextGenFreeEdu */}
+      <section className="section">
+        <h2 className="section-title">Why Choose NextGenFreeEdu?</h2>
+        <p className="section-content" style={{ marginBottom: '2rem' }}>
+          Experience a new way of learning that bridges the gap between academic knowledge and industry requirements.
+        </p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'center' }}>
+          <div>
+            {features.map((feature, index) => (
+              <div 
+                key={index}
+                onClick={() => setActiveFeature(index)}
+                style={{
+                  padding: '1.5rem',
+                  borderRadius: '0.75rem',
+                  border: activeFeature === index ? '2px solid #f59e0b' : '2px solid transparent',
+                  background: activeFeature === index ? 'linear-gradient(135deg, #fef3c7, #fde68a)' : 'white',
+                  cursor: 'pointer',
+                  marginBottom: '1rem',
+                  transition: 'all 0.3s ease',
+                  boxShadow: activeFeature === index ? '0 8px 25px -5px rgba(245, 158, 11, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ fontSize: '2rem' }}>{feature.icon}</div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600', color: '#111827' }}>
+                      {feature.title}
+                    </h3>
+                    <p style={{ margin: '0.5rem 0 0 0', color: '#6b7280', fontSize: '0.875rem' }}>
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="service-card" style={{ height: 'fit-content' }}>
+            <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}>
+              {features[activeFeature].icon}
+            </div>
+            <h3 className="service-title">{features[activeFeature].title}</h3>
+            <p className="service-description" style={{ marginBottom: '1.5rem' }}>
+              {features[activeFeature].description}
+            </p>
+            <div>
+              <h4 style={{ marginBottom: '1rem', color: '#374151' }}>Key Benefits:</h4>
+              <ul style={{ margin: 0, paddingLeft: '1rem' }}>
+                {features[activeFeature].benefits.map((benefit, index) => (
+                  <li key={index} style={{ marginBottom: '0.5rem', color: '#6b7280' }}>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Available Courses */}
+      <section className="section">
+        <h2 className="section-title">Available Courses</h2>
+        <p className="section-content" style={{ marginBottom: '2rem' }}>
+          Choose from our comprehensive range of industry-focused courses designed by experts.
+        </p>
+        
+        <div className="services-grid">
+          {courses.map((course, index) => (
+            <div key={index} className="service-card" style={{ height: 'fit-content' }}>
+              <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}>
+                {course.icon}
+              </div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h3 className="service-title" style={{ margin: 0 }}>{course.title}</h3>
+                <span style={{ 
+                  background: '#22c55e', 
+                  color: 'white', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '1rem',
+                  fontSize: '0.75rem',
+                  fontWeight: '600'
+                }}>
+                  {course.price}
+                </span>
+              </div>
+              
+              <p className="service-description" style={{ marginBottom: '1rem' }}>
+                {course.description}
+              </p>
+              
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '0.5rem',
+                marginBottom: '1rem',
+                fontSize: '0.875rem',
+                color: '#6b7280'
+              }}>
+                <div><strong>Duration:</strong> {course.duration}</div>
+                <div><strong>Level:</strong> {course.level}</div>
+                <div><strong>Students:</strong> {course.students}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <strong>Rating:</strong> 
+                  <span style={{ color: '#fbbf24' }}>⭐</span>
+                  {course.rating}
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                  Skills You'll Learn:
+                </h4>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {course.skills.slice(0, 3).map((skill, skillIndex) => (
+                    <span key={skillIndex} style={{
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '500'
+                    }}>
+                      {skill}
+                    </span>
+                  ))}
+                  {course.skills.length > 3 && (
+                    <span style={{
+                      background: '#dbeafe',
+                      color: '#1d4ed8',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.75rem',
+                      fontWeight: '500'
+                    }}>
+                      +{course.skills.length - 3} more
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <Link 
+                to="/nextgen/enroll" 
+                className="btn-primary"
+                style={{ width: '100%', textAlign: 'center', display: 'block', textDecoration: 'none' }}
+              >
+                Enroll in This Course
+              </Link>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Student Success Stories */}
+      <section className="section">
+        <h2 className="section-title">Student Success Stories</h2>
+        <p className="section-content" style={{ marginBottom: '2rem' }}>
+          Hear from our graduates who have transformed their careers through NextGenFreeEdu.
+        </p>
+        
+        <div className="services-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+          {testimonials.map((testimonial, index) => (
+            <div key={index} className="testimonial-card">
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '1rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ fontSize: '3rem' }}>{testimonial.image}</div>
+                <div>
+                  <div style={{ fontWeight: '600', color: '#374151' }}>{testimonial.name}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>{testimonial.course}</div>
+                  <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.25rem' }}>
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <span key={i} style={{ color: '#fbbf24' }}>⭐</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <blockquote className="testimonial-quote">
+                "{testimonial.content}"
+              </blockquote>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="section">
+        <h2 className="section-title">How It Works</h2>
+        <div className="services-grid">
+          {[
+            { step: 1, title: 'Enroll for Free', desc: 'Sign up and choose your course', icon: '📝' },
+            { step: 2, title: 'Learn & Practice', desc: 'Access interactive lessons and projects', icon: '💻' },
+            { step: 3, title: 'Get Assessed', desc: 'Take transparent evaluations', icon: '📊' },
+            { step: 4, title: 'Earn Certificate', desc: 'Receive industry-recognized certification', icon: '🏆' }
+          ].map((step) => (
+            <div key={step.step} className="service-card" style={{ textAlign: 'center' }}>
+              <div style={{ 
+                background: '#3b82f6',
+                color: 'white',
+                width: '3rem',
+                height: '3rem',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.25rem',
+                fontWeight: '700',
+                margin: '0 auto 1rem'
+              }}>
+                {step.step}
+              </div>
+              <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>{step.icon}</div>
+              <h3 className="service-title">{step.title}</h3>
+              <p className="service-description">{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Call to Action */}
+      <section className="section" style={{ textAlign: 'center', marginTop: '4rem' }}>
+        <div className="hero-section" style={{ background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)' }}>
+          <h2 className="section-title">Ready to Start Your Learning Journey?</h2>
+          <p className="section-content" style={{ marginBottom: '2rem' }}>
+            Join thousands of students who are already building their future with NextGenFreeEdu.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/nextgen/enroll" className="btn-primary">
+              Enroll Now - Completely Free
+            </Link>
+            <Link to="/nextgen/login" className="btn-secondary">
+              Already Enrolled? Login
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}

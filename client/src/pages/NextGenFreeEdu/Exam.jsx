@@ -1,0 +1,620 @@
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+
+export default function Exam() {
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [answers, setAnswers] = useState({})
+  const [timeLeft, setTimeLeft] = useState(3600) // 60 minutes in seconds
+  const [examStarted, setExamStarted] = useState(false)
+  const [examSubmitted, setExamSubmitted] = useState(false)
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false)
+
+  // Mock exam data
+  const examData = {
+    title: 'React Fundamentals Assessment',
+    course: 'Full Stack Development',
+    duration: '60 minutes',
+    totalQuestions: 10,
+    passingScore: 70,
+    instructions: [
+      'Read each question carefully before answering',
+      'You can navigate between questions using the navigation panel',
+      'Make sure to save your answers before submitting',
+      'You cannot change answers after submission',
+      'Ensure stable internet connection throughout the exam'
+    ]
+  }
+
+  const questions = [
+    {
+      id: 1,
+      type: 'multiple-choice',
+      question: 'What is React?',
+      options: [
+        'A JavaScript library for building user interfaces',
+        'A database management system',
+        'A server-side programming language',
+        'A CSS framework'
+      ],
+      correctAnswer: 0
+    },
+    {
+      id: 2,
+      type: 'multiple-choice',
+      question: 'Which method is used to create components in React?',
+      options: [
+        'React.createComponent()',
+        'React.createElement()',
+        'React.component()',
+        'React.makeComponent()'
+      ],
+      correctAnswer: 1
+    },
+    {
+      id: 3,
+      type: 'multiple-choice',
+      question: 'What is JSX?',
+      options: [
+        'A JavaScript extension',
+        'A syntax extension for JavaScript',
+        'A new programming language',
+        'A CSS preprocessor'
+      ],
+      correctAnswer: 1
+    },
+    {
+      id: 4,
+      type: 'text',
+      question: 'Explain the difference between state and props in React. (Write your answer in 2-3 sentences)',
+      correctAnswer: 'State is internal component data that can change, while props are external data passed from parent components and are read-only.'
+    },
+    {
+      id: 5,
+      type: 'multiple-choice',
+      question: 'Which hook is used to manage state in functional components?',
+      options: [
+        'useEffect',
+        'useState',
+        'useContext',
+        'useReducer'
+      ],
+      correctAnswer: 1
+    },
+    {
+      id: 6,
+      type: 'code',
+      question: 'Complete the following React component to display "Hello, World!":\n\nfunction HelloWorld() {\n  return (\n    // Your code here\n  );\n}',
+      correctAnswer: '<div>Hello, World!</div>'
+    },
+    {
+      id: 7,
+      type: 'multiple-choice',
+      question: 'What is the virtual DOM?',
+      options: [
+        'A copy of the real DOM kept in memory',
+        'A new type of HTML element',
+        'A JavaScript framework',
+        'A CSS technique'
+      ],
+      correctAnswer: 0
+    },
+    {
+      id: 8,
+      type: 'multiple-choice',
+      question: 'Which lifecycle method is called after a component is mounted?',
+      options: [
+        'componentWillMount',
+        'componentDidMount',
+        'componentWillUpdate',
+        'componentDidUpdate'
+      ],
+      correctAnswer: 1
+    },
+    {
+      id: 9,
+      type: 'text',
+      question: 'What are the benefits of using React? List at least 3 benefits.',
+      correctAnswer: 'Component reusability, virtual DOM for performance, large ecosystem, easy to learn'
+    },
+    {
+      id: 10,
+      type: 'multiple-choice',
+      question: 'How do you pass data from a parent component to a child component?',
+      options: [
+        'Using state',
+        'Using props',
+        'Using context',
+        'Using refs'
+      ],
+      correctAnswer: 1
+    }
+  ]
+
+  // Timer effect
+  useEffect(() => {
+    if (examStarted && !examSubmitted && timeLeft > 0) {
+      const timer = setTimeout(() => {
+        setTimeLeft(timeLeft - 1)
+      }, 1000)
+      return () => clearTimeout(timer)
+    } else if (timeLeft === 0 && !examSubmitted) {
+      handleSubmitExam()
+    }
+  }, [timeLeft, examStarted, examSubmitted])
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const handleAnswerChange = (questionId, answer) => {
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: answer
+    }))
+  }
+
+  const handleStartExam = () => {
+    setExamStarted(true)
+  }
+
+  const handleSubmitExam = () => {
+    setExamSubmitted(true)
+    setShowConfirmSubmit(false)
+  }
+
+  const getAnsweredCount = () => {
+    return Object.keys(answers).length
+  }
+
+  const calculateScore = () => {
+    let correct = 0
+    questions.forEach(question => {
+      if (question.type === 'multiple-choice') {
+        if (answers[question.id] === question.correctAnswer) {
+          correct++
+        }
+      } else {
+        // For text and code questions, we'll assume they're correct for demo
+        if (answers[question.id] && answers[question.id].trim().length > 10) {
+          correct++
+        }
+      }
+    })
+    return Math.round((correct / questions.length) * 100)
+  }
+
+  if (examSubmitted) {
+    const score = calculateScore()
+    const passed = score >= examData.passingScore
+
+    return (
+      <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+          <div className="service-card" style={{
+            background: passed ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #fef2f2, #fecaca)',
+            border: passed ? '2px solid #22c55e' : '2px solid #ef4444',
+            padding: '3rem 2rem'
+          }}>
+            <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h1 style={{ 
+              color: passed ? '#15803d' : '#dc2626', 
+              marginBottom: '1rem' 
+            }}>
+              Exam {passed ? 'Completed Successfully!' : 'Completed'}
+            </h1>
+            
+            <div style={{ 
+              background: 'white',
+              borderRadius: '0.75rem',
+              padding: '2rem',
+              marginBottom: '2rem'
+            }}>
+              <h2 style={{ color: '#374151', marginBottom: '1.5rem' }}>Your Results</h2>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(2, 1fr)', 
+                gap: '1rem',
+                marginBottom: '1.5rem'
+              }}>
+                <div>
+                  <div style={{ fontSize: '2rem', fontWeight: '700', color: passed ? '#22c55e' : '#ef4444' }}>
+                    {score}%
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Final Score</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#3b82f6' }}>
+                    {getAnsweredCount()}/{questions.length}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Questions Answered</div>
+                </div>
+              </div>
+              
+              <div style={{ 
+                padding: '1rem',
+                background: passed ? '#f0fdf4' : '#fef2f2',
+                borderRadius: '0.5rem',
+                marginBottom: '1rem'
+              }}>
+                <div style={{ 
+                  fontWeight: '600', 
+                  color: passed ? '#15803d' : '#dc2626',
+                  marginBottom: '0.5rem'
+                }}>
+                  {passed ? 'Congratulations! You passed the exam.' : 'You need to retake the exam.'}
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  Passing score: {examData.passingScore}% • Your score: {score}%
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link to="/nextgen/results" className="btn-primary">
+                View Detailed Results
+              </Link>
+              {!passed && (
+                <button 
+                  onClick={() => {
+                    setExamSubmitted(false)
+                    setExamStarted(false)
+                    setAnswers({})
+                    setCurrentQuestion(0)
+                    setTimeLeft(3600)
+                  }}
+                  className="btn-secondary"
+                >
+                  Retake Exam
+                </button>
+              )}
+              <Link to="/nextgen/login" className="btn-outline">
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!examStarted) {
+    return (
+      <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          {/* Exam Header */}
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '700', color: '#111827', marginBottom: '0.5rem' }}>
+              {examData.title}
+            </h1>
+            <p style={{ color: '#6b7280', fontSize: '1.125rem' }}>
+              {examData.course} • {examData.duration} • {examData.totalQuestions} Questions
+            </p>
+          </div>
+
+          <div className="services-grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
+            {/* Instructions */}
+            <div className="service-card">
+              <h2 className="service-title">Exam Instructions</h2>
+              <ul style={{ margin: 0, paddingLeft: '1.5rem', lineHeight: '1.8' }}>
+                {examData.instructions.map((instruction, index) => (
+                  <li key={index} style={{ marginBottom: '0.75rem', color: '#374151' }}>
+                    {instruction}
+                  </li>
+                ))}
+              </ul>
+              
+              <div style={{ 
+                background: '#fef3c7',
+                border: '1px solid #f59e0b',
+                borderRadius: '0.5rem',
+                padding: '1rem',
+                marginTop: '1.5rem'
+              }}>
+                <div style={{ fontWeight: '600', color: '#92400e', marginBottom: '0.5rem' }}>
+                  ⚠️ Important Notice
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#78350f' }}>
+                  Once you start the exam, the timer will begin and cannot be paused. 
+                  Make sure you have a stable internet connection and enough time to complete the exam.
+                </div>
+              </div>
+            </div>
+
+            {/* Exam Details */}
+            <div className="service-card">
+              <h3 className="service-title">Exam Details</h3>
+              <div style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>
+                <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ fontWeight: '600', color: '#374151' }}>Duration</div>
+                  <div style={{ color: '#6b7280' }}>{examData.duration}</div>
+                </div>
+                <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ fontWeight: '600', color: '#374151' }}>Total Questions</div>
+                  <div style={{ color: '#6b7280' }}>{examData.totalQuestions}</div>
+                </div>
+                <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid #f3f4f6' }}>
+                  <div style={{ fontWeight: '600', color: '#374151' }}>Passing Score</div>
+                  <div style={{ color: '#6b7280' }}>{examData.passingScore}%</div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: '600', color: '#374151' }}>Question Types</div>
+                  <div style={{ color: '#6b7280' }}>Multiple Choice, Text, Code</div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={handleStartExam}
+                className="btn-primary"
+                style={{ width: '100%', marginTop: '1.5rem' }}
+              >
+                Start Exam
+              </button>
+            </div>
+          </div>
+
+          {/* Help Section */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '3rem',
+            padding: '2rem',
+            background: '#f8fafc',
+            borderRadius: '0.75rem'
+          }}>
+            <h3 style={{ color: '#374151', marginBottom: '1rem' }}>Need Help?</h3>
+            <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+              If you encounter any technical issues during the exam, contact support immediately.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <a href="mailto:support@nextgenfreeedu.com" className="btn-outline">
+                Contact Support
+              </a>
+              <Link to="/nextgen/login" className="btn-outline">
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const currentQ = questions[currentQuestion]
+
+  return (
+    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Exam Header */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: '2rem',
+          padding: '1rem',
+          background: 'white',
+          borderRadius: '0.75rem',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#374151' }}>
+              {examData.title}
+            </h1>
+            <p style={{ margin: '0.25rem 0 0 0', color: '#6b7280', fontSize: '0.875rem' }}>
+              Question {currentQuestion + 1} of {questions.length}
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ 
+              fontSize: '1.5rem', 
+              fontWeight: '700', 
+              color: timeLeft < 600 ? '#ef4444' : '#374151',
+              marginBottom: '0.25rem'
+            }}>
+              {formatTime(timeLeft)}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+              Time Remaining
+            </div>
+          </div>
+        </div>
+
+        <div className="services-grid" style={{ gridTemplateColumns: '3fr 1fr' }}>
+          {/* Question Area */}
+          <div className="service-card" style={{ height: 'fit-content' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ 
+                fontSize: '0.875rem', 
+                color: '#6b7280',
+                marginBottom: '0.5rem'
+              }}>
+                Question {currentQuestion + 1} of {questions.length}
+              </div>
+              <h2 style={{ 
+                fontSize: '1.25rem', 
+                fontWeight: '600', 
+                color: '#374151',
+                lineHeight: '1.6',
+                marginBottom: '1.5rem'
+              }}>
+                {currentQ.question}
+              </h2>
+            </div>
+
+            {/* Answer Options */}
+            {currentQ.type === 'multiple-choice' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {currentQ.options.map((option, index) => (
+                  <label key={index} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '1rem',
+                    border: answers[currentQ.id] === index ? '2px solid #3b82f6' : '2px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    cursor: 'pointer',
+                    background: answers[currentQ.id] === index ? '#f0f9ff' : 'white',
+                    transition: 'all 0.2s ease'
+                  }}>
+                    <input
+                      type="radio"
+                      name={`question-${currentQ.id}`}
+                      value={index}
+                      checked={answers[currentQ.id] === index}
+                      onChange={() => handleAnswerChange(currentQ.id, index)}
+                    />
+                    <span style={{ flex: 1 }}>{option}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {(currentQ.type === 'text' || currentQ.type === 'code') && (
+              <textarea
+                value={answers[currentQ.id] || ''}
+                onChange={(e) => handleAnswerChange(currentQ.id, e.target.value)}
+                rows={currentQ.type === 'code' ? 8 : 4}
+                className="form-input"
+                placeholder={currentQ.type === 'code' ? 'Write your code here...' : 'Write your answer here...'}
+                style={{ 
+                  fontFamily: currentQ.type === 'code' ? 'monospace' : 'inherit',
+                  fontSize: currentQ.type === 'code' ? '0.875rem' : '1rem'
+                }}
+              />
+            )}
+
+            {/* Navigation Buttons */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              marginTop: '2rem',
+              paddingTop: '1.5rem',
+              borderTop: '1px solid #e5e7eb'
+            }}>
+              <button
+                onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+                disabled={currentQuestion === 0}
+                className="btn-secondary"
+                style={{ 
+                  opacity: currentQuestion === 0 ? 0.5 : 1,
+                  cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Previous
+              </button>
+
+              {currentQuestion === questions.length - 1 ? (
+                <button
+                  onClick={() => setShowConfirmSubmit(true)}
+                  className="btn-primary"
+                  style={{ background: '#22c55e' }}
+                >
+                  Submit Exam
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentQuestion(Math.min(questions.length - 1, currentQuestion + 1))}
+                  className="btn-primary"
+                >
+                  Next
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Question Navigation */}
+          <div className="service-card" style={{ height: 'fit-content' }}>
+            <h3 className="service-title">Question Navigation</h3>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(5, 1fr)', 
+              gap: '0.5rem',
+              marginBottom: '1.5rem'
+            }}>
+              {questions.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentQuestion(index)}
+                  style={{
+                    width: '2.5rem',
+                    height: '2.5rem',
+                    borderRadius: '0.375rem',
+                    border: '2px solid',
+                    borderColor: currentQuestion === index ? '#3b82f6' : 
+                                answers[questions[index].id] !== undefined ? '#22c55e' : '#e5e7eb',
+                    background: currentQuestion === index ? '#3b82f6' : 
+                               answers[questions[index].id] !== undefined ? '#22c55e' : 'white',
+                    color: currentQuestion === index || answers[questions[index].id] !== undefined ? 'white' : '#6b7280',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+            
+            <div style={{ fontSize: '0.875rem', color: '#6b7280', lineHeight: '1.6' }}>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <span style={{ color: '#22c55e' }}>●</span> Answered ({getAnsweredCount()})
+              </div>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <span style={{ color: '#6b7280' }}>●</span> Not Answered ({questions.length - getAnsweredCount()})
+              </div>
+              <div>
+                <span style={{ color: '#3b82f6' }}>●</span> Current Question
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Submit Confirmation Modal */}
+        {showConfirmSubmit && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="service-card" style={{ maxWidth: '500px', margin: '1rem' }}>
+              <h3 style={{ color: '#374151', marginBottom: '1rem' }}>
+                Submit Exam?
+              </h3>
+              <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+                Are you sure you want to submit your exam? You have answered {getAnsweredCount()} out of {questions.length} questions. 
+                You cannot change your answers after submission.
+              </p>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowConfirmSubmit(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitExam}
+                  className="btn-primary"
+                  style={{ background: '#22c55e' }}
+                >
+                  Yes, Submit Exam
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
