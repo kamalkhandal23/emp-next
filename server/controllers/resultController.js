@@ -1,6 +1,6 @@
-import Result from '../models/resultModel.js';
-import Exam from '../models/examModel.js';
-import Student from '../models/studentModel.js';
+import Result from '../models/education/resultModel.js';
+import Exam from '../models/education/examModel.js';
+import Student from '../models/education/studentModel.js';
 import { sendEmail, emailTemplates } from '../config/email.js';
 import mongoose from 'mongoose';
 

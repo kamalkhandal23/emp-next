@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import Leave from '../models/Leave.js';
+import Leave from '../models/hr-management/Leave.js';
 import { auth, authorize } from '../middleware/auth.js';
 import { sendEmail, emailTemplates } from '../config/email.js';
 

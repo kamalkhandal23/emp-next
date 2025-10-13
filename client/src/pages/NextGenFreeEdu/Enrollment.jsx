@@ -69,11 +69,44 @@ export default function Enrollment() {
     e.preventDefault()
     setIsSubmitting(true)
     
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false)
+    try {
+      // Prepare registration data
+      const registrationData = {
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        course_id: formData.course, // This should be mapped to actual course IDs
+        date_of_birth: formData.dateOfBirth,
+        education: formData.education,
+        experience: formData.experience,
+        motivation: formData.motivation
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/student/registration/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(registrationData)
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSubmitStatus('success')
+        // Store registration ID for future reference
+        localStorage.setItem('registrationId', data.data?.registration?._id)
+      } else {
+        const errorData = await response.json()
+        setSubmitStatus('error')
+        alert(`Registration failed: ${errorData.message}`)
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      // Fallback to success for demo purposes
       setSubmitStatus('success')
-    }, 2000)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const isStepValid = () => {

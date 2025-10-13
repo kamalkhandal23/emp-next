@@ -18,7 +18,7 @@ import teamRoutes from './routes/teams.js'
 import leaveRoutes from './routes/leaves.js'
 import meetingRoutes from './routes/meetings.js'
 import dashboardRoutes from './routes/dashboard.js'
-import nextgenRoutes from './routes/nextgen.js'
+import nextgenSystemRoutes from './routes/nextgen/index.js'
 import uploadRoutes from './routes/upload.js'
 import studentRoutes from './routes/students.js'
 import courseRoutes from './routes/courses.js'
@@ -85,11 +85,17 @@ if (process.env.NODE_ENV === 'development') {
 // Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
+    const conn = await mongoose.connect(process.env.MONGODB_URI)
     console.log(`MongoDB Connected: ${conn.connection.host}`)
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err)
+    })
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected')
+    })
   } catch (error) {
     console.error('Database connection error:', error)
     process.exit(1)
@@ -121,7 +127,7 @@ app.use('/api/teams', teamRoutes)
 app.use('/api/leaves', leaveRoutes)
 app.use('/api/meetings', meetingRoutes)
 app.use('/api/dashboard', dashboardRoutes)
-app.use('/api/nextgen', nextgenRoutes)
+app.use('/api/nextgen', nextgenSystemRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/students', studentRoutes)
 app.use('/api/courses', courseRoutes)
@@ -145,20 +151,18 @@ app.use(notFound)
 app.use(errorHandler)
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received. Shutting down gracefully...')
-  mongoose.connection.close(() => {
-    console.log('MongoDB connection closed.')
-    process.exit(0)
-  })
+  await mongoose.connection.close()
+  console.log('MongoDB connection closed.')
+  process.exit(0)
 })
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT received. Shutting down gracefully...')
-  mongoose.connection.close(() => {
-    console.log('MongoDB connection closed.')
-    process.exit(0)
-  })
+  await mongoose.connection.close()
+  console.log('MongoDB connection closed.')
+  process.exit(0)
 })
 
 // Start server

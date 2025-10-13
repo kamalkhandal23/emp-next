@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import Task from '../models/Task.js';
+import Task from '../models/hr-management/Task.js';
 import { auth, authorize } from '../middleware/auth.js';
 
 const router = express.Router();

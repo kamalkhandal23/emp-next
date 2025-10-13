@@ -1,5 +1,5 @@
-import Student from '../models/studentModel.js';
-import Course from '../models/courseModel.js';
+import Student from '../models/education/studentModel.js';
+import Course from '../models/education/courseModel.js';
 import { sendEmail, emailTemplates } from '../config/email.js';
 import { validationResult } from 'express-validator';
 

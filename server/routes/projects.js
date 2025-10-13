@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import Project from '../models/Project.js';
+import Project from '../models/hr-management/Project.js';
 import { auth, authorize } from '../middleware/auth.js';
 
 const router = express.Router();

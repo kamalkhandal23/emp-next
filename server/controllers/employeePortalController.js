@@ -1,8 +1,7 @@
-import EmployeeProfile from '../models/EmployeeProfile.js';
-import EmployeePerformance from '../models/EmployeePerformance.js';
-import EmployeeTimesheet from '../models/EmployeeTimesheet.js';
-import EmployeeBenefits from '../models/EmployeeBenefits.js';
-import User from '../models/User.js';
+import EmployeeProfile from '../models/hr-management/EmployeeProfile.js';
+import EmployeePerformance from '../models/hr-management/EmployeePerformance.js';
+import EmployeeBenefits from '../models/hr-management/EmployeeBenefits.js';
+import User from '../models/core/User.js';
 import { validationResult } from 'express-validator';
 import mongoose from 'mongoose';
 

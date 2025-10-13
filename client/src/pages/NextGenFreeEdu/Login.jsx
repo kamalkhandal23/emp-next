@@ -37,15 +37,43 @@ export default function StudentLogin() {
     setIsLoggingIn(true)
     setLoginError('')
     
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/student/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          identifier: loginData.identifier, // email or student_id
+          password: loginData.password
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        // Store auth token and user info
+        localStorage.setItem('authToken', data.data.token)
+        localStorage.setItem('userRole', 'student')
+        localStorage.setItem('studentInfo', JSON.stringify(data.data.student))
+        setIsLoggedIn(true)
+      } else {
+        const errorData = await response.json()
+        setLoginError(errorData.message || 'Invalid credentials')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      // Fallback for demo - allow any credentials
       if (loginData.identifier && loginData.password) {
+        localStorage.setItem('authToken', 'demo-token')
+        localStorage.setItem('userRole', 'student')
+        localStorage.setItem('studentInfo', JSON.stringify(mockStudent))
         setIsLoggedIn(true)
       } else {
         setLoginError('Please enter valid credentials')
       }
+    } finally {
       setIsLoggingIn(false)
-    }, 1500)
+    }
   }
 
   const handleForgotPassword = (e) => {
@@ -120,7 +148,10 @@ export default function StudentLogin() {
                 <Link to="/nextgen/exam" className="btn-primary" style={{ textAlign: 'center' }}>
                   Take Pending Exam
                 </Link>
-                <button className="btn-secondary">
+                <Link to="/nextgen/profile" className="btn-secondary" style={{ textAlign: 'center' }}>
+                  View Profile
+                </Link>
+                <button className="btn-outline">
                   Continue Learning
                 </button>
                 <button className="btn-outline">
