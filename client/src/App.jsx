@@ -12,6 +12,8 @@ import Contact from "./pages/Contact";
 import NextGenLanding from "./pages/NextGenFreeEdu/Landing";
 import Enrollment from "./pages/NextGenFreeEdu/Enrollment";
 import StudentLogin from "./pages/NextGenFreeEdu/Login";
+import SetPassword from "./pages/NextGenFreeEdu/SetPassword";
+import StudentProfile from "./pages/NextGenFreeEdu/StudentProfile";
 import Exam from "./pages/NextGenFreeEdu/Exam";
 import Results from "./pages/NextGenFreeEdu/Results";
 import AdminPortal from "./pages/Portal/AdminPortal";
@@ -90,6 +92,8 @@ export default function App() {
               <Route index element={<NextGenLanding />} />
               <Route path="enroll" element={<Enrollment />} />
               <Route path="login" element={<StudentLogin />} />
+              <Route path="set-password" element={<SetPassword />} />
+              <Route path="profile" element={<StudentProfile />} />
               <Route path="exam" element={<Exam />} />
               <Route path="results" element={<Results />} />
             </Route>

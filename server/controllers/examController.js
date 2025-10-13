@@ -1,7 +1,7 @@
-import Exam from '../models/examModel.js';
-import Result from '../models/resultModel.js';
-import Student from '../models/studentModel.js';
-import Course from '../models/courseModel.js';
+import Exam from '../models/education/examModel.js';
+import Result from '../models/education/resultModel.js';
+import Student from '../models/education/studentModel.js';
+import Course from '../models/education/courseModel.js';
 import { validationResult } from 'express-validator';
 import mongoose from 'mongoose';
 

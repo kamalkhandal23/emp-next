@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import mongoose from 'mongoose';
-import Attendance from '../models/Attendance.js';
+import Attendance from '../models/hr-management/Attendance.js';
 import { auth, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -65,7 +65,7 @@ router.post('/checkin', auth, async (req, res) => {
 
     // Check if already checked in today
     const existingRecord = await Attendance.findOne({
-      employee: req.user.id,
+      employee: req.user._id,
       date: today
     });
 
@@ -73,12 +73,21 @@ router.post('/checkin', auth, async (req, res) => {
       return res.status(400).json({ message: 'Already checked in today' });
     }
 
+    const { location, method = 'web', ipAddress, deviceInfo } = req.body;
+
     const attendance = new Attendance({
-      employee: req.user.id,
+      employee: req.user._id,
       date: today,
-      checkIn: new Date(),
       status: 'present'
     });
+
+    // Use the model's checkIn method
+    attendance.checkInEmployee(
+      location || { type: 'Point', coordinates: [0, 0] },
+      method,
+      ipAddress || req.ip,
+      deviceInfo || req.get('User-Agent')
+    );
 
     await attendance.save();
     await attendance.populate('employee', 'firstName lastName');
@@ -99,7 +108,7 @@ router.patch('/checkout', auth, async (req, res) => {
     today.setHours(0, 0, 0, 0);
 
     const attendance = await Attendance.findOne({
-      employee: req.user.id,
+      employee: req.user._id,
       date: today
     });
 
@@ -107,15 +116,19 @@ router.patch('/checkout', auth, async (req, res) => {
       return res.status(404).json({ message: 'No check-in record found for today' });
     }
 
-    if (attendance.checkOut) {
+    if (attendance.checkOut.time) {
       return res.status(400).json({ message: 'Already checked out today' });
     }
 
-    attendance.checkOut = new Date();
-    
-    // Calculate hours worked
-    const timeDiff = attendance.checkOut.getTime() - attendance.checkIn.getTime();
-    attendance.hoursWorked = Math.round((timeDiff / (1000 * 60 * 60)) * 100) / 100;
+    const { location, method = 'web', ipAddress, deviceInfo } = req.body;
+
+    // Use the model's checkOut method
+    attendance.checkOutEmployee(
+      location || { type: 'Point', coordinates: [0, 0] },
+      method,
+      ipAddress || req.ip,
+      deviceInfo || req.get('User-Agent')
+    );
 
     await attendance.save();
     await attendance.populate('employee', 'firstName lastName');
@@ -209,7 +222,7 @@ router.get('/summary/:employeeId', auth, async (req, res) => {
     const summary = await Attendance.aggregate([
       {
         $match: {
-          employee: mongoose.Types.ObjectId(employeeId),
+          employee: new mongoose.Types.ObjectId(employeeId),
           ...dateFilter
         }
       },
@@ -221,7 +234,7 @@ router.get('/summary/:employeeId', auth, async (req, res) => {
           absentDays: { $sum: { $cond: [{ $eq: ['$status', 'absent'] }, 1, 0] } },
           lateDays: { $sum: { $cond: [{ $eq: ['$status', 'late'] }, 1, 0] } },
           halfDays: { $sum: { $cond: [{ $eq: ['$status', 'half-day'] }, 1, 0] } },
-          totalHours: { $sum: '$hoursWorked' }
+          totalHours: { $sum: '$totalHours' }
         }
       }
     ]);

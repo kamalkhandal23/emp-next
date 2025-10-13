@@ -1,5 +1,5 @@
-import EmployeeTimesheet from '../models/EmployeeTimesheet.js';
-import User from '../models/User.js';
+import Attendance from '../models/hr-management/Attendance.js';
+import User from '../models/core/User.js';
 import { sendEmail } from '../config/email.js';
 
 class AttendanceService {
@@ -10,46 +10,38 @@ class AttendanceService {
       yesterday.setDate(yesterday.getDate() - 1);
       yesterday.setHours(0, 0, 0, 0);
       
-      const timesheets = await EmployeeTimesheet.find({
+      const attendanceRecords = await Attendance.find({
         date: yesterday,
-        'shifts.checkOut.time': { $exists: false }
+        'checkIn.time': { $exists: true },
+        'checkOut.time': { $exists: false }
       }).populate('employee', 'firstName lastName email');
       
-      for (const timesheet of timesheets) {
-        const lastShift = timesheet.shifts[timesheet.shifts.length - 1];
-        if (lastShift && lastShift.checkIn && !lastShift.checkOut) {
+      for (const attendance of attendanceRecords) {
+        if (attendance.checkIn.time && !attendance.checkOut.time) {
           // Auto check-out at 6 PM
           const autoCheckOutTime = new Date(yesterday);
           autoCheckOutTime.setHours(18, 0, 0, 0);
           
-          lastShift.checkOut = {
+          attendance.checkOut = {
             time: autoCheckOutTime,
             method: 'auto-checkout',
-            location: { type: 'office' }
+            location: { type: 'Point', coordinates: [0, 0] }
           };
           
-          // Calculate hours worked (assuming 1 hour lunch break)
-          const hoursWorked = 8; // Standard 9 AM to 6 PM with 1 hour break
-          lastShift.hoursWorked = hoursWorked;
+          attendance.isManualEntry = true;
+          attendance.manualEntryReason = 'Auto checked-out due to missing checkout';
           
-          // Add flag for missing checkout
-          timesheet.flags.push({
-            type: 'no-checkout',
-            description: 'Auto checked-out due to missing checkout',
-            severity: 'high'
-          });
-          
-          await timesheet.save();
+          await attendance.save();
           
           // Send notification email
-          if (timesheet.employee.email) {
+          if (attendance.employee.email) {
             await sendEmail(
-              timesheet.employee.email,
+              attendance.employee.email,
               'Auto Check-out Notification',
               `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <h2 style="color: #f59e0b;">Auto Check-out Notification</h2>
-                  <p>Dear ${timesheet.employee.firstName},</p>
+                  <p>Dear ${attendance.employee.firstName},</p>
                   <p>You were automatically checked out yesterday at 6:00 PM as you forgot to check out manually.</p>
                   <p><strong>Date:</strong> ${yesterday.toDateString()}</p>
                   <p><strong>Auto Check-out Time:</strong> 6:00 PM</p>
@@ -62,8 +54,8 @@ class AttendanceService {
         }
       }
       
-      console.log(`Auto checked-out ${timesheets.length} employees`);
-      return timesheets.length;
+      console.log(`Auto checked-out ${attendanceRecords.length} employees`);
+      return attendanceRecords.length;
     } catch (error) {
       console.error('Auto check-out error:', error);
       throw error;
@@ -83,7 +75,7 @@ class AttendanceService {
       }).select('firstName lastName email employeeId department');
       
       // Get attendance data for the date
-      const attendanceData = await EmployeeTimesheet.find({
+      const attendanceData = await Attendance.find({
         date: reportDate
       }).populate('employee', 'firstName lastName employeeId department');
       
@@ -116,27 +108,27 @@ class AttendanceService {
           checkIn: null,
           checkOut: null,
           hoursWorked: 0,
-          flags: []
+          isLate: false,
+          isEarlyLeave: false
         };
         
-        if (attendance && attendance.shifts.length > 0) {
-          const shift = attendance.shifts[0];
-          employeeRecord.status = 'present';
-          employeeRecord.checkIn = shift.checkIn?.time;
-          employeeRecord.checkOut = shift.checkOut?.time;
-          employeeRecord.hoursWorked = shift.hoursWorked || 0;
-          employeeRecord.flags = attendance.flags || [];
+        if (attendance) {
+          employeeRecord.status = attendance.status;
+          employeeRecord.checkIn = attendance.checkIn?.time;
+          employeeRecord.checkOut = attendance.checkOut?.time;
+          employeeRecord.hoursWorked = attendance.totalHours || 0;
+          employeeRecord.isLate = attendance.isLate;
+          employeeRecord.isEarlyLeave = attendance.isEarlyLeave;
           
           report.present++;
           
-          // Check for flags
-          if (attendance.flags.some(flag => flag.type === 'late-entry')) {
+          if (attendance.isLate) {
             report.late++;
           }
-          if (attendance.flags.some(flag => flag.type === 'early-exit')) {
+          if (attendance.isEarlyLeave) {
             report.earlyExit++;
           }
-          if (attendance.flags.some(flag => flag.type === 'overtime')) {
+          if (attendance.overtimeHours > 0) {
             report.overtime++;
           }
         } else {
@@ -159,7 +151,7 @@ class AttendanceService {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
       
-      const timesheets = await EmployeeTimesheet.find({
+      const attendanceRecords = await Attendance.find({
         employee: employeeId,
         date: { $gte: startDate, $lte: endDate }
       }).sort({ date: 1 });
@@ -168,7 +160,7 @@ class AttendanceService {
         month,
         year,
         totalWorkingDays: 0,
-        presentDays: timesheets.length,
+        presentDays: attendanceRecords.length,
         absentDays: 0,
         totalHours: 0,
         totalOvertimeHours: 0,
@@ -186,24 +178,25 @@ class AttendanceService {
         }
       }
       
-      timesheets.forEach(timesheet => {
-        summary.totalHours += timesheet.totalHours.regular || 0;
-        summary.totalOvertimeHours += timesheet.totalHours.overtime || 0;
+      attendanceRecords.forEach(attendance => {
+        summary.totalHours += attendance.regularHours || 0;
+        summary.totalOvertimeHours += attendance.overtimeHours || 0;
         
-        if (timesheet.flags.some(flag => flag.type === 'late-entry')) {
+        if (attendance.isLate) {
           summary.lateArrivals++;
         }
-        if (timesheet.flags.some(flag => flag.type === 'early-exit')) {
+        if (attendance.isEarlyLeave) {
           summary.earlyDepartures++;
         }
         
         summary.dailyRecords.push({
-          date: timesheet.date,
-          status: timesheet.attendanceStatus,
-          hoursWorked: timesheet.totalWorkedHours,
-          checkIn: timesheet.shifts[0]?.checkIn?.time,
-          checkOut: timesheet.shifts[0]?.checkOut?.time,
-          flags: timesheet.flags
+          date: attendance.date,
+          status: attendance.status,
+          hoursWorked: attendance.totalHours,
+          checkIn: attendance.checkIn?.time,
+          checkOut: attendance.checkOut?.time,
+          isLate: attendance.isLate,
+          isEarlyLeave: attendance.isEarlyLeave
         });
       });
       
@@ -229,7 +222,7 @@ class AttendanceService {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
       
-      const timesheets = await EmployeeTimesheet.find({
+      const attendanceRecords = await Attendance.find({
         employee: employeeId,
         date: { $gte: startDate, $lte: endDate }
       }).sort({ date: -1 });
@@ -241,10 +234,10 @@ class AttendanceService {
       let consecutiveEarlyExits = 0;
       let unusualWorkingHours = [];
       
-      timesheets.forEach((timesheet, index) => {
-        const isLate = timesheet.flags.some(flag => flag.type === 'late-entry');
-        const isEarlyExit = timesheet.flags.some(flag => flag.type === 'early-exit');
-        const hoursWorked = timesheet.totalWorkedHours;
+      attendanceRecords.forEach((attendance, index) => {
+        const isLate = attendance.isLate;
+        const isEarlyExit = attendance.isEarlyLeave;
+        const hoursWorked = attendance.totalHours;
         
         // Track consecutive late arrivals
         if (isLate) {
@@ -279,13 +272,13 @@ class AttendanceService {
         // Check for unusual working hours (less than 4 or more than 12)
         if (hoursWorked < 4 && hoursWorked > 0) {
           unusualWorkingHours.push({
-            date: timesheet.date,
+            date: attendance.date,
             hours: hoursWorked,
             type: 'too-few-hours'
           });
         } else if (hoursWorked > 12) {
           unusualWorkingHours.push({
-            date: timesheet.date,
+            date: attendance.date,
             hours: hoursWorked,
             type: 'too-many-hours'
           });
@@ -336,7 +329,7 @@ class AttendanceService {
       const memberIds = teamMembers.map(member => member._id);
       
       // Get attendance data
-      const attendanceData = await EmployeeTimesheet.find({
+      const attendanceData = await Attendance.find({
         employee: { $in: memberIds },
         date: reportDate
       }).populate('employee', 'firstName lastName employeeId');
@@ -369,12 +362,11 @@ class AttendanceService {
           isLate: false
         };
         
-        if (attendance && attendance.shifts.length > 0) {
-          const shift = attendance.shifts[0];
-          memberData.status = 'present';
-          memberData.checkIn = shift.checkIn?.time;
-          memberData.hoursWorked = shift.hoursWorked || 0;
-          memberData.isLate = attendance.flags.some(flag => flag.type === 'late-entry');
+        if (attendance) {
+          memberData.status = attendance.status;
+          memberData.checkIn = attendance.checkIn?.time;
+          memberData.hoursWorked = attendance.totalHours || 0;
+          memberData.isLate = attendance.isLate;
           
           overview.present++;
           if (memberData.isLate) {

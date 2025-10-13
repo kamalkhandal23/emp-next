@@ -1,5 +1,5 @@
-import Employee from '../models/employeeModel.js';
-import User from '../models/User.js';
+import Employee from '../models/hr-management/employeeModel.js';
+import User from '../models/core/User.js';
 import { sendEmail, emailTemplates } from '../config/email.js';
 import { validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';

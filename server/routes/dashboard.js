@@ -1,11 +1,11 @@
 import express from 'express'
-import User from '../models/User.js'
-import Team from '../models/Team.js'
-import Project from '../models/Project.js'
-import Task from '../models/Task.js'
-import Attendance from '../models/Attendance.js'
-import Leave from '../models/Leave.js'
-import Meeting from '../models/Meeting.js'
+import User from '../models/core/User.js'
+import Team from '../models/hr-management/Team.js'
+import Project from '../models/hr-management/Project.js'
+import Task from '../models/hr-management/Task.js'
+import Attendance from '../models/hr-management/Attendance.js'
+import Leave from '../models/hr-management/Leave.js'
+import Meeting from '../models/admin-system/Meeting.js'
 import { authenticate, authorize } from '../middleware/auth.js'
 
 const router = express.Router()

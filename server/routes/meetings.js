@@ -1,6 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
-import Meeting from '../models/Meeting.js';
+import Meeting from '../models/admin-system/Meeting.js';
 import { auth, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
