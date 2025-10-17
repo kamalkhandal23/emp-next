@@ -11,6 +11,7 @@ import Careers from "./pages/Careers";
 import Contact from "./pages/Contact";
 import NextGenLanding from "./pages/NextGenFreeEdu/Landing";
 import Enrollment from "./pages/NextGenFreeEdu/Enrollment";
+import PaymentCheckout from "./pages/NextGenFreeEdu/PaymentCheckout";
 import StudentLogin from "./pages/NextGenFreeEdu/Login";
 import SetPassword from "./pages/NextGenFreeEdu/SetPassword";
 import StudentProfile from "./pages/NextGenFreeEdu/StudentProfile";
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="nextgen" element={<NextGenLayout />}>
               <Route index element={<NextGenLanding />} />
               <Route path="enroll" element={<Enrollment />} />
+              <Route path="payment/checkout" element={<PaymentCheckout />} />
               <Route path="login" element={<StudentLogin />} />
               <Route path="set-password" element={<SetPassword />} />
               <Route path="profile" element={<StudentProfile />} />

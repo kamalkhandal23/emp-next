@@ -111,10 +111,16 @@ router.post('/login', [
 
     const { email, password } = req.body
 
+    // safe debug context
+    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown'
+    const userAgent = req.headers['user-agent'] || 'unknown'
+
     // Find user and include password for comparison
     const user = await User.findOne({ email }).select('+password')
     
     if (!user) {
+      // Log reason for 401 without sensitive data
+      console.warn(`[Auth][Login] User not found - email=${email} ip=${clientIp} ua=${userAgent}`)
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -123,6 +129,7 @@ router.post('/login', [
 
     // Check if account is locked
     if (user.isLocked) {
+      console.warn(`[Auth][Login] Account locked - email=${email} ip=${clientIp} ua=${userAgent}`)
       return res.status(423).json({
         success: false,
         message: 'Account is temporarily locked due to too many failed login attempts'
@@ -131,6 +138,7 @@ router.post('/login', [
 
     // Check if account is active
     if (user.status !== 'active') {
+      console.warn(`[Auth][Login] Account not active - email=${email} status=${user.status} ip=${clientIp} ua=${userAgent}`)
       return res.status(401).json({
         success: false,
         message: 'Account is not active. Please contact administrator.'
@@ -142,6 +150,8 @@ router.post('/login', [
     
     if (!isPasswordValid) {
       // Increment login attempts
+      // Log invalid password attempt (do NOT log the provided password)
+      console.warn(`[Auth][Login] Invalid password - email=${email} ip=${clientIp} ua=${userAgent} attempts=${user.loginAttempts + 1}`)
       await user.incLoginAttempts()
       
       return res.status(401).json({
@@ -155,12 +165,15 @@ router.post('/login', [
       await user.resetLoginAttempts()
     }
 
-    // Update last login
-    user.lastLogin = new Date()
-    await user.save()
+  // Update last login
+  user.lastLogin = new Date()
+  await user.save()
 
-    // Generate token
-    const token = generateToken(user._id)
+  // Generate token
+  const token = generateToken(user._id)
+
+  // Log successful login
+  console.info(`[Auth][Login] Success - email=${email} id=${user._id} ip=${clientIp} ua=${userAgent}`)
 
     // Remove password from response
     const userResponse = user.toObject()

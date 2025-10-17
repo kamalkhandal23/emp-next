@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 export default function Enrollment() {
@@ -11,39 +11,49 @@ export default function Enrollment() {
     course: '',
     experience: '',
     motivation: '',
+    amount: '',
     agreeTerms: false
   })
   
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null)
+  const [paymentType, setPaymentType] = useState('free') // 'free' or 'paid'
 
-  const courses = [
-    {
-      id: 'fullstack',
-      title: 'Full Stack Development',
-      duration: '6 months',
-      description: 'Master modern web development with React, Node.js, and cloud technologies',
-      prerequisites: 'Basic programming knowledge helpful but not required',
-      icon: '🌐'
-    },
-    {
-      id: 'cybersecurity',
-      title: 'Cybersecurity Fundamentals',
-      duration: '4 months',
-      description: 'Learn essential cybersecurity concepts and hands-on security practices',
-      prerequisites: 'Basic computer knowledge required',
-      icon: '🔒'
-    },
-    {
-      id: 'digital-marketing',
-      title: 'Digital Marketing & Media',
-      duration: '3 months',
-      description: 'Create compelling digital content and master modern marketing strategies',
-      prerequisites: 'No prior experience required',
-      icon: '📱'
+  const [courses, setCourses] = useState([
+    // fallback in case API is unavailable; these do not contain Mongo IDs
+    { _id: 'fullstack', title: 'Full Stack Development', duration: '6 months', description: 'Master modern web development with React, Node.js, and cloud technologies', prerequisites: 'Basic programming knowledge helpful but not required', icon: '🌐' },
+    { _id: 'cybersecurity', title: 'Cybersecurity Fundamentals', duration: '4 months', description: 'Learn essential cybersecurity concepts and hands-on security practices', prerequisites: 'Basic computer knowledge required', icon: '🔒' },
+    { _id: 'digital-marketing', title: 'Digital Marketing & Media', duration: '3 months', description: 'Create compelling digital content and master modern marketing strategies', prerequisites: 'No prior experience required', icon: '📱' }
+  ])
+
+  // Fetch courses from API on mount to get real MongoDB _id values
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/courses`)
+        if (!res.ok) throw new Error('Failed to fetch courses')
+        const json = await res.json()
+        // API may return { success: true, data: { courses: [...] } } or plain array
+        const apiCourses = json?.data?.courses || json?.courses || json
+        if (Array.isArray(apiCourses) && apiCourses.length > 0) {
+          // map to ensure each course has an _id and fallback fields
+          setCourses(apiCourses.map(c => ({
+            _id: c._id || c.id || c.slug || c.title,
+            title: c.title || c.name || 'Untitled Course',
+            duration: c.duration || c.length || 'N/A',
+            description: c.description || '',
+            prerequisites: c.prerequisites || c.prereq || '',
+            icon: c.icon || '🎓'
+          })))
+        }
+      } catch (err) {
+        console.warn('Could not load courses from API, using fallback list.', err)
+      }
     }
-  ]
+
+    fetchCourses()
+  }, [])
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -75,14 +85,41 @@ export default function Enrollment() {
         full_name: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        course_id: formData.course, // This should be mapped to actual course IDs
+        // send the MongoDB ID for the course if available; fallback to the string value
+        course_id: formData.course,
         date_of_birth: formData.dateOfBirth,
         education: formData.education,
         experience: formData.experience,
         motivation: formData.motivation
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/student/registration/register`, {
+      // If user selected paid, start payment flow
+      if (paymentType === 'paid') {
+        const payRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/student/payment/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...registrationData, amount: formData.amount || 10000 /* paise/cents depending on gateway */ })
+        })
+
+        if (payRes.ok) {
+          const payData = await payRes.json()
+          // Expecting { success: true, data: { paymentUrl } }
+          const paymentUrl = payData?.data?.paymentUrl
+          if (paymentUrl) {
+            // Redirect user to payment page (mock or real gateway)
+            window.location.href = paymentUrl
+            return
+          }
+        }
+
+        const err = await payRes.json().catch(() => ({ message: 'Payment initiation failed' }))
+        alert(`Payment initiation failed: ${err.message || 'Unknown error'}`)
+        setSubmitStatus('error')
+        return
+      }
+
+      // Free registration - submit directly
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/student/registration/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -94,7 +131,7 @@ export default function Enrollment() {
         const data = await response.json()
         setSubmitStatus('success')
         // Store registration ID for future reference
-        localStorage.setItem('registrationId', data.data?.registration?._id)
+        localStorage.setItem('registrationId', data.data?.registration_id || data.data?.registration?._id)
       } else {
         const errorData = await response.json()
         setSubmitStatus('error')
@@ -139,8 +176,8 @@ export default function Enrollment() {
             <h1 style={{ color: '#15803d', marginBottom: '1rem' }}>
               Enrollment Successful!
             </h1>
-            <p style={{ color: '#166534', marginBottom: '2rem', fontSize: '1.125rem' }}>
-              Welcome to NextGenFreeEdu! Your enrollment for <strong>{courses.find(c => c.id === formData.course)?.title}</strong> has been confirmed.
+              <p style={{ color: '#166534', marginBottom: '2rem', fontSize: '1.125rem' }}>
+              Welcome to NextGenFreeEdu! Your enrollment for <strong>{courses.find(c => c._id === formData.course)?.title}</strong> has been confirmed.
             </p>
             
             <div style={{ 
@@ -329,23 +366,23 @@ export default function Enrollment() {
               <div className="form-group">
                 <label className="form-label">Choose Your Course *</label>
                 <div style={{ display: 'grid', gap: '1rem', marginTop: '0.5rem' }}>
-                  {courses.map((course) => (
-                    <label key={course.id} style={{
+                        {courses.map((course) => (
+                    <label key={course._id} style={{
                       display: 'flex',
                       alignItems: 'flex-start',
                       gap: '1rem',
                       padding: '1rem',
-                      border: formData.course === course.id ? '2px solid #3b82f6' : '2px solid #e5e7eb',
+                      border: formData.course === course._id ? '2px solid #3b82f6' : '2px solid #e5e7eb',
                       borderRadius: '0.5rem',
                       cursor: 'pointer',
-                      background: formData.course === course.id ? '#f0f9ff' : 'white',
+                      background: formData.course === course._id ? '#f0f9ff' : 'white',
                       transition: 'all 0.2s ease'
                     }}>
                       <input
                         type="radio"
                         name="course"
-                        value={course.id}
-                        checked={formData.course === course.id}
+                        value={course._id}
+                        checked={formData.course === course._id}
                         onChange={handleInputChange}
                         style={{ marginTop: '0.25rem' }}
                       />
@@ -375,6 +412,34 @@ export default function Enrollment() {
                       </div>
                     </label>
                   ))}
+                </div>
+              </div>
+
+              {/* Payment option: Free or Paid */}
+              <div className="form-group" style={{ marginTop: '1rem' }}>
+                <label className="form-label">Payment Option</label>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="radio" name="paymentType" value="free" checked={paymentType === 'free'} onChange={() => setPaymentType('free')} />
+                    <span>Free</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                    <input type="radio" name="paymentType" value="paid" checked={paymentType === 'paid'} onChange={() => setPaymentType('paid')} />
+                    <span>Paid</span>
+                  </label>
+                  {paymentType === 'paid' && (
+                    <div style={{ marginLeft: '1rem' }}>
+                      <input
+                        type="number"
+                        name="amount"
+                        value={formData.amount}
+                        onChange={handleInputChange}
+                        placeholder="Amount in paise (e.g., 49900 for ₹499)"
+                        className="form-input"
+                        style={{ width: '220px' }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -412,12 +477,12 @@ export default function Enrollment() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <span style={{ fontSize: '1.5rem' }}>
-                        {courses.find(c => c.id === formData.course)?.icon}
+                        {courses.find(c => c._id === formData.course)?.icon}
                       </span>
-                      <strong>{courses.find(c => c.id === formData.course)?.title}</strong>
+                      <strong>{courses.find(c => c._id === formData.course)?.title}</strong>
                     </div>
                     <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
-                      Duration: {courses.find(c => c.id === formData.course)?.duration} • 
+                      Duration: {courses.find(c => c._id === formData.course)?.duration} • 
                       Completely Free • Industry Certification
                     </p>
                   </div>
