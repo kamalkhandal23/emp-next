@@ -17,10 +17,10 @@ class ApiClient {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`
-    
+
     // Always get the latest token from localStorage
     this.token = localStorage.getItem('authToken')
-    
+
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config)
-      
+
       if (!response.ok) {
         const error = await response.json().catch(() => ({ message: 'Network error' }))
         // Handle the server's error response format
@@ -51,7 +51,7 @@ class ApiClient {
       if (contentType && contentType.includes('application/json')) {
         return await response.json()
       }
-      
+
       return await response.text()
     } catch (error) {
       console.error('API request failed:', error)
@@ -79,6 +79,7 @@ class ApiClient {
 
   async register(userData) {
     const response = await this.request('/auth/register', {
+
       method: 'POST',
       body: userData,
     })

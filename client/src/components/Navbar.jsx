@@ -4,10 +4,10 @@ import logo from '/src/assets/logo.png'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
-  
-  const getLinkClass = (isActive) => 
+
+  const getLinkClass = (isActive) =>
     isActive ? 'navbar-link active' : 'navbar-link'
-  
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -15,7 +15,7 @@ export default function Navbar() {
           <img src={logo} alt="Lifebox NextGen logo" />
           <span>Lifebox NextGen</span>
         </Link>
-        
+
         <button
           className="navbar-toggle"
           aria-label="Toggle menu"
@@ -26,24 +26,24 @@ export default function Navbar() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
-        
+
         <div className="navbar-menu">
-          <NavLink to="/" className={({isActive}) => getLinkClass(isActive)}>
+          <NavLink to="/" className={({ isActive }) => getLinkClass(isActive)}>
             Home
           </NavLink>
-          <NavLink to="/about" className={({isActive}) => getLinkClass(isActive)}>
+          <NavLink to="/about" className={({ isActive }) => getLinkClass(isActive)}>
             About Us
           </NavLink>
-          <NavLink to="/services" className={({isActive}) => getLinkClass(isActive)}>
+          <NavLink to="/services" className={({ isActive }) => getLinkClass(isActive)}>
             Services
           </NavLink>
           <a href="/nextgen" target="_blank" rel="noreferrer" className="navbar-link">
             NextGenFreeEdu
           </a>
-          <NavLink to="/careers" className={({isActive}) => getLinkClass(isActive)}>
+          <NavLink to="/careers" className={({ isActive }) => getLinkClass(isActive)}>
             Careers
           </NavLink>
-          <NavLink to="/contact" className={({isActive}) => getLinkClass(isActive)}>
+          <NavLink to="/contact" className={({ isActive }) => getLinkClass(isActive)}>
             Contact Us
           </NavLink>
           <div className="navbar-dropdown">
@@ -55,31 +55,32 @@ export default function Navbar() {
               <Link to="/portal/hr" className="dropdown-item">HR Portal</Link>
               <Link to="/portal/team-lead" className="dropdown-item">Team Lead Portal</Link>
               <Link to="/portal/manager" className="dropdown-item">Manager Portal</Link>
-              <Link to="/portal/employee" className="dropdown-item">Employee Portal</Link>
+              <Link to="/portal/coursemanager" className="dropdown-item">Course Manager Portal</Link>
+
             </div>
           </div>
         </div>
       </div>
-      
+
       {open && (
         <div className="mobile-menu">
           <div className="mobile-menu-links">
-            <NavLink to="/" onClick={() => setOpen(false)} className={({isActive}) => getLinkClass(isActive)}>
+            <NavLink to="/" onClick={() => setOpen(false)} className={({ isActive }) => getLinkClass(isActive)}>
               Home
             </NavLink>
-            <NavLink to="/about" onClick={() => setOpen(false)} className={({isActive}) => getLinkClass(isActive)}>
+            <NavLink to="/about" onClick={() => setOpen(false)} className={({ isActive }) => getLinkClass(isActive)}>
               About Us
             </NavLink>
-            <NavLink to="/services" onClick={() => setOpen(false)} className={({isActive}) => getLinkClass(isActive)}>
+            <NavLink to="/services" onClick={() => setOpen(false)} className={({ isActive }) => getLinkClass(isActive)}>
               Services
             </NavLink>
             <a href="/nextgen" target="_blank" rel="noreferrer" onClick={() => setOpen(false)} className="navbar-link">
               NextGenFreeEdu
             </a>
-            <NavLink to="/careers" onClick={() => setOpen(false)} className={({isActive}) => getLinkClass(isActive)}>
+            <NavLink to="/careers" onClick={() => setOpen(false)} className={({ isActive }) => getLinkClass(isActive)}>
               Careers
             </NavLink>
-            <NavLink to="/contact" onClick={() => setOpen(false)} className={({isActive}) => getLinkClass(isActive)}>
+            <NavLink to="/contact" onClick={() => setOpen(false)} className={({ isActive }) => getLinkClass(isActive)}>
               Contact Us
             </NavLink>
             <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '0.5rem', marginTop: '0.5rem' }}>

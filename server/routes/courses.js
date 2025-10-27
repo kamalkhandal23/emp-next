@@ -47,6 +47,9 @@ router.use(auth);
 // Create new course
 router.post('/', authorize(['admin', 'hr']), courseValidation, createCourse);
 
+
+
+
 // Update course
 router.put('/:id', authorize(['admin', 'hr']), updateCourse);
 

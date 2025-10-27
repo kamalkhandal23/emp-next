@@ -6,17 +6,17 @@ import { validationResult } from 'express-validator';
 // Get all courses
 export const getAllCourses = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      search, 
-      category, 
-      level, 
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      category,
+      level,
       status,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
-    
+
     const query = {};
     if (search) {
       query.$or = [
@@ -133,7 +133,7 @@ export const deleteCourse = async (req, res) => {
     });
 
     if (enrolledStudents > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Cannot delete course with active enrollments',
         enrolledStudents
       });
@@ -151,7 +151,7 @@ export const deleteCourse = async (req, res) => {
 export const getCourseStatistics = async (req, res) => {
   try {
     const courseId = req.params.id;
-    
+
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ message: 'Course not found' });
@@ -284,8 +284,8 @@ export const addReview = async (req, res) => {
     );
 
     if (!enrollment) {
-      return res.status(400).json({ 
-        message: 'You must complete the course before leaving a review' 
+      return res.status(400).json({
+        message: 'You must complete the course before leaving a review'
       });
     }
 

@@ -14,7 +14,7 @@ export default function Enrollment() {
     amount: '',
     agreeTerms: false
   })
-  
+
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null)
@@ -78,7 +78,7 @@ export default function Enrollment() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
+
     try {
       // Prepare registration data
       const registrationData = {
@@ -86,7 +86,9 @@ export default function Enrollment() {
         email: formData.email,
         phone: formData.phone,
         // send the MongoDB ID for the course if available; fallback to the string value
-        course_id: formData.course,
+        // course_id: formData.course,
+        course_id: "68fc5efd3d9639feee13d1ac",
+
         date_of_birth: formData.dateOfBirth,
         education: formData.education,
         experience: formData.experience,
@@ -162,8 +164,8 @@ export default function Enrollment() {
   if (submitStatus === 'success') {
     return (
       <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-        <div style={{ 
-          maxWidth: '600px', 
+        <div style={{
+          maxWidth: '600px',
           margin: '0 auto',
           textAlign: 'center'
         }}>
@@ -176,11 +178,11 @@ export default function Enrollment() {
             <h1 style={{ color: '#15803d', marginBottom: '1rem' }}>
               Enrollment Successful!
             </h1>
-              <p style={{ color: '#166534', marginBottom: '2rem', fontSize: '1.125rem' }}>
+            <p style={{ color: '#166534', marginBottom: '2rem', fontSize: '1.125rem' }}>
               Welcome to NextGenFreeEdu! Your enrollment for <strong>{courses.find(c => c._id === formData.course)?.title}</strong> has been confirmed.
             </p>
-            
-            <div style={{ 
+
+            <div style={{
               background: 'white',
               borderRadius: '0.5rem',
               padding: '1.5rem',
@@ -196,7 +198,7 @@ export default function Enrollment() {
                 <li>Start with the orientation module</li>
               </ul>
             </div>
-            
+
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link to="/nextgen/login" className="btn-primary">
                 Login to Dashboard
@@ -225,9 +227,9 @@ export default function Enrollment() {
         </div>
 
         {/* Progress Indicator */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
           marginBottom: '3rem',
           gap: '1rem'
         }}>
@@ -266,7 +268,7 @@ export default function Enrollment() {
               <h2 style={{ marginBottom: '1.5rem', color: '#374151' }}>
                 Step 1: Personal Information
               </h2>
-              
+
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Full Name *</label>
@@ -328,7 +330,7 @@ export default function Enrollment() {
               <h2 style={{ marginBottom: '1.5rem', color: '#374141' }}>
                 Step 2: Education & Course Selection
               </h2>
-              
+
               <div className="form-group">
                 <label className="form-label">Highest Education *</label>
                 <select
@@ -366,7 +368,7 @@ export default function Enrollment() {
               <div className="form-group">
                 <label className="form-label">Choose Your Course *</label>
                 <div style={{ display: 'grid', gap: '1rem', marginTop: '0.5rem' }}>
-                        {courses.map((course) => (
+                  {courses.map((course) => (
                     <label key={course._id} style={{
                       display: 'flex',
                       alignItems: 'flex-start',
@@ -392,10 +394,10 @@ export default function Enrollment() {
                           <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
                             {course.title}
                           </h3>
-                          <span style={{ 
-                            background: '#22c55e', 
-                            color: 'white', 
-                            padding: '0.125rem 0.5rem', 
+                          <span style={{
+                            background: '#22c55e',
+                            color: 'white',
+                            padding: '0.125rem 0.5rem',
                             borderRadius: '0.25rem',
                             fontSize: '0.75rem',
                             fontWeight: '500'
@@ -451,7 +453,7 @@ export default function Enrollment() {
               <h2 style={{ marginBottom: '1.5rem', color: '#374151' }}>
                 Step 3: Final Details
               </h2>
-              
+
               <div className="form-group">
                 <label className="form-label">Why do you want to join this course? *</label>
                 <textarea
@@ -465,7 +467,7 @@ export default function Enrollment() {
                 />
               </div>
 
-              <div style={{ 
+              <div style={{
                 background: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 borderRadius: '0.5rem',
@@ -482,7 +484,7 @@ export default function Enrollment() {
                       <strong>{courses.find(c => c._id === formData.course)?.title}</strong>
                     </div>
                     <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
-                      Duration: {courses.find(c => c._id === formData.course)?.duration} • 
+                      Duration: {courses.find(c => c._id === formData.course)?.duration} •
                       Completely Free • Industry Certification
                     </p>
                   </div>
@@ -500,8 +502,8 @@ export default function Enrollment() {
                     style={{ marginTop: '0.25rem' }}
                   />
                   <span style={{ fontSize: '0.875rem', lineHeight: '1.5', color: '#374151' }}>
-                    I agree to the <a href="#" style={{ color: '#3b82f6' }}>Terms and Conditions</a> and 
-                    <a href="#" style={{ color: '#3b82f6' }}> Privacy Policy</a>. I understand that this is a 
+                    I agree to the <a href="#" style={{ color: '#3b82f6' }}>Terms and Conditions</a> and
+                    <a href="#" style={{ color: '#3b82f6' }}> Privacy Policy</a>. I understand that this is a
                     free course and I commit to actively participate in the learning process.
                   </span>
                 </label>
@@ -510,9 +512,9 @@ export default function Enrollment() {
           )}
 
           {/* Navigation Buttons */}
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             marginTop: '2rem',
             paddingTop: '2rem',
             borderTop: '1px solid #e5e7eb'
@@ -522,7 +524,7 @@ export default function Enrollment() {
               onClick={handlePrevious}
               disabled={currentStep === 1}
               className="btn-secondary"
-              style={{ 
+              style={{
                 opacity: currentStep === 1 ? 0.5 : 1,
                 cursor: currentStep === 1 ? 'not-allowed' : 'pointer'
               }}
@@ -536,7 +538,7 @@ export default function Enrollment() {
                 onClick={handleNext}
                 disabled={!isStepValid()}
                 className="btn-primary"
-                style={{ 
+                style={{
                   opacity: !isStepValid() ? 0.5 : 1,
                   cursor: !isStepValid() ? 'not-allowed' : 'pointer'
                 }}
@@ -548,7 +550,7 @@ export default function Enrollment() {
                 type="submit"
                 disabled={!isStepValid() || isSubmitting}
                 className="btn-primary"
-                style={{ 
+                style={{
                   opacity: (!isStepValid() || isSubmitting) ? 0.5 : 1,
                   cursor: (!isStepValid() || isSubmitting) ? 'not-allowed' : 'pointer'
                 }}
@@ -560,8 +562,8 @@ export default function Enrollment() {
         </form>
 
         {/* Help Section */}
-        <div style={{ 
-          textAlign: 'center', 
+        <div style={{
+          textAlign: 'center',
           marginTop: '3rem',
           padding: '2rem',
           background: '#f8fafc',
