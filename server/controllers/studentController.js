@@ -7,7 +7,7 @@ import { validationResult } from 'express-validator';
 export const getAllStudents = async (req, res) => {
   try {
     const { page = 1, limit = 10, search, status, course } = req.query;
-    
+
     const query = {};
     if (search) {
       query.$or = [
@@ -149,7 +149,7 @@ export const deleteStudent = async (req, res) => {
 export const enrollInCourse = async (req, res) => {
   try {
     const { studentId, courseId } = req.params;
-    
+
     const student = await Student.findById(studentId);
     const course = await Course.findById(courseId);
 
@@ -273,7 +273,7 @@ export const updateProgress = async (req, res) => {
     }
 
     enrollment.progress = Math.min(100, Math.max(0, progress));
-    
+
     // Auto-complete if progress reaches 100%
     if (enrollment.progress === 100 && enrollment.status === 'active') {
       enrollment.status = 'completed';

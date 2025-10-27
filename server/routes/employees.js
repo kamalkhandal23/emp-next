@@ -65,6 +65,7 @@ router.get('/:id', auth, getEmployeeById);
 // Create new employee
 router.post('/', auth, authorize(['admin', 'hr']), employeeValidation, createEmployee);
 
+
 // Update employee
 router.put('/:id', auth, authorize(['admin', 'hr']), updateEmployee);
 

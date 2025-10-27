@@ -4,15 +4,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "author": {
-    "name": "Syagam Reddy Bhanu Prakash Reddy",
-    "email": "founder@lifeboxnextgen.com",
-    "url": "https://www.lifeboxnextgen.com"
-  },
+  "author": "Syagam Reddy Bhanu Prakash Reddy <founder@lifeboxnextgen.com> (https://www.lifeboxnextgen.com)",
   "homepage": "https://www.lifeboxnextgen.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lifeboxnextgen/lifebox-nextgen.git"
+    "url": "git+https://github.com/lifeboxnextgen/lifebox-nextgen.git"
   },
   "bugs": {
     "url": "https://github.com/lifeboxnextgen/lifebox-nextgen/issues"
@@ -79,5 +75,6 @@
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "main": "eslint.config.js"
 }

@@ -22,6 +22,7 @@ import HRPortal from "./pages/Portal/HRPortal";
 import TeamLeadPortal from "./pages/Portal/TeamLeadPortal";
 import ManagerPortal from "./pages/Portal/ManagerPortal";
 import EmployeePortal from "./pages/Portal/EmployeePortal";
+import CourseManagerPortal from "./pages/Portal/CourseManagerPortal";
 import TestConnection from "./pages/TestConnection";
 
 function MainLayout() {
@@ -104,6 +105,7 @@ export default function App() {
             <Route path="portal/team-lead" element={<TeamLeadPortal />} />
             <Route path="portal/manager" element={<ManagerPortal />} />
             <Route path="portal/employee" element={<EmployeePortal />} />
+            <Route path="portal/coursemanager" element={<CourseManagerPortal />} />
             <Route path="test" element={<TestConnection />} />
           </Routes>
         </AuthProvider>

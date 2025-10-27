@@ -13,6 +13,7 @@ const router = express.Router();
 
 // @desc    Student Registration (Public)
 // @route   POST /api/nextgen/student/register
+//route should be  POST /api/nextgen/student/registartion/register
 // @access  Public
 router.post('/register', [
   body('full_name').trim().notEmpty().withMessage('Full name is required'),
@@ -43,12 +44,12 @@ router.post('/register', [
     }
 
     // Check if registration already exists for this course
-    const existingRegistration = await Registration.findOne({ 
-      email, 
+    const existingRegistration = await Registration.findOne({
+      email,
       course_id,
       status: { $in: ['submitted', 'under_review', 'accepted', 'activated'] }
     });
-    
+
     if (existingRegistration) {
       return res.status(400).json({
         success: false,
@@ -115,7 +116,7 @@ router.post('/register', [
 router.get('/registration-status/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    
+
     const registrations = await Registration.find({ email })
       .populate('course_id', 'title slug')
       .populate('reviewed_by', 'full_name')
