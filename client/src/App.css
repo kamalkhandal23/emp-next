@@ -553,6 +553,26 @@ avbar Dropdown Styles */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Ensure header titles are white (override global h1 color) */
+.portal-header h1,
+.portal-header h2,
+.portal-header h3,
+.portal-header p,
+.portal-header .subtitle {
+  color: #ffffff;
+}
+
+.portal-header .btn-secondary {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+.portal-header .btn-secondary:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: #ffffff;
+}
+
 .portal-nav {
   background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
@@ -568,7 +588,7 @@ avbar Dropdown Styles */
 }
 
 .portal-nav-link {
-  color: #64748b;
+  color: #000000;
   text-decoration: none;
   font-weight: 500;
   padding: 0.5rem 1rem;
@@ -578,7 +598,7 @@ avbar Dropdown Styles */
 
 .portal-nav-link:hover,
 .portal-nav-link.active {
-  background: #3b82f6;
+  background: #2563eb;
   color: white;
 }
 
@@ -704,9 +724,9 @@ avbar Dropdown Styles */
 }
 
 .action-button.primary {
-  background: #3b82f6;
+  background: #2563eb;
   color: white;
-  border-color: #3b82f6;
+  border-color: #2563eb;
 }
 
 .action-button.primary:hover {
@@ -934,7 +954,7 @@ e Portal Specific Styles */
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: #ffffff;
 }
 
 /* Enhanced Stats Grid */

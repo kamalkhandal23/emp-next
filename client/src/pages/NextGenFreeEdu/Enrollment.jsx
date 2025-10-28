@@ -12,7 +12,8 @@ export default function Enrollment() {
     experience: '',
     motivation: '',
     amount: '',
-    agreeTerms: false
+    agreeTerms: false,
+    passportPhoto: '' // data URL (base64) for preview and submit
   })
 
   const [currentStep, setCurrentStep] = useState(1)
@@ -63,6 +64,29 @@ export default function Enrollment() {
     }))
   }
 
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    // Validate type (JPEG/PNG) and size (<= 2MB)
+    const validTypes = ['image/jpeg', 'image/png']
+    const maxBytes = 2 * 1024 * 1024
+    if (!validTypes.includes(file.type)) {
+      alert('Please upload a JPEG or PNG image.')
+      return
+    }
+    if (file.size > maxBytes) {
+      alert('Image is too large. Max size is 2 MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setFormData(prev => ({ ...prev, passportPhoto: reader.result }))
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
@@ -92,7 +116,9 @@ export default function Enrollment() {
         date_of_birth: formData.dateOfBirth,
         education: formData.education,
         experience: formData.experience,
-        motivation: formData.motivation
+        motivation: formData.motivation,
+        // Optional passport photo (base64 data URL). Backend can extract and store.
+        passport_photo: formData.passportPhoto || undefined
       }
 
       // If user selected paid, start payment flow
@@ -320,6 +346,26 @@ export default function Enrollment() {
                     className="form-input"
                   />
                 </div>
+              </div>
+
+              {/* Passport size photo upload (optional) */}
+              <div className="form-group">
+                <label className="form-label">Passport Size Photo (JPEG/PNG, max 2MB)</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={handleFileChange}
+                  className="form-input"
+                />
+                {formData.passportPhoto && (
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <img
+                      src={formData.passportPhoto}
+                      alt="Passport preview"
+                      style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
