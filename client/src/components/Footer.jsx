@@ -18,7 +18,7 @@ export default function Footer() {
           <a href="https://x.com" target="_blank" rel="noreferrer" className="footer-link">
             X (Twitter)
           </a>
-          <a href="/privacy" className="footer-link">
+          <a href="/nextgen/privacy-policy" className="footer-link">
             Privacy Policy
           </a>
           <a href="/terms" className="footer-link">

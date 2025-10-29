@@ -425,7 +425,7 @@ export default function CourseManagerPortal() {
                 <div className="container">
                     {activeTab === "dashboard" && (
                         <div>
-                            <h2 style={{ marginBottom: "2rem" }}>System Overview</h2>
+                            <h2 style={{ marginBottom: "2rem", color:"black" }}>System Overview</h2>
 
                             <div className="stats-grid">
                                 <div className="stat-card">
@@ -455,7 +455,7 @@ export default function CourseManagerPortal() {
                             >
                                 <div className="portal-card">
                                     <div className="portal-card-header">
-                                        <h3 className="portal-card-title">Recent Activities</h3>
+                                        <h3 className="portal-card-title" style={{ color:"black" }} >Recent Activities</h3>
                                     </div>
                                     <div>
                                         {recentActivities.map((activity) => (
@@ -494,7 +494,7 @@ export default function CourseManagerPortal() {
 
                                 <div className="portal-card">
                                     <div className="portal-card-header">
-                                        <h3 className="portal-card-title">System Health</h3>
+                                        <h3 className="portal-card-title" style={{ color:"black" }}>System Health</h3>
                                     </div>
                                     <div
                                         style={{
@@ -563,7 +563,7 @@ export default function CourseManagerPortal() {
                                     marginBottom: "2rem",
                                 }}
                             >
-                                <h2>Student Management</h2>
+                                <h2 style={{ marginBottom: "2rem", color:"black" }}>Student Management</h2>
                                 {/* <br />
                                 <button className="btn-primary">Add New Course</button> */}
                             </div>
@@ -642,7 +642,7 @@ export default function CourseManagerPortal() {
                     {activeTab === "projects" && (
                         <div>
 
-                            <h2 style={{ marginBottom: "2rem" }}>Course Overview</h2>
+                            <h2 style={{ marginBottom: "2rem", color:"black" }}>Course Overview</h2>
                             <button style={{ marginBottom: "2rem" }} className="btn-primary">Add New Course</button>
 
                             <div className="stats-grid">
@@ -730,7 +730,7 @@ export default function CourseManagerPortal() {
 
                     {activeTab === "system" && (
                         <div>
-                            <h2 style={{ marginBottom: "2rem" }}>System Management</h2>
+                            <h2 style={{ marginBottom: "2rem", color:"black" }}>System Management</h2>
 
                             <div
                                 style={{
@@ -740,7 +740,7 @@ export default function CourseManagerPortal() {
                                 }}
                             >
                                 <div className="portal-card">
-                                    <h3 className="portal-card-title">Database Management</h3>
+                                    <h3 className="portal-card-title" style={{ color:"black" }}>Database Management</h3>
                                     <div
                                         style={{
                                             display: "flex",
@@ -758,7 +758,7 @@ export default function CourseManagerPortal() {
                                 </div>
 
                                 <div className="portal-card">
-                                    <h3 className="portal-card-title">User Management</h3>
+                                    <h3 className="portal-card-title" style={{ color:"black" }}>User Management</h3>
                                     <div
                                         style={{
                                             display: "flex",
@@ -776,7 +776,7 @@ export default function CourseManagerPortal() {
                                 </div>
 
                                 <div className="portal-card">
-                                    <h3 className="portal-card-title">Security Settings</h3>
+                                    <h3 className="portal-card-title" style={{ color:"black" }}>Security Settings</h3>
                                     <div
                                         style={{
                                             display: "flex",
@@ -806,7 +806,7 @@ export default function CourseManagerPortal() {
                                     marginBottom: "2rem",
                                 }}
                             >
-                                <h2>Student Registrations</h2>
+                                <h2 style={{ marginBottom: "2rem", color:"black" }}>Student Registrations</h2>
                                 <div style={{ display: "flex", gap: "1rem" }}>
                                     <select
                                         className="form-input"
@@ -1071,7 +1071,7 @@ export default function CourseManagerPortal() {
                             <div style={{ marginTop: "2rem" }}>
                                 <div className="portal-card">
                                     <div className="portal-card-header">
-                                        <h3 className="portal-card-title">Quick Actions</h3>
+                                        <h3 className="portal-card-title" style={{ color:"black" }}>Quick Actions</h3>
                                     </div>
                                     <div
                                         style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}
@@ -1152,7 +1152,7 @@ export default function CourseManagerPortal() {
 
                     {activeTab === "reports" && (
                         <div>
-                            <h2 style={{ marginBottom: "2rem" }}>Reports & Analytics</h2>
+                            <h2 style={{ marginBottom: "2rem", color:"black" }}>Reports & Analytics</h2>
 
                             <div
                                 style={{
@@ -1162,7 +1162,7 @@ export default function CourseManagerPortal() {
                                 }}
                             >
                                 <div className="portal-card">
-                                    <h3 className="portal-card-title">Employee Reports</h3>
+                                    <h3 className="portal-card-title" style={{ color:"black" }}>Employee Reports</h3>
                                     <div
                                         style={{
                                             display: "flex",
@@ -1182,7 +1182,7 @@ export default function CourseManagerPortal() {
                                 </div>
 
                                 <div className="portal-card">
-                                    <h3 className="portal-card-title">Project Reports</h3>
+                                    <h3 className="portal-card-title" style={{ color:"black" }}>Project Reports</h3>
                                     <div
                                         style={{
                                             display: "flex",
@@ -1200,7 +1200,7 @@ export default function CourseManagerPortal() {
                                 </div>
 
                                 <div className="portal-card">
-                                    <h3 className="portal-card-title">Financial Reports</h3>
+                                    <h3 className="portal-card-title" style={{ color:"black" }}>Financial Reports</h3>
                                     <div
                                         style={{
                                             display: "flex",

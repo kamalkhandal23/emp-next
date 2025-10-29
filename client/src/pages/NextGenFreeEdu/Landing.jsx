@@ -465,8 +465,8 @@ export default function NextGenLanding() {
 
       {/*Footer*/}
       <footer style={{ textAlign: 'center', padding: '2rem 0', fontSize: '0.875rem', color: '#6b7280' }}>
-        <Link to="/privacy-policy" style={{ margin: '0 1rem' }}>Privacy Policy</Link> | 
-        <Link to="/terms-of-service" style={{ margin: '0 1rem' }}>Terms of Service</Link> | 
+        <Link to="privacy-policy" className="text-blue-600 hover:underline ml-2" style={{ margin: '0 1rem' }}> Privacy Policy</Link> |
+        <Link to="/terms-of-service" style={{ margin: '0 1rem' }}>Terms of Service</Link> |
         <Link to="/contact" style={{ margin: '0 1rem' }}>Contact Us</Link>
       </footer>
 

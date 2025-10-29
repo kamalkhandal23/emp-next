@@ -24,6 +24,7 @@ import ManagerPortal from "./pages/Portal/ManagerPortal";
 import EmployeePortal from "./pages/Portal/EmployeePortal";
 import CourseManagerPortal from "./pages/Portal/CourseManagerPortal";
 import TestConnection from "./pages/TestConnection";
+import PrivacyPolicy from "./pages/NextGenFreeEdu/PrivacyPolicy";
 
 function MainLayout() {
   return (
@@ -99,6 +100,7 @@ export default function App() {
               <Route path="profile" element={<StudentProfile />} />
               <Route path="exam" element={<Exam />} />
               <Route path="results" element={<Results />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
             </Route>
             <Route path="portal/admin" element={<AdminPortal />} />
             <Route path="portal/hr" element={<HRPortal />} />
@@ -111,5 +113,7 @@ export default function App() {
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
+
+    
   );
 }

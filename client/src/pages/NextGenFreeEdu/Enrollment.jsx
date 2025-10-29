@@ -110,7 +110,7 @@ export default function Enrollment() {
         email: formData.email,
         phone: formData.phone,
         // send the MongoDB ID for the course if available; fallback to the string value
-        // course_id: formData.course,
+        //course_id: formData.course,
         course_id: "68fc5efd3d9639feee13d1ac",
 
         date_of_birth: formData.dateOfBirth,
@@ -420,10 +420,10 @@ export default function Enrollment() {
                       alignItems: 'flex-start',
                       gap: '1rem',
                       padding: '1rem',
-                      border: formData.course === course._id ? '2px solid #3b82f6' : '2px solid #e5e7eb',
+                      border: formData.course === course._id ? '2px solid #3b82f6' : '2px solid #000000ff',
                       borderRadius: '0.5rem',
                       cursor: 'pointer',
-                      background: formData.course === course._id ? '#f0f9ff' : 'white',
+                      background: formData.course === course._id ? '#e2f3f5ff' : 'white',
                       transition: 'all 0.2s ease'
                     }}>
                       <input
@@ -436,8 +436,8 @@ export default function Enrollment() {
                       />
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <span style={{ fontSize: '1.5rem' }}>{course.icon}</span>
-                          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600' }}>
+                          <span style={{  fontSize: '1.5rem' }}>{course.icon}</span>
+                          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color:'black'}}>
                             {course.title}
                           </h3>
                           <span style={{
@@ -451,10 +451,10 @@ export default function Enrollment() {
                             {course.duration}
                           </span>
                         </div>
-                        <p style={{ margin: '0 0 0.5rem 0', color: '#6b7280', fontSize: '0.875rem' }}>
+                        <p style={{ margin: '0 0 0.5rem 0', color: '#000000ff', fontSize: '0.875rem' }}>
                           {course.description}
                         </p>
-                        <p style={{ margin: 0, color: '#9ca3af', fontSize: '0.75rem' }}>
+                        <p style={{ margin: 0, color: '#000000ff', fontSize: '0.75rem' }}>
                           <strong>Prerequisites:</strong> {course.prerequisites}
                         </p>
                       </div>
