@@ -10,10 +10,15 @@ const registrationSchema = new mongoose.Schema({
   reviewed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'NG_User' },
   reviewed_at: Date,
   notes: String,
+  date_of_birth: Date,
+  education: String,
+  experience: String,
+  motivation: String,
+  passport_photo: String,
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 registrationSchema.index({ email: 1, course_id: 1 });
 registrationSchema.index({ status: 1 });
 
-const Registration = mongoose.models.NG_Registration || mongoose.model('NG_Registration', registrationSchema);
+const Registration = mongoose.models.NG_Registration || mongoose.model('NG_Registration', registrationSchema, 'ng_registration');
 export default Registration;

@@ -85,7 +85,7 @@ if (process.env.NODE_ENV === 'development') {
 // Database connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI)
+    const conn = await mongoose.connect(process.env.MONGO_URI || "mongodb+srv://bhanuprakashsyagamreddy:oxfordV2Cluster@cluster0.f1p7jgs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
     console.log(`MongoDB Connected: ${conn.connection.host}`)
 
     // Handle connection events
@@ -165,8 +165,8 @@ process.on('SIGINT', async () => {
   process.exit(0)
 })
 
-// Start server
-app.listen(PORT, () => {
+// Start server and attach error handler to avoid unhandled 'error' events
+const server = app.listen(PORT, () => {
   console.log(`
 🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}
 📊 Health check: http://localhost:${PORT}/health
@@ -174,10 +174,33 @@ app.listen(PORT, () => {
 🌐 Client URL: ${process.env.CLIENT_URL}
 📧 Email: ${process.env.EMAIL_USER ? 'Configured' : 'Not configured'}
   `)
-  
+
   // Start attendance jobs in production
   if (process.env.NODE_ENV === 'production') {
     startAttendanceJobs()
+  }
+})
+
+// Listen for server errors (EADDRINUSE etc) and fail gracefully with helpful logs
+server.on('error', (err) => {
+  if (err && err.code) {
+    switch (err.code) {
+      case 'EACCES':
+        console.error(`Port ${PORT} requires elevated privileges.`)
+        process.exit(1)
+        break
+      case 'EADDRINUSE':
+        console.error(`Port ${PORT} is already in use.`)
+        console.error('Possible fixes: stop the process using that port, or set PORT in your .env to a different number.')
+        process.exit(1)
+        break
+      default:
+        console.error('Server error:', err)
+        process.exit(1)
+    }
+  } else {
+    console.error('Server error:', err)
+    process.exit(1)
   }
 })
 

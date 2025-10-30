@@ -63,7 +63,12 @@ router.post('/register', [
       email,
       phone: encrypt(phone),
       course_id,
-      status: 'submitted'
+      status: 'submitted',
+      date_of_birth: req.body.date_of_birth,
+      education: req.body.education,
+      experience: req.body.experience,
+      motivation: req.body.motivation,
+      passport_photo: req.body.passport_photo
     });
 
     // Send confirmation email
