@@ -1,12 +1,29 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function CourseManagerPortal() {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("dashboard");
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [loginData, setLoginData] = useState({ username: "", password: "" });
     const [studentRegistrations, setStudentRegistrations] = useState([]);
+    const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showAddCourse, setShowAddCourse] = useState(false);
+    const [newCourse, setNewCourse] = useState({
+        slug: '',
+        title: '',
+        subtitle: '',
+        duration: '',
+        description: '',
+        prerequisites: '',
+        icon: '🎓',
+        visibility: 'draft'
+    });
+    const [selectedCourse, setSelectedCourse] = useState(null);
+    const [showCourseDetails, setShowCourseDetails] = useState(false);
+
+
 
     // Mock data
     const adminStats = {
@@ -28,7 +45,6 @@ export default function CourseManagerPortal() {
         },
         {
             id: 2,
-            // action: "course  completed",
             action: "Fullstack course batch 3 completed",
             user: "Team Alpha",
             time: "4 hours ago",
@@ -121,6 +137,7 @@ export default function CourseManagerPortal() {
     useEffect(() => {
         if (isLoggedIn) {
             fetchRegistrations();
+            fetchCourses();
         }
     }, [isLoggedIn]);
 
@@ -166,6 +183,40 @@ export default function CourseManagerPortal() {
             setLoading(false);
         }
     };
+
+    // Fetch courses from API
+    const fetchCourses = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem("authToken");
+
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/nextgen/courses`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                setCourses(data.data.courses || []);
+            } else {
+                // Fallback to empty array if API fails
+                console.warn("API failed, no courses loaded");
+                setCourses([]);
+            }
+        } catch (error) {
+            console.error("Error fetching courses:", error);
+            setCourses([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
 
     // Handle registration approval
     const handleApproveRegistration = async (registrationId) => {
@@ -268,12 +319,62 @@ export default function CourseManagerPortal() {
         }
     };
 
+    // Handle view course details
+    const handleViewCourse = (course) => {
+        setSelectedCourse(course);
+        setShowCourseDetails(true);
+    };
+
+ // Handle add course
+    const handleAddCourse = async () => {
+       setLoading(true);
+       try {
+           const token = localStorage.getItem("authToken");
+
+           const response = await fetch(
+               `${import.meta.env.VITE_API_URL}/nextgen/courses`,
+               {
+                   method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                   body: JSON.stringify(newCourse),
+               }
+            );
+
+            if (response.ok) {
+                await fetchCourses();
+                setShowAddCourse(false);
+                setNewCourse({
+                    slug: '',
+                    title: '',
+                    subtitle: '',
+                    duration: '',
+                    description: '',
+                    prerequisites: '',
+                    icon: '🎓',
+                    visibility: 'draft'
+                });
+                alert("Course added successfully!");
+            } else {
+                const errorData = await response.json();
+               alert(`Error adding course: ${errorData.message}`);
+            }
+        } catch (error) {
+            console.error("Error adding course:", error);
+            alert("Error adding course");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     if (!isLoggedIn) {
         return (
             <div className="portal-layout">
                 <div className="portal-header">
                     <div className="container">
-                        <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Course Manger Portal</h1>
+                    <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Course Manager Portal</h1>
                     </div>
                 </div>
 
@@ -341,11 +442,316 @@ export default function CourseManagerPortal() {
                                 </p>
                             </div>
                         </div>
-                    </div>
                 </div>
             </div>
-        );
-    }
+
+            {/* Add Course Modal */}
+            {showAddCourse && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1000,
+                    }}
+                >
+                    <div
+                        style={{
+                            background: "white",
+                            borderRadius: "0.5rem",
+                            padding: "2rem",
+                            width: "90%",
+                            maxWidth: "500px",
+                            maxHeight: "90vh",
+                            overflowY: "auto",
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: "1.5rem",
+                            }}
+                        >
+                            <h3 style={{ margin: 0, color: "black" }}>Add New Course</h3>
+                            <button
+                                onClick={() => setShowAddCourse(false)}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    fontSize: "1.5rem",
+                                    cursor: "pointer",
+                                    color: "#6b7280",
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleAddCourse();
+                            }}
+                        >
+                            <div style={{ display: "grid", gap: "1rem" }}>
+                                <div className="form-group">
+                                    <label className="form-label">Slug</label>
+                                    <input
+                                        type="text"
+                                        value={newCourse.slug}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, slug: e.target.value })
+                                        }
+                                        className="form-input"
+                                        placeholder="course-slug"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Title</label>
+                                    <input
+                                        type="text"
+                                        value={newCourse.title}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, title: e.target.value })
+                                        }
+                                        className="form-input"
+                                        placeholder="Course Title"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Subtitle</label>
+                                    <input
+                                        type="text"
+                                        value={newCourse.subtitle}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, subtitle: e.target.value })
+                                        }
+                                        className="form-input"
+                                        placeholder="Course Subtitle"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Duration</label>
+                                    <input
+                                        type="text"
+                                        value={newCourse.duration}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, duration: e.target.value })
+                                        }
+                                        className="form-input"
+                                        placeholder="e.g., 3 months"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Description</label>
+                                    <textarea
+                                        value={newCourse.description}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, description: e.target.value })
+                                        }
+                                        className="form-input"
+                                        placeholder="Course description"
+                                        rows="3"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Prerequisites</label>
+                                    <input
+                                        type="text"
+                                        value={newCourse.prerequisites}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, prerequisites: e.target.value })
+                                        }
+                                        className="form-input"
+                                        placeholder="Prerequisites"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Icon</label>
+                                    <input
+                                        type="text"
+                                        value={newCourse.icon}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, icon: e.target.value })
+                                        }
+                                        className="form-input"
+                                        placeholder="🎓"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Visibility</label>
+                                    <select
+                                        value={newCourse.visibility}
+                                        onChange={(e) =>
+                                            setNewCourse({ ...newCourse, visibility: e.target.value })
+                                        }
+                                        className="form-input"
+                                    >
+                                        <option value="draft">Draft</option>
+                                        <option value="published">Published</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "1rem",
+                                    justifyContent: "flex-end",
+                                    marginTop: "2rem",
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddCourse(false)}
+                                    className="btn-secondary"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn-primary"
+                                    disabled={loading}
+                                >
+                                    {loading ? "Adding..." : "Add Course"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* View Course Details Modal */}
+            {showCourseDetails && selectedCourse && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1000,
+                    }}
+                >
+                    <div
+                        style={{
+                            background: "white",
+                            borderRadius: "0.5rem",
+                            padding: "2rem",
+                            width: "90%",
+                            maxWidth: "600px",
+                            maxHeight: "90vh",
+                            overflowY: "auto",
+                        }}
+                    >
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: "1.5rem",
+                            }}
+                        >
+                            <h3 style={{ margin: 0, color: "black" }}>
+                                {selectedCourse.icon} {selectedCourse.title}
+                            </h3>
+                            <button
+                                onClick={() => {
+                                    setShowCourseDetails(false);
+                                    setSelectedCourse(null);
+                                }}
+                                style={{
+                                    background: "none",
+                                    border: "none",
+                                    fontSize: "1.5rem",
+                                    cursor: "pointer",
+                                    color: "#6b7280",
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div style={{ display: "grid", gap: "1rem" }}>
+                            <div>
+                                <strong>Subtitle:</strong> {selectedCourse.subtitle || "N/A"}
+                            </div>
+                            <div>
+                                <strong>Duration:</strong> {selectedCourse.duration || "N/A"}
+                            </div>
+                            <div>
+                                <strong>Description:</strong>{" "}
+                                {selectedCourse.description || "N/A"}
+                            </div>
+                            <div>
+                                <strong>Prerequisites:</strong>{" "}
+                                {selectedCourse.prerequisites || "N/A"}
+                            </div>
+                            <div>
+                                <strong>Visibility:</strong>{" "}
+                                <span
+                                    className={`status-badge status-${
+                                        selectedCourse.visibility === "published"
+                                            ? "active"
+                                            : "pending"
+                                    }`}
+                                >
+                                    {selectedCourse.visibility}
+                                </span>
+                            </div>
+                            <div>
+                                <strong>Enrollments:</strong>{" "}
+                                {selectedCourse.enrolled_count || 0}
+                            </div>
+                            <div>
+                                <strong>Slug:</strong> {selectedCourse.slug || "N/A"}
+                            </div>
+                        </div>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                marginTop: "2rem",
+                            }}
+                        >
+                            <button
+                                onClick={() => {
+                                    setShowCourseDetails(false);
+                                    setSelectedCourse(null);
+                                }}
+                                className="btn-secondary"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
     return (
         <div className="portal-layout">
@@ -573,14 +979,13 @@ export default function CourseManagerPortal() {
                                 <div
                                     className="table-row"
                                     style={{
-                                        gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto",
+                                        gridTemplateColumns: "2fr 1fr 1fr 1fr auto",
                                         fontWeight: "600",
                                         background: "#f8fafc",
                                     }}
                                 >
                                     <div>Name</div>
-                                    <div>course</div>
-                                    <div>Department</div>
+                                    <div>Course</div>
                                     <div>Status</div>
                                     <div>Join Date</div>
                                     <div>Actions</div>
@@ -588,47 +993,42 @@ export default function CourseManagerPortal() {
                                 {[
                                     {
                                         name: "Priya Sharma",
-                                        role: "Full Stack Developer",
-                                        dept: "Engineering",
+                                        course: "Full Stack Development",
                                         status: "active",
-                                        date: "2024-01-15",
+                                        joinDate: "2024-01-15",
                                     },
                                     {
                                         name: "Rahul Kumar",
-                                        role: "UI/UX Designer",
-                                        dept: "Design",
+                                        course: "UI/UX Design",
                                         status: "active",
-                                        date: "2024-01-20",
+                                        joinDate: "2024-01-20",
                                     },
                                     {
                                         name: "Anita Patel",
-                                        role: "Project Manager",
-                                        dept: "Management",
+                                        course: "Data Science",
                                         status: "active",
-                                        date: "2024-02-01",
+                                        joinDate: "2024-02-01",
                                     },
                                     {
                                         name: "Vikram Singh",
-                                        role: "DevOps Engineer",
-                                        dept: "Engineering",
+                                        course: "Cybersecurity",
                                         status: "inactive",
-                                        date: "2024-01-10",
+                                        joinDate: "2024-01-10",
                                     },
-                                ].map((emp, index) => (
+                                ].map((student, index) => (
                                     <div
                                         key={index}
                                         className="table-row"
-                                        style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto" }}
+                                        style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr auto" }}
                                     >
-                                        <div style={{ fontWeight: "500" }}>{emp.name}</div>
-                                        <div>{emp.role}</div>
-                                        <div>{emp.dept}</div>
+                                        <div style={{ fontWeight: "500" }}>{student.name}</div>
+                                        <div>{student.course}</div>
                                         <div>
-                                            <span className={`status-badge status-${emp.status}`}>
-                                                {emp.status}
+                                            <span className={`status-badge status-${student.status}`}>
+                                                {student.status}
                                             </span>
                                         </div>
-                                        <div>{emp.date}</div>
+                                        <div>{student.joinDate}</div>
                                         <div style={{ display: "flex", gap: "0.5rem" }}>
                                             <button className="action-button">Edit</button>
                                             <button className="action-button" >View</button>
@@ -641,31 +1041,40 @@ export default function CourseManagerPortal() {
 
                     {activeTab === "projects" && (
                         <div>
-
-                            <h2 style={{ marginBottom: "2rem", color:"black" }}>Course Overview</h2>
-                            <button style={{ marginBottom: "2rem" }} className="btn-primary">Add New Course</button>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
+                                <h2 style={{ margin: 0, color:"black" }}>Course Overview</h2>
+                                <button className="btn-primary" onClick={() => setShowAddCourse(true)}>
+                                    Add Course
+                                </button>
+                            </div>
 
                             <div className="stats-grid">
                                 <div className="stat-card">
-                                    <div className="stat-number">12</div>
-                                    <div className="stat-label">Active Projects</div>
+                                    <div className="stat-number">{courses.length}</div>
+                                    <div className="stat-label">Total Courses</div>
                                 </div>
                                 <div className="stat-card">
-                                    <div className="stat-number">8</div>
-                                    <div className="stat-label">Completed This Month</div>
+                                    <div className="stat-number">
+                                        {courses.filter(course => course.visibility === 'published').length}
+                                    </div>
+                                    <div className="stat-label">Published Courses</div>
                                 </div>
                                 <div className="stat-card">
-                                    <div className="stat-number">3</div>
-                                    <div className="stat-label">Overdue Projects</div>
+                                    <div className="stat-number">
+                                        {courses.filter(course => course.visibility === 'draft').length}
+                                    </div>
+                                    <div className="stat-label">Draft Courses</div>
                                 </div>
                                 <div className="stat-card">
-                                    <div className="stat-number">₹15,45,000</div>
-                                    <div className="stat-label">Total Project Value</div>
+                                    <div className="stat-number">
+                                        {courses.reduce((total, course) => total + (course.enrolled_count || 0), 0)}
+                                    </div>
+                                    <div className="stat-label">Total Enrollments</div>
                                 </div>
                             </div>
 
                             <div className="data-table">
-                                <div className="table-header">All Projects</div>
+                                <div className="table-header">All Courses</div>
                                 <div
                                     className="table-row"
                                     style={{
@@ -674,52 +1083,32 @@ export default function CourseManagerPortal() {
                                         background: "#f8fafc",
                                     }}
                                 >
-                                    <div>Project Name</div>
-                                    <div>Client</div>
-                                    <div>Team Lead</div>
-                                    <div>Status</div>
-                                    <div>Deadline</div>
+                                    <div>Course Title</div>
+                                    <div>Subtitle</div>
+                                    <div>Duration</div>
+                                    <div>Visibility</div>
+                                    <div>Enrollments</div>
                                     <div>Actions</div>
                                 </div>
-                                {[
-                                    {
-                                        name: "E-commerce Platform",
-                                        client: "TechCorp",
-                                        lead: "Anita Patel",
-                                        status: "active",
-                                        deadline: "2024-03-15",
-                                    },
-                                    {
-                                        name: "Mobile Banking App",
-                                        client: "FinanceBank",
-                                        lead: "Rahul Kumar",
-                                        status: "completed",
-                                        deadline: "2024-02-28",
-                                    },
-                                    {
-                                        name: "CRM System",
-                                        client: "SalesForce Ltd",
-                                        lead: "Priya Sharma",
-                                        status: "pending",
-                                        deadline: "2024-04-10",
-                                    },
-                                ].map((project, index) => (
+                                {courses.map((course, index) => (
                                     <div
-                                        key={index}
+                                        key={course._id || index}
                                         className="table-row"
                                         style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto" }}
                                     >
-                                        <div style={{ fontWeight: "500" }}>{project.name}</div>
-                                        <div>{project.client}</div>
-                                        <div>{project.lead}</div>
+                                        <div style={{ fontWeight: "500" }}>
+                                            <div>{course.icon} {course.title}</div>
+                                        </div>
+                                        <div>{course.subtitle}</div>
+                                        <div>{course.duration}</div>
                                         <div>
-                                            <span className={`status-badge status-${project.status}`}>
-                                                {project.status}
+                                            <span className={`status-badge status-${course.visibility === 'published' ? 'active' : 'pending'}`}>
+                                                {course.visibility}
                                             </span>
                                         </div>
-                                        <div>{project.deadline}</div>
+                                        <div>{course.enrolled_count || 0}</div>
                                         <div style={{ display: "flex", gap: "0.5rem" }}>
-                                            <button className="action-button primary">View</button>
+                                            <button className="action-button primary" onClick={() => handleViewCourse(course)}>View</button>
                                             <button className="action-button">Edit</button>
                                         </div>
                                     </div>
