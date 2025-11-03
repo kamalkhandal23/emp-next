@@ -6,11 +6,22 @@ import Announcement from '../models/nextgen/admin/Announcement.js'
 import Ticket from '../models/nextgen/support/Ticket.js'
 import Certificate from '../models/nextgen/education/Certificate.js'
 import HRDocRequest from '../models/nextgen/support/HRRequest.js'
+import Registration from "../models/nextgen/core/Registration.js";
 
 async function generateNextStudentId() {
   const count = await Student.countDocuments();
   return `STU${String(count + 1).padStart(6, '0')}`;
 }
+
+export const getAllRegistrations = async (req, res) => {
+  try {
+    const data = await Registration.find();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching registrations:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 
 export const enroll = async (req, res) => {
   try {

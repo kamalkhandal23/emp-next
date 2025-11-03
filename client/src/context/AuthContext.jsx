@@ -1,18 +1,15 @@
-import { createContext, useContext, useReducer, useEffect } from 'react'
-import apiClient from '../utils/api'
-import { FullPageLoader } from '../components/LoadingSpinner'
+import { createContext, useContext, useReducer, useEffect } from "react";
+import apiClient from "../utils/api";
+import { FullPageLoader } from "../components/LoadingSpinner";
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
 const authReducer = (state, action) => {
   switch (action.type) {
-    case 'LOGIN_START':
-      return {
-        ...state,
-        loading: true,
-        error: null,
-      }
-    case 'LOGIN_SUCCESS':
+    case "LOGIN_START":
+      return { ...state, loading: true, error: null };
+
+    case "LOGIN_SUCCESS":
       return {
         ...state,
         loading: false,
@@ -20,8 +17,9 @@ const authReducer = (state, action) => {
         user: action.payload.user,
         token: action.payload.token,
         error: null,
-      }
-    case 'LOGIN_FAILURE':
+      };
+
+    case "LOGIN_FAILURE":
       return {
         ...state,
         loading: false,
@@ -29,132 +27,149 @@ const authReducer = (state, action) => {
         user: null,
         token: null,
         error: action.payload,
-      }
-    case 'LOGOUT':
+      };
+
+    case "LOGOUT":
       return {
         ...state,
         isAuthenticated: false,
         user: null,
         token: null,
         error: null,
-      }
-    case 'SET_USER':
-      return {
-        ...state,
-        user: action.payload,
-      }
-    case 'SET_LOADING':
-      return {
-        ...state,
-        loading: action.payload,
-      }
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null,
-      }
+      };
+
+    case "SET_USER":
+      return { ...state, user: action.payload };
+
+    case "SET_LOADING":
+      return { ...state, loading: action.payload };
+
+    case "CLEAR_ERROR":
+      return { ...state, error: null };
+
     default:
-      return state
+      return state;
   }
-}
+};
 
 const initialState = {
   isAuthenticated: false,
   user: null,
-  token: localStorage.getItem('authToken'),
-  loading: true, // Start with loading true for initial auth check
+  token: localStorage.getItem("authToken"),
+  loading: true,
   error: null,
-}
+};
 
 export const AuthProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState)
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Check if user is logged in on app start
+  //  Check for existing token on app start
   useEffect(() => {
-    const token = localStorage.getItem('authToken')
+    const token = localStorage.getItem("authToken");
     if (token) {
-      dispatch({ type: 'SET_LOADING', payload: true })
-      apiClient.setAuthToken(token)
-      
-      apiClient.getCurrentUser()
-        .then(user => {
+      dispatch({ type: "SET_LOADING", payload: true });
+      apiClient.setAuthToken(token);
+
+      apiClient
+        .getCurrentUser()
+        .then((user) => {
           dispatch({
-            type: 'LOGIN_SUCCESS',
-            payload: { user, token }
-          })
+            type: "LOGIN_SUCCESS",
+            payload: { user, token },
+          });
         })
-        .catch(error => {
-          console.error('Failed to get current user:', error)
-          localStorage.removeItem('authToken')
-          dispatch({ type: 'LOGOUT' })
+        .catch((error) => {
+          console.error("Failed to get current user:", error);
+          localStorage.removeItem("authToken");
+          dispatch({ type: "LOGOUT" });
         })
         .finally(() => {
-          dispatch({ type: 'SET_LOADING', payload: false })
-        })
+          dispatch({ type: "SET_LOADING", payload: false });
+        });
+    } else {
+      dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [])
+  }, []);
 
+  //  LOGIN
   const login = async (credentials) => {
-    dispatch({ type: 'LOGIN_START' })
-    
+    dispatch({ type: "LOGIN_START" });
+
     try {
-      const response = await apiClient.login(credentials)
+      const response = await apiClient.login(credentials);
+
+      //  Save token in localStorage
+      localStorage.setItem("authToken", response.token);
+
+      apiClient.setAuthToken(response.token);
+
       dispatch({
-        type: 'LOGIN_SUCCESS',
+        type: "LOGIN_SUCCESS",
         payload: {
           user: response.user,
-          token: response.token
-        }
-      })
-      return response
+          token: response.token,
+        },
+      });
+
+      return response;
     } catch (error) {
       dispatch({
-        type: 'LOGIN_FAILURE',
-        payload: error.message
-      })
-      throw error
+        type: "LOGIN_FAILURE",
+        payload: error.message,
+      });
+      throw error;
     }
-  }
+  };
 
+  //  LOGOUT
   const logout = async () => {
     try {
-      await apiClient.logout()
+      await apiClient.logout();
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error("Logout error:", error);
     } finally {
-      dispatch({ type: 'LOGOUT' })
+      localStorage.removeItem("authToken"); 
+      dispatch({ type: "LOGOUT" });
     }
-  }
+  };
 
+  //  REGISTER
   const register = async (userData) => {
-    dispatch({ type: 'LOGIN_START' })
-    
+    dispatch({ type: "LOGIN_START" });
+
     try {
-      const response = await apiClient.register(userData)
+      const response = await apiClient.register(userData);
+
+      //  Save token in localStorage
+      localStorage.setItem("authToken", response.token);
+
+      apiClient.setAuthToken(response.token);
+
       dispatch({
-        type: 'LOGIN_SUCCESS',
+        type: "LOGIN_SUCCESS",
         payload: {
           user: response.user,
-          token: response.token
-        }
-      })
-      return response
+          token: response.token,
+        },
+      });
+
+      return response;
     } catch (error) {
       dispatch({
-        type: 'LOGIN_FAILURE',
-        payload: error.message
-      })
-      throw error
+        type: "LOGIN_FAILURE",
+        payload: error.message,
+      });
+      throw error;
     }
-  }
+  };
 
   const updateUser = (userData) => {
-    dispatch({ type: 'SET_USER', payload: userData })
-  }
+    dispatch({ type: "SET_USER", payload: userData });
+  };
 
   const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' })
-  }
+    dispatch({ type: "CLEAR_ERROR" });
+  };
 
   const value = {
     ...state,
@@ -163,26 +178,22 @@ export const AuthProvider = ({ children }) => {
     register,
     updateUser,
     clearError,
+  };
+
+  // Show loader only during initial auth check
+  if (state.loading && !state.user && localStorage.getItem("authToken")) {
+    return <FullPageLoader message="Checking authentication..." />;
   }
 
-  // Show loading screen during initial auth check
-  if (state.loading && !state.user && localStorage.getItem('authToken')) {
-    return <FullPageLoader message="Checking authentication..." />
-  }
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
-}
+  return context;
+};
 
-export default AuthContext
+export default AuthContext;
