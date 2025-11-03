@@ -3,7 +3,19 @@ import Exam from '../models/education/examModel.js';
 import Student from '../models/education/studentModel.js';
 import { sendEmail, emailTemplates } from '../config/email.js';
 import mongoose from 'mongoose';
+import Registration from "../models/nextgen/core/Registration.js";
 
+
+//get all registrations
+export const getAllRegistrations = async (req, res) => {
+  try {
+    const registrations = await Registration.find();
+    res.status(200).json(registrations);
+  } catch (error) {
+    console.error("Error fetching registrations:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
 // Get all results
 export const getAllResults = async (req, res) => {
   try {
