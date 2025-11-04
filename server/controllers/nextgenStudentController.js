@@ -2,10 +2,12 @@ import bcrypt from 'bcryptjs'
 import { generateToken } from '../utils/jwt.js'
 import Student from '../models/nextgen/student-management/Student.js'
 import Attendance from '../models/nextgen/student-management/Attendance.js'
+import Registration from '../models/nextgen/core/Registration.js'
 import Announcement from '../models/nextgen/admin/Announcement.js'
 import Ticket from '../models/nextgen/support/Ticket.js'
 import Certificate from '../models/nextgen/education/Certificate.js'
 import HRDocRequest from '../models/nextgen/support/HRRequest.js'
+import { Result } from 'express-validator'
 
 async function generateNextStudentId() {
   const count = await Student.countDocuments();

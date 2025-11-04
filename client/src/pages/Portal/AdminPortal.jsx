@@ -70,7 +70,7 @@ export default function AdminPortal() {
       address: "Mumbai, Maharashtra",
     },
     {
-      id: 2,
+      id: 2,  
       fullName: "Sneha Sharma",
       email: "sneha.sharma@email.com",
       phone: "+91-9876543211",
