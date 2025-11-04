@@ -455,5 +455,17 @@ router.get('/stats/overview', auth, ensureAdminOrManager, async (req, res) => {
     });
   }
 });
+// lets first get all student registrations 
+
+router.get("/",async(req,res)=>{
+  try{
+    const studentRegister = await Registration.find()
+    console.log(studentRegister)
+    res.status(200).send({status:true,data:studentRegister})
+  }catch(e){
+    console.log("error",e.message)
+    res.status(500).send({status:false,message:e.message})
+  }
+})
 
 export default router;

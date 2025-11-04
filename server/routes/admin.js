@@ -14,6 +14,7 @@ import {
   backupDatabase,
   sendSystemNotification
 } from '../controllers/adminController.js';
+
 import { auth, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -59,5 +60,8 @@ router.get('/logs', getActivityLogs);
 // System operations
 router.post('/backup', backupDatabase);
 router.post('/notification', notificationValidation, sendSystemNotification);
+
+
+
 
 export default router;
