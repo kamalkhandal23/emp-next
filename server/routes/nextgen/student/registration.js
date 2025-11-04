@@ -5,9 +5,11 @@ import jwt from 'jsonwebtoken';
 import User from '../../../models/nextgen/core/User.js';
 import Registration from '../../../models/nextgen/core/Registration.js';
 import Student from '../../../models/nextgen/student-management/Student.js';
+import NG_Approved_Students from '../../../models/nextgen/core/NG_ApprovedStudents.js';
 import { auth, authorize } from '../../../middleware/auth.js';
 import { encrypt } from '../../../utils/crypto.js';
 import { sendEmail, emailTemplates } from '../../../config/email.js';
+
 
 const router = express.Router();
 
@@ -277,100 +279,64 @@ router.post('/set-password', [
   }
 });
 
-// @desc    Student Login
-// @route   POST /api/nextgen/student/login
-// @access  Public
-router.post('/login', [
-  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
-  body('password').notEmpty().withMessage('Password is required')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
+// // @desc    Student Login
+// // @route   POST /api/nextgen/student/login
+// // @access  Public
+// router.post("/student/login", async (req, res) => {
+//   try {
+    
+//     const { identifier, password } = req.body;
+//     console.log(identifier)
+//     console.log(password)
 
-    const { email, password } = req.body;
+//     // Check for missing fields
+//     if (!identifier || !password) {
+//       return res.status(400).json({ message: "Email/Student ID and password are required." });
+//     }
+    
 
-    // Find user
-    const user = await User.findOne({ email, role: 'student' });
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
+//     // Find by email or student_id
+//     const student = await NG_Approved_Students.findOne({
+//       $or: [{ email: identifier.toLowerCase() }, { student_id: identifier }],
+//     });
 
-    // Check if account is active
-    if (user.status !== 'active') {
-      return res.status(401).json({
-        success: false,
-        message: 'Account is not active. Please contact support.'
-      });
-    }
+//     if (!student) {
+//       return res.status(401).json({ message: "Invalid credentials." });
+//     }
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-    if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
-    }
+//     // Compare passwords (bcrypt)
+//     const isMatch = await bcrypt.compare(password, student.password);
+//     if (!isMatch) {
+//       return res.status(401).json({ message: "Invalid credentials." });
+//     }
 
-    // Get student profile
-    const student = await Student.findOne({ user_id: user._id });
+//     // Generate JWT token
+//     const token = jwt.sign(
+//       { id: student._id, role: "student" },
+//       process.env.JWT_SECRET,
+//       { expiresIn: "7d" }
+//     );
 
-    // Update last login
-    user.last_login_at = new Date();
-    await user.save();
+//     res.status(200).json({
+//       message: "Login successful",
+//       data: {
+//         token,
+//         student: {
+//           id: student._id,
+//           student_id: student.student_id,
+//           fullName: student.fullName,
+//           email: student.email,
+//           course: student.course,
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     res.status(500).json({ message: "Server error during login" });
+//   }
+// });
 
-    if (student) {
-      student.last_activity = new Date();
-      student.login_count += 1;
-      await student.save();
-    }
 
-    // Generate token
-    const token = jwt.sign(
-      { id: user._id, role: user.role, studentId: student?._id },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
-    );
-
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: {
-          id: user._id,
-          full_name: user.full_name,
-          email: user.email,
-          role: user.role,
-          status: user.status,
-          last_login: user.last_login_at
-        },
-        student: student ? {
-          id: student._id,
-          student_id: student.student_id,
-          status: student.status,
-          enrollment_date: student.enrollment_date,
-          performance: student.performance
-        } : null,
-        token
-      }
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during login'
-    });
-  }
-});
+// get register student to show on admin student management 
 
 export default router;

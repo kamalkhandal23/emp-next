@@ -47,7 +47,8 @@ export default function StudentLogin() {
           identifier: loginData.identifier, // email or student_id
           password: loginData.password
         })
-      })
+      }) 
+      console.log(response)
 
       if (response.ok) {
         const data = await response.json()

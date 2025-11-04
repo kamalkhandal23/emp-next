@@ -19,6 +19,7 @@ import leaveRoutes from "./routes/leaves.js";
 import meetingRoutes from "./routes/meetings.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import nextgenSystemRoutes from "./routes/nextgen/index.js";
+
 import uploadRoutes from "./routes/upload.js";
 import studentRoutes from "./routes/students.js";
 import courseRoutes from "./routes/courses.js";
