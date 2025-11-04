@@ -60,31 +60,22 @@ export default function AdminPortal() {
     securityStatus: "Secure",
   };
 
-  // Mock student registrations data
-  useEffect(() => {
-    const fetchRegistrations = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:5002/api/nextgen/registrations",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        
-        setStudentRegistrations(response.data);
-
-        
-        // setStudentRegistrations(response.data.data);
-
-        console.log("Fetched registrations:", response.data);
-      } catch (error) {
-        console.error("Error fetching registrations:", error);
-      }
-    };
-
-    fetchRegistrations();
-  }, []);
+  // Fetch registrations from API
+  const fetchRegistrations = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await axios.get("http://localhost:5002/api/nextgen/registrations", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+      setStudentRegistrations(res.data);
+      console.log(res.data);
+    } catch (error) {
+      console.error("Error fetching registrations:", error);
+    }
+  };
 
   // Initialize registrations on component mount
   useEffect(() => {
@@ -92,24 +83,6 @@ export default function AdminPortal() {
       fetchRegistrations();
     }
   }, [isLoggedIn]);
-
-  // Fetch registrations from API
-  const fetchRegistrations = async () => {
-    try {
-      const token = localStorage.getItem("token"); // get token from localStorage
-
-      const res = await axios.get("http://localhost:5002/api/nextgen/registrations", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        withCredentials: true,
-      });
-
-      console.log(res.data);
-    } catch (error) {
-      console.error("Error fetching registrations:", error);
-    }
-  };
 
   // Handle registration approval
   const handleApproveRegistration = async (id) => {
