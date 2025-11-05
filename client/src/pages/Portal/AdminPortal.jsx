@@ -372,7 +372,7 @@ export default function AdminPortal() {
         <div className="container">
           {activeTab === "dashboard" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>System Overview</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Overview</h2>
 
               <div className="stats-grid">
                 <div className="stat-card">
@@ -402,7 +402,7 @@ export default function AdminPortal() {
               >
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title">Recent Activities</h3>
+                    <h3 className="portal-card-title"  style={{ color:"black" }}>Recent Activities</h3>
                   </div>
                   <div>
                     {recentActivities.map((activity) => (
@@ -441,7 +441,7 @@ export default function AdminPortal() {
 
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title">System Health</h3>
+                    <h3 className="portal-card-title"  style={{ color:"black" }} >System Health</h3>
                   </div>
                   <div
                     style={{
@@ -510,7 +510,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2>Employee Management</h2>
+                <h2 style={{ marginBottom: "2rem", color:"black" }}>Employee Management</h2>
                 <button className="btn-primary">Add New Employee</button>
               </div>
 
@@ -587,7 +587,7 @@ export default function AdminPortal() {
 
           {activeTab === "projects" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>Project Overview</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>Project Overview</h2>
 
               <div className="stats-grid">
                 <div className="stat-card">
@@ -674,7 +674,7 @@ export default function AdminPortal() {
 
           {activeTab === "system" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>System Management</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Management</h2>
 
               <div
                 style={{
@@ -684,7 +684,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Database Management</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Database Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -692,7 +692,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Backup Database
                     </button>
                     <button className="action-button">Restore Database</button>
@@ -702,7 +702,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">User Management</h3>
+                  <h3 className="portal-card-title" style={{ color:"black", textAlign: "center" }}>User Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -710,7 +710,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Create User
                     </button>
                     <button className="action-button">Manage Roles</button>
@@ -720,7 +720,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Security Settings</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Security Settings</h3>
                   <div
                     style={{
                       display: "flex",
@@ -728,7 +728,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Security Audit
                     </button>
                     <button className="action-button">Update Firewall</button>
@@ -750,7 +750,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2>Student Registrations</h2>
+                <h2 style={{ marginBottom: "2rem", color:"black" }}>Student Registrations</h2>
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <select
                     className="form-input"
@@ -1100,7 +1100,7 @@ export default function AdminPortal() {
 
           {activeTab === "reports" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>Reports & Analytics</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>Reports & Analytics</h2>
 
               <div
                 style={{
@@ -1110,7 +1110,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Employee Reports</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Employee Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1118,7 +1118,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Attendance Report
                     </button>
                     <button className="action-button">
@@ -1130,7 +1130,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Project Reports</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Project Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1138,7 +1138,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Project Status
                     </button>
                     <button className="action-button">Time Tracking</button>
@@ -1148,7 +1148,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Financial Reports</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}} >Financial Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1156,7 +1156,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Revenue Report
                     </button>
                     <button className="action-button">Expense Report</button>

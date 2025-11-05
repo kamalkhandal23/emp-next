@@ -7,7 +7,6 @@ import Announcement from '../models/nextgen/admin/Announcement.js'
 import Ticket from '../models/nextgen/support/Ticket.js'
 import Certificate from '../models/nextgen/education/Certificate.js'
 import HRDocRequest from '../models/nextgen/support/HRRequest.js'
-import Registration from "../models/nextgen/core/Registration.js";
 import { Result } from 'express-validator'
 
 async function generateNextStudentId() {
