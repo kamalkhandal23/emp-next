@@ -20,7 +20,7 @@ const ngApprovedStudentSchema = new mongoose.Schema({
 });
 
 const ngApprovedStudent = mongoose.model(
-  "ng_approved_students",
+  "ng_students",
   ngApprovedStudentSchema
 );
 export default ngApprovedStudent;

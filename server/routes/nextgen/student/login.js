@@ -1,5 +1,7 @@
 import Router from "express"
 import NG_Approved_Students from '../../../models/nextgen/core/NG_ApprovedStudents.js';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 const router = Router()
 
 // @desc    Student Login
@@ -7,7 +9,7 @@ const router = Router()
 // @access  Public
 router.post("/student/login", async (req, res) => {
   try {
-    
+
     const { identifier, password } = req.body;
     console.log(identifier)
     console.log(password)
@@ -16,12 +18,12 @@ router.post("/student/login", async (req, res) => {
     if (!identifier || !password) {
       return res.status(400).json({ message: "Email/Student ID and password are required." });
     }
-    
+
 
     // Find by email or student_id
     const student = await NG_Approved_Students.findOne({
       $or: [{ email: identifier.toLowerCase() }, { student_id: identifier }],
-    });
+    }).populate('course', 'title');
 
     if (!student) {
       return res.status(401).json({ message: "Invalid credentials." });

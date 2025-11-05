@@ -32,7 +32,7 @@ const NG_ApprovedStudents = new mongoose.Schema(
     },
     course: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "NG_Courses",
+      ref: "NG_Course",
       required: true,
     },
     password: {
