@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Services from "./pages/Services";
+import Login from "./pages/Login";
 import Careers from "./pages/Careers";
 import Contact from "./pages/Contact";
 import NextGenLanding from "./pages/NextGenFreeEdu/Landing";
@@ -29,8 +30,7 @@ import PrivacyPolicy from "./pages/NextGenFreeEdu/PrivacyPolicy";
 function MainLayout() {
   return (
     <div
-      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
-    >
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Navbar />
       <main style={{ flex: 1 }}>
         <Outlet />
@@ -43,16 +43,14 @@ function MainLayout() {
 function NextGenLayout() {
   return (
     <div
-      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
-    >
+      style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <header
         style={{
           padding: "1rem",
           background: "linear-gradient(135deg, #fef3c7, #fde68a)",
           borderBottom: "2px solid #f59e0b",
           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        }}
-      >
+        }}>
         <div className="container">
           <h1
             style={{
@@ -60,8 +58,7 @@ function NextGenLayout() {
               fontSize: "1.5rem",
               fontWeight: "700",
               color: "#92400e",
-            }}
-          >
+            }}>
             NextGenFreeEdu
           </h1>
         </div>
@@ -80,8 +77,7 @@ export default function App() {
         future={{
           v7_startTransition: true,
           v7_relativeSplatPath: true,
-        }}
-      >
+        }}>
         <AuthProvider>
           <Routes>
             <Route element={<MainLayout />}>
@@ -91,6 +87,7 @@ export default function App() {
               <Route path="careers" element={<Careers />} />
               <Route path="contact" element={<Contact />} />
             </Route>
+            <Route path="login" element={<Login />} />
             <Route path="nextgen" element={<NextGenLayout />}>
               <Route index element={<NextGenLanding />} />
               <Route path="enroll" element={<Enrollment />} />
@@ -107,13 +104,14 @@ export default function App() {
             <Route path="portal/team-lead" element={<TeamLeadPortal />} />
             <Route path="portal/manager" element={<ManagerPortal />} />
             <Route path="portal/employee" element={<EmployeePortal />} />
-            <Route path="portal/coursemanager" element={<CourseManagerPortal />} />
+            <Route
+              path="portal/coursemanager"
+              element={<CourseManagerPortal />}
+            />
             <Route path="test" element={<TestConnection />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>
-
-    
   );
 }
