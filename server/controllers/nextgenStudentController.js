@@ -14,6 +14,16 @@ async function generateNextStudentId() {
   return `STU${String(count + 1).padStart(6, '0')}`;
 }
 
+export const getAllRegistrations = async (req, res) => {
+  try {
+    const data = await Registration.find();
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("Error fetching registrations:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 export const enroll = async (req, res) => {
   try {
     const { fullName, email, course, password } = req.body;

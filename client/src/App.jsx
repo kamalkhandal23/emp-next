@@ -1,5 +1,6 @@
 import "./App.css";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Navbar from "./components/Navbar";
@@ -70,6 +71,60 @@ function NextGenLayout() {
   );
 }
 
+function AppContent() {
+  const hostname = window.location.hostname;
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Dynamic tab titles
+    if (hostname === "nextgenfreedu.site") {
+      document.title = "Welcome to NextGenFreeEdu";
+    } else {
+      document.title = "Welcome to Lifebox NextGen Pvt. Ltd.";
+    }
+
+    // Redirect logic: if user visits lifeboxnextgen.co.site/nextgen → redirect to nextgenfreedu.site
+    if (hostname === "lifeboxnextgen.co.site" && location.pathname === "/nextgen") {
+      window.location.replace("https://nextgenfreedu.site");
+    }
+
+    // If on nextgenfreedu.site and at root, redirect to /nextgen
+    if (hostname === "nextgenfreedu.site" && location.pathname === "/") {
+      navigate("/nextgen", { replace: true });
+    }
+  }, [hostname, location, navigate]);
+
+  return (
+    <Routes>
+      <Route element={<MainLayout />}>
+        <Route index element={<Home />} />
+        <Route path="about" element={<About />} />
+        <Route path="services" element={<Services />} />
+        <Route path="careers" element={<Careers />} />
+        <Route path="contact" element={<Contact />} />
+      </Route>
+      <Route path="nextgen" element={<NextGenLayout />}>
+        <Route index element={<NextGenLanding />} />
+        <Route path="enroll" element={<Enrollment />} />
+        <Route path="payment/checkout" element={<PaymentCheckout />} />
+        <Route path="login" element={<StudentLogin />} />
+        <Route path="set-password" element={<SetPassword />} />
+        <Route path="profile" element={<StudentProfile />} />
+        <Route path="exam" element={<Exam />} />
+        <Route path="results" element={<Results />} />
+        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+      </Route>
+      <Route path="portal/admin" element={<AdminPortal />} />
+      <Route path="portal/hr" element={<HRPortal />} />
+      <Route path="portal/team-lead" element={<TeamLeadPortal />} />
+      <Route path="portal/manager" element={<ManagerPortal />} />
+      <Route path="portal/employee" element={<EmployeePortal />} />
+      <Route path="portal/coursemanager" element={<CourseManagerPortal />} />
+      <Route path="test" element={<TestConnection />} />
+    </Routes>
+  );
+}
 export default function App() {
   return (
     <ErrorBoundary>

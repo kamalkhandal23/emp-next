@@ -2,6 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import NG_Approved_Students from '../../../models/nextgen/core/NG_ApprovedStudents.js';
 import User from '../../../models/nextgen/core/User.js';
 import Student from '../../../models/nextgen/student-management/Student.js';
 import Registration from '../../../models/nextgen/core/Registration.js';
@@ -27,48 +28,20 @@ router.post('/login', [
 
     const { identifier, password } = req.body;
 
-    // Find user by email or student ID
-    let user;
-    let student;
+    // Find student by email or student_id from NG_Approved_Students collection
+    const student = await NG_Approved_Students.findOne({
+      $or: [{ email: identifier.toLowerCase() }, { student_id: identifier }],
+    });
 
-    // Try to find by email first
-    user = await User.findOne({ email: identifier, role: 'student' });
-    
-    if (!user) {
-      // Try to find by student ID
-      student = await Student.findOne({ student_id: identifier });
-      if (student) {
-        user = await User.findById(student.user_id);
-      }
-    } else {
-      student = await Student.findOne({ user_id: user._id });
-    }
-
-    if (!user || !student) {
+    if (!student) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
 
-    // Check if user is active
-    if (user.status !== 'active') {
-      return res.status(401).json({
-        success: false,
-        message: 'Account is not active. Please contact support.'
-      });
-    }
-
-    // Check if student is active
-    if (student.status !== 'active') {
-      return res.status(401).json({
-        success: false,
-        message: 'Student account is not active. Please contact support.'
-      });
-    }
-
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    // Verify password using bcrypt
+    const isPasswordValid = await bcrypt.compare(password, student.password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -76,16 +49,12 @@ router.post('/login', [
       });
     }
 
-    // Update last login
-    user.last_login_at = new Date();
-    await user.save();
-
     // Generate JWT token
     const token = jwt.sign(
-      { 
-        id: user._id,
-        email: user.email,
-        role: user.role,
+      {
+        id: student._id,
+        email: student.email,
+        role: 'student',
         student_id: student.student_id
       },
       process.env.JWT_SECRET,
@@ -97,20 +66,14 @@ router.post('/login', [
       message: 'Login successful',
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          role: user.role,
-          last_login: user.last_login_at
-        },
         student: {
           id: student._id,
           student_id: student.student_id,
-          full_name: student.full_name,
-          status: student.status,
-          enrollment_date: student.enrollment_date
-        }
-      }
+          fullName: student.fullName,
+          email: student.email,
+          course: student.course,
+        },
+      },
     });
   } catch (error) {
     console.error('Student login error:', error);
@@ -141,7 +104,7 @@ router.post('/validate-token', [
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Find registration
     const registration = await Registration.findById(decoded.registrationId)
       .populate('course_id', 'title slug');
@@ -207,7 +170,7 @@ router.post('/set-password', [
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Find registration
     const registration = await Registration.findById(decoded.registrationId)
       .populate('course_id', 'title slug');
@@ -228,11 +191,11 @@ router.post('/set-password', [
 
     // Check if user already exists
     let user = await User.findOne({ email: registration.email });
-    
+
     if (!user) {
       // Create new user
       const hashedPassword = await bcrypt.hash(password, 12);
-      
+
       user = new User({
         login_id: `student_${Date.now()}`,
         full_name: registration.full_name,
@@ -241,7 +204,7 @@ router.post('/set-password', [
         status: 'active',
         password_hash: hashedPassword
       });
-      
+
       await user.save();
     } else {
       // Update existing user password
@@ -253,7 +216,7 @@ router.post('/set-password', [
 
     // Create or update student profile
     let student = await Student.findOne({ email: registration.email });
-    
+
     if (!student) {
       // Generate student ID
       const studentCount = await Student.countDocuments();
@@ -268,7 +231,7 @@ router.post('/set-password', [
         status: 'active',
         enrollment_date: new Date()
       });
-      
+
       await student.save();
     } else {
       student.user_id = user._id;
@@ -282,7 +245,7 @@ router.post('/set-password', [
 
     // Generate login token
     const loginToken = jwt.sign(
-      { 
+      {
         id: user._id,
         email: user.email,
         role: user.role,

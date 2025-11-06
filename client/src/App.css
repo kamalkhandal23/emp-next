@@ -630,7 +630,7 @@ avbar Dropdown Styles */
 .stat-card {
   background: white;
   border-radius: 0.75rem;
-  padding: 1.5rem;
+  padding: 3rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border-left: 4px solid #3b82f6;
 }
@@ -715,12 +715,12 @@ avbar Dropdown Styles */
   color: #374151;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.action-button:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+.action-button:hover{
+  background: #2f59ad;
+  border-color: #0d2c60;
 }
 
 .action-button.primary {

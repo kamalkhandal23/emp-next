@@ -20,6 +20,8 @@ export default function Enrollment() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null)
   const [paymentType, setPaymentType] = useState('free') // 'free' or 'paid'
+  const [showCourseDetails, setShowCourseDetails] = useState(false)
+  const [selectedCourseDetails, setSelectedCourseDetails] = useState(null)
 
   const [courses, setCourses] = useState([
     // fallback in case API is unavailable; these do not contain Mongo IDs
@@ -110,8 +112,8 @@ export default function Enrollment() {
         email: formData.email,
         phone: formData.phone,
         // send the MongoDB ID for the course if available; fallback to the string value
-        //course_id: formData.course,
-        course_id: "68fc5efd3d9639feee13d1ac",
+        course_id: formData.course,
+        //course_id: "68fc5efd3d9639feee13d1ac",
 
         date_of_birth: formData.dateOfBirth,
         education: formData.education,

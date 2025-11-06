@@ -13,14 +13,10 @@ export default function StudentLogin() {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  // Mock student data for demo
-  const mockStudent = {
-    name: 'Priya Sharma',
-    studentId: 'NGE2024001',
-    course: 'Full Stack Development',
-    batch: 'Batch 2024-A',
-    progress: 65,
-    email: 'priya.sharma@email.com'
+  // Get student data from localStorage
+  const getStudentData = () => {
+    const studentInfo = localStorage.getItem('studentInfo')
+    return studentInfo ? JSON.parse(studentInfo) : null
   }
 
   const handleInputChange = (e) => {
@@ -53,6 +49,7 @@ export default function StudentLogin() {
       if (response.ok) {
         const data = await response.json()
         // Store auth token and user info
+        console.log(data)
         localStorage.setItem('authToken', data.data.token)
         localStorage.setItem('userRole', 'student')
         localStorage.setItem('studentInfo', JSON.stringify(data.data.student))
@@ -63,15 +60,7 @@ export default function StudentLogin() {
       }
     } catch (error) {
       console.error('Login error:', error)
-      // Fallback for demo - allow any credentials
-      if (loginData.identifier && loginData.password) {
-        localStorage.setItem('authToken', 'demo-token')
-        localStorage.setItem('userRole', 'student')
-        localStorage.setItem('studentInfo', JSON.stringify(mockStudent))
-        setIsLoggedIn(true)
-      } else {
-        setLoginError('Please enter valid credentials')
-      }
+      setLoginError('Network error. Please try again.')
     } finally {
       setIsLoggingIn(false)
     }
@@ -100,10 +89,10 @@ export default function StudentLogin() {
               <div style={{ fontSize: '3rem' }}>👋</div>
               <div>
                 <h1 style={{ margin: 0, color: '#1e40af' }}>
-                  Welcome back, {mockStudent.name}!
+                  Welcome back, {getStudentData()?.fullName}!
                 </h1>
                 <p style={{ margin: '0.5rem 0 0 0', color: '#1e3a8a' }}>
-                  Student ID: {mockStudent.studentId} • {mockStudent.course}
+                  Student ID: {getStudentData()?.student_id} • {getStudentData()?.course?.title || 'Course'}
                 </p>
               </div>
             </div>
@@ -118,7 +107,7 @@ export default function StudentLogin() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                   <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Overall Progress</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
-                    {mockStudent.progress}%
+                    0%
                   </span>
                 </div>
                 <div style={{ 
@@ -128,9 +117,9 @@ export default function StudentLogin() {
                   borderRadius: '4px',
                   overflow: 'hidden'
                 }}>
-                  <div style={{ 
-                    width: `${mockStudent.progress}%`, 
-                    height: '100%', 
+                  <div style={{
+                    width: `0%`,
+                    height: '100%',
                     background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
                     transition: 'width 0.3s ease'
                   }} />
