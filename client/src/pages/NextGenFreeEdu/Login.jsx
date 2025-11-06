@@ -49,6 +49,7 @@ export default function StudentLogin() {
       if (response.ok) {
         const data = await response.json()
         // Store auth token and user info
+        console.log(data)
         localStorage.setItem('authToken', data.data.token)
         localStorage.setItem('userRole', 'student')
         localStorage.setItem('studentInfo', JSON.stringify(data.data.student))
