@@ -1,5 +1,6 @@
 import Router from "express"
 import NG_Approved_Students from '../../../models/nextgen/core/NG_ApprovedStudents.js';
+import NG_Courses from "../../../models/nextgen/core/NG_Courses.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 const router = Router()
@@ -23,13 +24,18 @@ router.post("/student/login", async (req, res) => {
     // Find by email or student_id
     const student = await NG_Approved_Students.findOne({
       $or: [{ email: identifier.toLowerCase() }, { student_id: identifier }],
-    }).populate('course', 'title');
+    }).populate({
+      path : "course",
+      model : "NG_Courses",
+      select : "title subtitle duration"
+    });
 
+    console.log("populate",student)
+    const res = student
     if (!student) {
       return res.status(401).json({ message: "Invalid credentials." });
     }
-
-    // Compare passwords (bcrypt)
+    
     const isMatch = await bcrypt.compare(password, student.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials." });
@@ -51,8 +57,9 @@ router.post("/student/login", async (req, res) => {
           student_id: student.student_id,
           fullName: student.fullName,
           email: student.email,
-          course: student.course,
+          course: student.course.title,
         },
+        
       },
     });
   } catch (error) {

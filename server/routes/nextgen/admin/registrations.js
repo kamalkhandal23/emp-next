@@ -4,6 +4,7 @@ import Registration from "../../../models/nextgen/core/Registration.js";
 import { auth } from "../../../middleware/auth.js";
 import { sendEmail } from "../../../config/email.js";
 import ngStudent from "../../../models/ng_student.js";
+import NG_Approved_Students from "../../../models/nextgen/core/NG_ApprovedStudents.js";
 import ngRejectedStudent from "../../../models/ng_rejected_students.js";
 const router = express.Router();
 import bcrypt from "bcryptjs";
@@ -40,14 +41,9 @@ router.put("/:id/approve", auth, ensureAdminOrManager, async (req, res) => {
       ? req.user._id
       : new mongoose.Types.ObjectId("670b9a7b5f2c2b4d9ef4f9a1");
 
-    //  Update registration
-    registration.status = "approved";
-    registration.reviewed_by = reviewerId;
-    registration.reviewed_at = new Date();
-    await registration.save();
-
-    //  Check if already exists
-    const existingStudent = await ngStudent.findOne({ email: registration.email });
+    
+    //  Check if already exists // here it should find in   ng_approved students
+    const existingStudent = await NG_Approved_Students.findOne({ email: registration.email });
     if (existingStudent) {
       return res.json({
         success: true,
@@ -56,13 +52,19 @@ router.put("/:id/approve", auth, ensureAdminOrManager, async (req, res) => {
       });
     }
 
+    //  Update registration
+    registration.status = "approved";
+    registration.reviewed_by = reviewerId;
+    registration.reviewed_at = new Date();
+    await registration.save();
+
     // Generate unique student_id
     let studentCode;
     let isUnique = false;
     for (let i = 0; i < 5 && !isUnique; i++) {
-      const count = await ngStudent.countDocuments();
+      const count = await NG_Approved_Students.countDocuments();
       studentCode = `STU${(count + 1 + i).toString().padStart(4, "0")}`;
-      const exists = await ngStudent.findOne({ student_id: studentCode });
+      const exists = await NG_Approved_Students.findOne({ student_id: studentCode });
       if (!exists) isUnique = true;
     }
 
@@ -78,7 +80,7 @@ router.put("/:id/approve", auth, ensureAdminOrManager, async (req, res) => {
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
     //  Create new student entry
-    const newStudent = new ngStudent({
+    const newStudent = new NG_Approved_Students({
       user_id: registration.user_id || new mongoose.Types.ObjectId(),
       student_id: studentCode,
       fullName: registration.full_name || registration.fullName,
@@ -86,7 +88,7 @@ router.put("/:id/approve", auth, ensureAdminOrManager, async (req, res) => {
       phone: registration.phone?.c || registration.phone,
       course: registration.course_id,
       address: registration.address,
-      password: hashedPassword,
+      password: hashedPassword, // this is for checking purpose only, it has to replace with this hashedPassword
       registeredAt: new Date(),
       registrationRef: registration._id,
     });
@@ -108,7 +110,7 @@ router.put("/:id/approve", auth, ensureAdminOrManager, async (req, res) => {
     res.json({
       success: true,
       message:
-        "Registration approved successfully, student added, and credentials emailed.",
+        "Registration approved successfully, student added to ng_approved, and credentials emailed.",
       data: { registrationId: registration._id, studentId: studentCode },
     });
   } catch (error) {

@@ -7,7 +7,7 @@ const NG_ApprovedStudents = new mongoose.Schema(
   {
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "NG_User",
+      ref: "NG_Registration",
       required: true,
     },
     student_id: {
@@ -32,7 +32,7 @@ const NG_ApprovedStudents = new mongoose.Schema(
     },
     course: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "NG_Course",
+      ref: "NG_Courses",
       required: true,
     },
     password: {
