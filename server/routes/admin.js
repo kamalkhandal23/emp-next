@@ -1,5 +1,6 @@
 import express from 'express';
 import { body } from 'express-validator';
+import jwt from "jsonwebtoken";
 import {
   getDashboardStats,
   getSystemHealth,
@@ -19,7 +20,33 @@ import { auth, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes require admin authentication
+/* ---------------------- ADMIN LOGIN ROUTE ---------------------- */
+// This should be placed BEFORE router.use(auth)
+router.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (username === 'admin' && password === 'admin123') {
+    const token = jwt.sign(
+      { id: 'admin-id', role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    return res.json({
+      token,
+      admin: {
+        name: 'Super Admin',
+        role: 'admin',
+        email: 'admin@example.com'
+      }
+    });
+  } else {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+});
+/* ------------------------------------------------------------------ */
+
+//  All routes below this require authentication
 router.use(auth);
 router.use(authorize(['admin']));
 

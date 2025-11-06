@@ -1,4 +1,3 @@
-# TODO: Change Title Colors in PrivacyPolicy.jsx
-
-- [x] Update h1 element to add inline style color: black
-- [x] Update all h2 elements to add inline style color: black
+- [x] Refactor App.jsx to remove DomainRouter and make routing conditional on hostname
+- [x] Add proper redirect logic using useEffect and useNavigate
+- [ ] Run development server and test navigation to /nextgen

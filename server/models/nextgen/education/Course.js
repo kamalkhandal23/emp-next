@@ -4,7 +4,10 @@ const courseSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true, index: true },
   title: { type: String, required: true },
   subtitle: String,
-  duration_weeks: Number,
+  duration: { type: String, required: true }, // e.g., "6 months", "4 months"
+  description: { type: String, required: true },
+  prerequisites: { type: String, default: '' },
+  icon: { type: String, default: '🎓' },
   visibility: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft', index: true },
   banner_url: String,
   created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'NG_User' },

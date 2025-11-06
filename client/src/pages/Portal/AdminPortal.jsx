@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 export default function AdminPortal() {
+  const { token } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginData, setLoginData] = useState({ username: "", password: "" });
-  const [studentRegistrations, setStudentRegistrations] = useState([]);
+  const [loginError, setLoginError] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [studentRegistrations, setStudentRegistrations] = useState([]);
 
   // Mock data
   const adminStats = {
@@ -56,65 +60,22 @@ export default function AdminPortal() {
     securityStatus: "Secure",
   };
 
-  // Mock student registrations data
-  const mockRegistrations = [
-    {
-      id: 1,
-      fullName: "Arjun Patel",
-      email: "arjun.patel@email.com",
-      phone: "+91-9876543210",
-      course: "Full Stack Development",
-      registrationDate: "2024-03-01",
-      status: "pending",
-      documents: ["10th Certificate", "12th Certificate", "ID Proof"],
-      address: "Mumbai, Maharashtra",
-    },
-    {
-      id: 2,  
-      fullName: "Sneha Sharma",
-      email: "sneha.sharma@email.com",
-      phone: "+91-9876543211",
-      course: "Data Science & Analytics",
-      registrationDate: "2024-03-02",
-      status: "pending",
-      documents: ["Graduation Certificate", "ID Proof", "Photo"],
-      address: "Delhi, India",
-    },
-    {
-      id: 3,
-      fullName: "Rohit Kumar",
-      email: "rohit.kumar@email.com",
-      phone: "+91-9876543212",
-      course: "Digital Marketing",
-      registrationDate: "2024-03-03",
-      status: "approved",
-      documents: ["12th Certificate", "ID Proof"],
-      address: "Bangalore, Karnataka",
-    },
-    {
-      id: 4,
-      fullName: "Priya Singh",
-      email: "priya.singh@email.com",
-      phone: "+91-9876543213",
-      course: "UI/UX Design",
-      registrationDate: "2024-03-04",
-      status: "rejected",
-      documents: ["Graduation Certificate", "Portfolio"],
-      address: "Pune, Maharashtra",
-      rejectionReason: "Incomplete documentation",
-    },
-    {
-      id: 5,
-      fullName: "Vikash Gupta",
-      email: "vikash.gupta@email.com",
-      phone: "+91-9876543214",
-      course: "Cybersecurity",
-      registrationDate: "2024-03-05",
-      status: "pending",
-      documents: ["Graduation Certificate", "ID Proof", "Experience Letter"],
-      address: "Hyderabad, Telangana",
-    },
-  ];
+  // Fetch registrations from API
+  const fetchRegistrations = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await axios.get("http://localhost:5002/api/nextgen/registrations", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+      setStudentRegistrations(res.data);
+      console.log(res.data);
+    } catch (error) {
+      console.error("Error fetching registrations:", error);
+    }
+  };
 
   // Initialize registrations on component mount
   useEffect(() => {
@@ -123,84 +84,38 @@ export default function AdminPortal() {
     }
   }, [isLoggedIn]);
 
-  // Fetch registrations from API
-  const fetchRegistrations = async (status = "all") => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("authToken");
-      const queryParam = status !== "all" ? `?status=${status}` : "";
-
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_URL
-        }/nextgen/admin/registrations${queryParam}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setStudentRegistrations(data.data.registrations || []);
-      } else {
-        // Fallback to mock data if API fails
-        console.warn("API failed, using mock data");
-        setStudentRegistrations(
-          status === "all"
-            ? mockRegistrations
-            : mockRegistrations.filter((reg) => reg.status === status)
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching registrations:", error);
-      // Fallback to mock data
-      setStudentRegistrations(
-        status === "all"
-          ? mockRegistrations
-          : mockRegistrations.filter((reg) => reg.status === status)
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Handle registration approval
-  const handleApproveRegistration = async (registrationId) => {
-    setLoading(true);
+  const handleApproveRegistration = async (id) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("authToken");
+      console.log("🔹 Token from localStorage:", token);
 
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_URL
-        }/nextgen/admin/registrations/${registrationId}/review`,
+      if (!token) {
+        alert("No token found! Please login again.");
+        return;
+      }
+
+      const url = `http://localhost:5002/api/nextgen/admin/registrations/${id}/approve`;
+      console.log("🔹 Requesting:", url);
+
+      const res = await axios.put(
+        url,
+        {},
         {
-          method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            status: "accepted",
-            notes: "Registration approved by admin",
-          }),
         }
       );
 
-      if (response.ok) {
-        // Refresh the registrations list
-        await fetchRegistrations();
-        alert("Registration approved successfully!");
-      } else {
-        const errorData = await response.json();
-        alert(`Error approving registration: ${errorData.message}`);
-      }
+      console.log(" Response:", res.data);
+      alert(res.data?.message || "Registration approved successfully!");
+      fetchRegistrations();
     } catch (error) {
-      console.error("Error approving registration:", error);
-      alert("Error approving registration");
+      console.error("Full error object:", error);
+      console.error("Error response:", error.response?.data);
+      alert(error.response?.data?.message || "Approval failed!");
     } finally {
       setLoading(false);
     }
@@ -211,26 +126,20 @@ export default function AdminPortal() {
     setLoading(true);
     try {
       const token = localStorage.getItem("authToken");
-
+  
       const response = await fetch(
-        `${
-          import.meta.env.VITE_API_URL
-        }/nextgen/admin/registrations/${registrationId}/review`,
+        `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
         {
           method: "PUT",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            status: "rejected",
-            notes: reason,
-          }),
+          body: JSON.stringify({ reason }),
         }
       );
-
+  
       if (response.ok) {
-        // Refresh the registrations list
         await fetchRegistrations();
         alert("Registration rejected successfully!");
       } else {
@@ -244,6 +153,7 @@ export default function AdminPortal() {
       setLoading(false);
     }
   };
+  
 
   // Handle view registration details
   const handleViewDetails = (registration) => {
@@ -263,10 +173,45 @@ export default function AdminPortal() {
     );
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (loginData.username && loginData.password) {
+    setLoginError("");
+    setIsLoggingIn(true);
+
+    try {
+      const response = await fetch(
+        "http://localhost:5002/api/nextgen/admin/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: loginData.username,
+            password: loginData.password,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Invalid username or password");
+      }
+
+      const data = await response.json();
+
+      // Save token for future API calls
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("userRole", "admin");
+      localStorage.setItem("adminInfo", JSON.stringify(data.admin));
+
+      // console.log("Admin token saved:", data.token);
       setIsLoggedIn(true);
+    } catch (error) {
+      console.error("Admin login failed:", error);
+      setLoginError(error.message || "Login failed");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -380,49 +325,43 @@ export default function AdminPortal() {
         <div className="portal-nav-links">
           <button
             onClick={() => setActiveTab("dashboard")}
-            className={`portal-nav-link ${
-              activeTab === "dashboard" ? "active" : ""
-            }`}
+            className={`portal-nav-link ${activeTab === "dashboard" ? "active" : ""
+              }`}
           >
             Dashboard
           </button>
           <button
             onClick={() => setActiveTab("employees")}
-            className={`portal-nav-link ${
-              activeTab === "employees" ? "active" : ""
-            }`}
+            className={`portal-nav-link ${activeTab === "employees" ? "active" : ""
+              }`}
           >
             Employee Management
           </button>
           <button
             onClick={() => setActiveTab("projects")}
-            className={`portal-nav-link ${
-              activeTab === "projects" ? "active" : ""
-            }`}
+            className={`portal-nav-link ${activeTab === "projects" ? "active" : ""
+              }`}
           >
             Project Overview
           </button>
           <button
             onClick={() => setActiveTab("system")}
-            className={`portal-nav-link ${
-              activeTab === "system" ? "active" : ""
-            }`}
+            className={`portal-nav-link ${activeTab === "system" ? "active" : ""
+              }`}
           >
             System Management
           </button>
           <button
             onClick={() => setActiveTab("student-registrations")}
-            className={`portal-nav-link ${
-              activeTab === "student-registrations" ? "active" : ""
-            }`}
+            className={`portal-nav-link ${activeTab === "student-registrations" ? "active" : ""
+              }`}
           >
             Student Registrations
           </button>
           <button
             onClick={() => setActiveTab("reports")}
-            className={`portal-nav-link ${
-              activeTab === "reports" ? "active" : ""
-            }`}
+            className={`portal-nav-link ${activeTab === "reports" ? "active" : ""
+              }`}
           >
             Reports & Analytics
           </button>
@@ -433,7 +372,7 @@ export default function AdminPortal() {
         <div className="container">
           {activeTab === "dashboard" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>System Overview</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Overview</h2>
 
               <div className="stats-grid">
                 <div className="stat-card">
@@ -463,7 +402,7 @@ export default function AdminPortal() {
               >
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title">Recent Activities</h3>
+                    <h3 className="portal-card-title"  style={{ color:"black" }}>Recent Activities</h3>
                   </div>
                   <div>
                     {recentActivities.map((activity) => (
@@ -486,13 +425,12 @@ export default function AdminPortal() {
                           {activity.time}
                         </div>
                         <div
-                          className={`status-badge status-${
-                            activity.type === "success"
-                              ? "active"
-                              : activity.type === "warning"
+                          className={`status-badge status-${activity.type === "success"
+                            ? "active"
+                            : activity.type === "warning"
                               ? "pending"
                               : "completed"
-                          }`}
+                            }`}
                         >
                           {activity.type}
                         </div>
@@ -503,7 +441,7 @@ export default function AdminPortal() {
 
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title">System Health</h3>
+                    <h3 className="portal-card-title"  style={{ color:"black" }} >System Health</h3>
                   </div>
                   <div
                     style={{
@@ -572,7 +510,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2>Employee Management</h2>
+                <h2 style={{ marginBottom: "2rem", color:"black" }}>Employee Management</h2>
                 <button className="btn-primary">Add New Employee</button>
               </div>
 
@@ -649,7 +587,7 @@ export default function AdminPortal() {
 
           {activeTab === "projects" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>Project Overview</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>Project Overview</h2>
 
               <div className="stats-grid">
                 <div className="stat-card">
@@ -736,7 +674,7 @@ export default function AdminPortal() {
 
           {activeTab === "system" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>System Management</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Management</h2>
 
               <div
                 style={{
@@ -746,7 +684,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Database Management</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Database Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -754,7 +692,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Backup Database
                     </button>
                     <button className="action-button">Restore Database</button>
@@ -764,7 +702,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">User Management</h3>
+                  <h3 className="portal-card-title" style={{ color:"black", textAlign: "center" }}>User Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -772,7 +710,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Create User
                     </button>
                     <button className="action-button">Manage Roles</button>
@@ -782,7 +720,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Security Settings</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Security Settings</h3>
                   <div
                     style={{
                       display: "flex",
@@ -790,7 +728,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Security Audit
                     </button>
                     <button className="action-button">Update Firewall</button>
@@ -812,7 +750,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2>Student Registrations</h2>
+                <h2 style={{ marginBottom: "2rem", color:"black" }}>Student Registrations</h2>
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <select
                     className="form-input"
@@ -877,9 +815,9 @@ export default function AdminPortal() {
 
               {/* Registrations Table */}
               <div className="data-table">
-                <div className="table-header">
-                  Student Registration Requests
-                </div>
+                <div className="table-header">Student Registration Requests</div>
+
+                {/* Table Header Row */}
                 <div
                   className="table-row"
                   style={{
@@ -897,181 +835,184 @@ export default function AdminPortal() {
                   <div>Notes</div>
                 </div>
 
-                {studentRegistrations.map((registration) => (
-                  <div
-                    key={registration._id || registration.id}
-                    className="table-row"
-                    style={{
-                      gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr 1fr 2fr",
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{ fontWeight: "500", marginBottom: "0.25rem" }}
-                      >
-                        {registration.full_name || registration.fullName}
-                      </div>
-                      <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-                        {registration.email}
-                      </div>
-                      <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-                        {registration.phone || "N/A"}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: "500" }}>
-                        {registration.course_id?.title || registration.course}
-                      </div>
-                      <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-                        {registration.address || "N/A"}
-                      </div>
-                    </div>
-                    <div>
-                      {new Date(
-                        registration.created_at || registration.registrationDate
-                      ).toLocaleDateString()}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "0.875rem" }}>
-                        {registration.documents.length} docs
-                      </div>
-                      <button
-                        className="action-button"
-                        onClick={() =>
-                          alert(
-                            `Documents:\n${registration.documents.join("\n")}`
-                          )
-                        }
-                        style={{
-                          fontSize: "0.75rem",
-                          padding: "0.25rem 0.5rem",
-                        }}
-                      >
-                        View
-                      </button>
-                    </div>
-                    <div>
-                      <span
-                        className={`status-badge status-${
-                          registration.status === "accepted" ||
-                          registration.status === "approved"
-                            ? "active"
-                            : registration.status === "rejected"
-                            ? "inactive"
-                            : "pending"
-                        }`}
-                      >
-                        {registration.status}
-                      </span>
-                    </div>
+                {studentRegistrations.map((registration) => {
+                  const safeValue = (val) => {
+                    if (!val) return "N/A";
+                    if (typeof val === "string" || typeof val === "number") return val;
+                    if (Array.isArray(val)) return val.join(", ");
+                    if (typeof val === "object") return "[Encrypted]";
+                    return String(val);
+                  };
+
+                  const documents = Array.isArray(registration.documents)
+                    ? registration.documents
+                    : registration.documents
+                      ? [registration.documents]
+                      : [];
+
+                  return (
                     <div
+                      key={registration._id || registration.id}
+                      className="table-row"
                       style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.5rem",
+                        gridTemplateColumns: "2fr 1.5fr 1fr 1fr 1fr 1fr 2fr",
                       }}
                     >
-                      {(registration.status === "submitted" ||
-                        registration.status === "under_review" ||
-                        registration.status === "pending") && (
-                        <>
-                          <button
-                            className="action-button primary"
-                            onClick={() =>
-                              handleApproveRegistration(
-                                registration._id || registration.id
+                      {/* Student Info */}
+                      <div>
+                        <div style={{ fontWeight: "500", marginBottom: "0.25rem" }}>
+                          {safeValue(registration.full_name || registration.fullName)}
+                        </div>
+                        <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                          {safeValue(registration.email)}
+                        </div>
+                        <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                          {safeValue(registration.phone)}
+                        </div>
+                      </div>
+
+                      {/* Course Info */}
+                      <div>
+                        <div style={{ fontWeight: "500" }}>
+                          {safeValue(registration.course_id?.title || registration.course)}
+                        </div>
+                        <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+                          {safeValue(registration.address)}
+                        </div>
+                      </div>
+
+                      {/* Date */}
+                      <div>
+                        {registration.created_at || registration.registrationDate
+                          ? new Date(
+                            registration.created_at || registration.registrationDate
+                          ).toLocaleDateString()
+                          : "—"}
+                      </div>
+
+                      {/* Documents */}
+                      <div>
+                        <div style={{ fontSize: "0.875rem" }}>{documents.length} docs</div>
+                        <button
+                          className="action-button"
+                          onClick={() => {
+                            const docsText = documents
+                              .map((doc) =>
+                                typeof doc === "string"
+                                  ? doc
+                                  : JSON.stringify(doc, null, 2)
                               )
-                            }
-                            disabled={loading}
-                            style={{
-                              fontSize: "0.75rem",
-                              padding: "0.25rem 0.5rem",
-                            }}
-                          >
-                            {loading ? "Processing..." : "Approve"}
-                          </button>
-                          <button
-                            className="action-button"
-                            onClick={() => {
-                              const reason = prompt("Enter rejection reason:");
-                              if (reason) {
-                                handleRejectRegistration(
-                                  registration._id || registration.id,
-                                  reason
-                                );
-                              }
-                            }}
-                            disabled={loading}
-                            style={{
-                              fontSize: "0.75rem",
-                              padding: "0.25rem 0.5rem",
-                              background: "#ef4444",
-                              color: "white",
-                            }}
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      <button
-                        className="action-button"
-                        onClick={() => handleViewDetails(registration)}
-                        style={{
-                          fontSize: "0.75rem",
-                          padding: "0.25rem 0.5rem",
-                        }}
-                      >
-                        Details
-                      </button>
-                    </div>
-                    <div style={{ fontSize: "0.875rem" }}>
-                      {(registration.status === "accepted" ||
-                        registration.status === "approved") &&
-                        registration.reviewed_at && (
-                          <div style={{ color: "#22c55e" }}>
-                            Approved on{" "}
-                            {new Date(
-                              registration.reviewed_at
-                            ).toLocaleDateString()}
-                            {registration.reviewed_by?.full_name && (
-                              <div style={{ fontSize: "0.75rem" }}>
-                                by {registration.reviewed_by.full_name}
+                              .join("\n");
+                            alert(docsText || "No documents uploaded.");
+                          }}
+                          style={{
+                            fontSize: "0.75rem",
+                            padding: "0.25rem 0.5rem",
+                          }}
+                        >
+                          View
+                        </button>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <span
+                          className={`status-badge status-${registration.status === "accepted" ||
+                            registration.status === "approved"
+                            ? "active"
+                            : registration.status === "rejected"
+                              ? "inactive"
+                              : "pending"
+                            }`}
+                        >
+                          {safeValue(registration.status)}
+                        </span>
+                      </div>
+
+                      {/* Actions */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        {(registration.status === "submitted" ||
+                          registration.status === "under_review" ||
+                          registration.status === "pending") && (
+                            <>
+                              <button
+                                className="action-button primary"
+                                onClick={() =>
+                                  handleApproveRegistration(registration._id || registration.id)
+                                }
+                                disabled={loading}
+                                style={{
+                                  fontSize: "0.75rem",
+                                  padding: "0.25rem 0.5rem",
+                                }}
+                              >
+                                {loading ? "Processing..." : "Approve"}
+                              </button>
+                              <button
+                                className="action-button"
+                                onClick={() => {
+                                  const reason = prompt("Enter rejection reason:");
+                                  if (reason) {
+                                    handleRejectRegistration(
+                                      registration._id || registration.id,
+                                      reason
+                                    );
+                                  }
+                                }}
+                                disabled={loading}
+                                style={{
+                                  fontSize: "0.75rem",
+                                  padding: "0.25rem 0.5rem",
+                                  background: "#ef4444",
+                                  color: "white",
+                                }}
+                              >
+                                Reject
+                              </button>
+                            </>
+                          )}
+                        <button
+                          className="action-button"
+                          onClick={() => handleViewDetails(registration)}
+                          style={{
+                            fontSize: "0.75rem",
+                            padding: "0.25rem 0.5rem",
+                          }}
+                        >
+                          Details
+                        </button>
+                      </div>
+
+                      {/* Notes */}
+                      <div style={{ fontSize: "0.875rem" }}>
+                        {registration.status === "approved" &&
+                          registration.reviewed_at && (
+                            <div style={{ color: "#22c55e" }}>
+                              Approved on{" "}
+                              {new Date(registration.reviewed_at).toLocaleDateString()}
+                            </div>
+                          )}
+                        {registration.status === "rejected" && (
+                          <div style={{ color: "#ef4444" }}>
+                            <div>
+                              Rejected on{" "}
+                              {new Date(
+                                registration.reviewed_at || registration.rejectedDate
+                              ).toLocaleDateString()}
+                            </div>
+                            {(registration.notes || registration.rejectionReason) && (
+                              <div
+                                style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}
+                              >
+                                Reason: {safeValue(registration.notes || registration.rejectionReason)}
                               </div>
                             )}
                           </div>
                         )}
-                      {registration.status === "rejected" && (
-                        <div style={{ color: "#ef4444" }}>
-                          <div>
-                            Rejected on{" "}
-                            {new Date(
-                              registration.reviewed_at ||
-                                registration.rejectedDate
-                            ).toLocaleDateString()}
-                          </div>
-                          {(registration.notes ||
-                            registration.rejectionReason) && (
-                            <div
-                              style={{
-                                fontSize: "0.75rem",
-                                marginTop: "0.25rem",
-                              }}
-                            >
-                              Reason:{" "}
-                              {registration.notes ||
-                                registration.rejectionReason}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {(registration.status === "submitted" ||
-                        registration.status === "under_review" ||
-                        registration.status === "pending") && (
-                        <div style={{ color: "#f59e0b" }}>Awaiting review</div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Quick Actions */}
@@ -1099,12 +1040,12 @@ export default function AdminPortal() {
                               prev.map((reg) =>
                                 reg.status === "pending"
                                   ? {
-                                      ...reg,
-                                      status: "approved",
-                                      approvedDate: new Date()
-                                        .toISOString()
-                                        .split("T")[0],
-                                    }
+                                    ...reg,
+                                    status: "approved",
+                                    approvedDate: new Date()
+                                      .toISOString()
+                                      .split("T")[0],
+                                  }
                                   : reg
                               )
                             );
@@ -1159,7 +1100,7 @@ export default function AdminPortal() {
 
           {activeTab === "reports" && (
             <div>
-              <h2 style={{ marginBottom: "2rem" }}>Reports & Analytics</h2>
+              <h2 style={{ marginBottom: "2rem", color:"black" }}>Reports & Analytics</h2>
 
               <div
                 style={{
@@ -1169,7 +1110,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Employee Reports</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Employee Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1177,7 +1118,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Attendance Report
                     </button>
                     <button className="action-button">
@@ -1189,7 +1130,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Project Reports</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Project Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1197,7 +1138,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Project Status
                     </button>
                     <button className="action-button">Time Tracking</button>
@@ -1207,7 +1148,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title">Financial Reports</h3>
+                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}} >Financial Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1215,7 +1156,7 @@ export default function AdminPortal() {
                       gap: "1rem",
                     }}
                   >
-                    <button className="action-button primary">
+                    <button className="action-button">
                       Revenue Report
                     </button>
                     <button className="action-button">Expense Report</button>
