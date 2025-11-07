@@ -1,19 +1,20 @@
+// server/routes/auth.js
 import express from "express";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import { body, validationResult } from "express-validator";
-import User from "../models/core/User.js";
+import User from "../models/core/User.js"; // NG_User model
 import { authenticate } from "../middleware/auth.js";
 
 const router = express.Router();
 
 /* ------------------------------------------------------------- */
-/*  Helper Functions */
+/* Helper functions                                               */
 /* ------------------------------------------------------------- */
 
-//  Generate JWT
-const generateToken = (id) => {
+const generateToken = (payload) => {
   try {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
+    return jwt.sign(payload, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE || "7d",
     });
   } catch (err) {
@@ -22,11 +23,9 @@ const generateToken = (id) => {
   }
 };
 
-//  Unified error response
-const sendError = (res, statusCode, message, extra = {}) =>
-  res.status(statusCode).json({ success: false, message, ...extra });
+const sendError = (res, status, message, extra = {}) =>
+  res.status(status).json({ success: false, message, ...extra });
 
-//  Validation error formatter
 const handleValidationErrors = (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -37,269 +36,156 @@ const handleValidationErrors = (req, res) => {
 };
 
 /* ------------------------------------------------------------- */
-/*  REGISTER USER */
-/* ------------------------------------------------------------- */
-router.post(
-  "/register",
-  [
-    body("firstName").trim().notEmpty().withMessage("First name is required"),
-    body("lastName").trim().notEmpty().withMessage("Last name is required"),
-    body("email").isEmail().normalizeEmail().withMessage("Valid email required"),
-    body("password")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters"),
-    body("department").notEmpty().withMessage("Department is required"),
-    body("position").notEmpty().withMessage("Position is required"),
-  ],
-  async (req, res) => {
-    if (handleValidationErrors(req, res)) return;
-
-    try {
-      const {
-        firstName,
-        lastName,
-        email,
-        password,
-        phone,
-        department,
-        position,
-        role = "employee",
-      } = req.body;
-
-      //  Check existing user
-      const existingUser = await User.findOne({ email });
-      if (existingUser)
-        return sendError(res, 400, "User already exists with this email");
-
-      //  Create & save user (password hashed via model)
-      const user = new User({
-        firstName,
-        lastName,
-        email,
-        password,
-        phone,
-        department,
-        position,
-        role,
-      });
-
-      await user.save();
-
-      //  JWT
-      const token = generateToken(user._id);
-      if (!token) return sendError(res, 500, "Token generation failed");
-
-      const userResponse = user.toObject();
-      delete userResponse.password;
-
-      return res.status(201).json({
-        success: true,
-        message: "User registered successfully",
-        data: { user: userResponse, token },
-      });
-    } catch (error) {
-      console.error("🚨 Registration error:", error);
-      if (error.code === 11000) {
-        return sendError(res, 400, "Duplicate field value", {
-          field: error.keyValue,
-        });
-      }
-      return sendError(
-        res,
-        500,
-        error.message || "Server error during registration"
-      );
-    }
-  }
-);
-
-/* ------------------------------------------------------------- */
-/*  LOGIN USER */
+/* LOGIN (email OR login_id)                                     */
 /* ------------------------------------------------------------- */
 router.post(
   "/login",
   [
-    body("email").isEmail().withMessage("Valid email required"),
+    body("identifier").trim().notEmpty().withMessage("Email or Login ID required"),
     body("password").notEmpty().withMessage("Password required"),
   ],
   async (req, res) => {
     if (handleValidationErrors(req, res)) return;
 
     try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email }).select("+password");
+      const { identifier, password } = req.body;
+      console.log("Login attempt with identifier:", identifier);
 
-      if (!user) return sendError(res, 401, "Invalid credentials");
+      const query = {
+        $or: [
+          { email: identifier.toLowerCase() },
+          { login_id: identifier },
+        ],
+      };
 
-      if (user.status && user.status !== "active") {
+      // Select both password fields
+      const user = await User.findOne(query).select("+password +password_hash");
+
+      console.log("Found user:", user ? user.toObject() : null);
+
+      if (!user) {
+        return sendError(res, 401, "Invalid email or login ID");
+      }
+
+      if (user.status !== "active") {
         return sendError(res, 403, "Account inactive. Contact admin.");
       }
 
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-        await user.incLoginAttempts?.();
-        return sendError(res, 401, "Invalid credentials");
+      // Check which password field exists
+      console.log("Password fields check:", {
+        password: user.password,
+        password_hash: user.password_hash
+      });
+      const hashed = user.password_hash || user.password || "";
+      if (!hashed) {
+        return sendError(res, 401, "User has no password set");
       }
 
-      await user.resetLoginAttempts?.();
+      
+      try {
+        
+        const isValid = await bcrypt.compare(password.trim(), (hashed || "").trim());
+        console.log("bcrypt.compare() =>", isValid);
+        if (!isValid) {
+          console.warn("Invalid password attempt for:", identifier);
+          return sendError(res, 401, "Invalid credentials");
+        }
+      } catch (e) {
+        console.error("bcrypt error:", e);
+        return sendError(res, 500, "Error during password check");
+      }
 
-      user.lastLogin = new Date();
-      await user.save();
+      // Update last login
+      try {
+        user.last_login_at = new Date();
+        await user.save();
+      } catch (err) {
+        console.warn("Could not update last_login_at:", err.message);
+      }
 
-      const token = generateToken(user._id);
-      if (!token) return sendError(res, 500, "Token generation failed");
+      // Create JWT
+      const token = generateToken({
+        id: user._id.toString(),
+        role: user.role,
+        login_id: user.login_id,
+      });
 
-      const userResponse = user.toObject();
-      delete userResponse.password;
+      if (!token) {
+        return sendError(res, 500, "Token generation failed");
+      }
+
+      const safeUser = {
+        id: user._id,
+        login_id: user.login_id,
+        full_name: user.full_name || user.fullName || "User",
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        last_login_at: user.last_login_at,
+      };
 
       return res.json({
         success: true,
         message: "Login successful",
-        data: { user: userResponse, token },
+        data: { user: safeUser, token },
       });
     } catch (error) {
-      console.error(" Login error:", error);
+      console.error("Login error:", error);
       return sendError(res, 500, "Server error during login");
     }
   }
 );
 
 /* ------------------------------------------------------------- */
-/*  CURRENT USER */
+/* CURRENT USER (token-based)                                    */
 /* ------------------------------------------------------------- */
 router.get("/me", authenticate, async (req, res) => {
   try {
-    //  Handle hardcoded admin user (non-DB)
+    console.log("Authenticated User:", req.user);
+
+    // For hardcoded admin
     if (req.user._id === "admin-id") {
-      return res.status(200).json({
+      return res.json({
         success: true,
         user: {
-          _id: "admin-id",
-          firstName: "Super Admin",
-          email: "admin@lifebox.com",
+          id: "admin-id",
+          login_id: "admin",
+          full_name: "Super Admin",
+          email: process.env.ADMIN_EMAIL || "admin@example.com",
           role: "admin",
+          status: "active",
         },
       });
     }
 
-    // Otherwise, fetch from MongoDB
-    const user = await User.findById(req.user._id).select("-password");
+    const user = await User.findById(req.user._id).select("-password -password_hash");
+    if (!user) return sendError(res, 404, "User not found");
 
-    if (!user) {
-      return sendError(res, 404, "User not found");
-    }
-
-    return res.status(200).json({
-      success: true,
-      user,
-    });
-  } catch (error) {
-    console.error(" Get current user error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return res.json({ success: true, user });
+  } catch (err) {
+    console.error("👤 /me error:", err);
+    return sendError(res, 500, "Internal server error");
   }
 });
 
 /* ------------------------------------------------------------- */
-/*  UPDATE PROFILE */
+/* LOGOUT + REFRESH                                              */
 /* ------------------------------------------------------------- */
-router.put(
-  "/me",
-  authenticate,
-  [
-    body("firstName").optional().trim(),
-    body("lastName").optional().trim(),
-    body("phone").optional().isMobilePhone().withMessage("Invalid phone"),
-  ],
-  async (req, res) => {
-    if (handleValidationErrors(req, res)) return;
-
-    try {
-      const allowed = [
-        "firstName",
-        "lastName",
-        "phone",
-        "bio",
-        "skills",
-        "address",
-        "preferences",
-      ];
-      const updates = {};
-      Object.keys(req.body).forEach((key) => {
-        if (allowed.includes(key)) updates[key] = req.body[key];
-      });
-
-      const user = await User.findByIdAndUpdate(req.user._id, updates, {
-        new: true,
-        runValidators: true,
-      }).select("-password");
-
-      if (!user) return sendError(res, 404, "User not found");
-
-      res.json({
-        success: true,
-        message: "Profile updated successfully",
-        data: { user },
-      });
-    } catch (error) {
-      console.error(" Profile update error:", error);
-      sendError(res, 500, "Server error during profile update");
-    }
-  }
-);
-
-/* ------------------------------------------------------------- */
-/*  CHANGE PASSWORD */
-/* ------------------------------------------------------------- */
-router.put(
-  "/change-password",
-  authenticate,
-  [
-    body("currentPassword").notEmpty().withMessage("Current password required"),
-    body("newPassword")
-      .isLength({ min: 6 })
-      .withMessage("New password must be at least 6 characters"),
-  ],
-  async (req, res) => {
-    if (handleValidationErrors(req, res)) return;
-
-    try {
-      const { currentPassword, newPassword } = req.body;
-      const user = await User.findById(req.user._id).select("+password");
-
-      if (!user) return sendError(res, 404, "User not found");
-
-      const isMatch = await user.comparePassword(currentPassword);
-      if (!isMatch) return sendError(res, 400, "Current password incorrect");
-
-      user.password = newPassword;
-      await user.save();
-
-      res.json({ success: true, message: "Password changed successfully" });
-    } catch (error) {
-      console.error("🚨 Password change error:", error);
-      sendError(res, 500, "Server error during password change");
-    }
-  }
-);
-
-/* ------------------------------------------------------------- */
-/*  LOGOUT + REFRESH */
-/* ------------------------------------------------------------- */
-router.post("/logout", authenticate, (req, res) => {
+router.post("/logout", authenticate, (_req, res) => {
   try {
-    // In JWT system, logout is handled client-side (by deleting token)
     res.json({ success: true, message: "Logged out successfully" });
-  } catch (error) {
+  } catch {
     sendError(res, 500, "Logout failed");
   }
 });
 
 router.post("/refresh", authenticate, (req, res) => {
   try {
-    const token = generateToken(req.user._id);
+    const token = generateToken({
+      id: req.user._id.toString(),
+      role: req.user.role,
+      login_id: req.user.login_id,
+    });
     if (!token) return sendError(res, 500, "Token generation failed");
 
     res.json({
@@ -307,7 +193,7 @@ router.post("/refresh", authenticate, (req, res) => {
       message: "Token refreshed successfully",
       data: { token },
     });
-  } catch (error) {
+  } catch (err) {
     sendError(res, 500, "Token refresh failed");
   }
 });

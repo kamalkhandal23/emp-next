@@ -7,7 +7,7 @@ const registrationSchema = new mongoose.Schema({
   phone: { c: String, iv: String, tag: String },
   course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'NG_Course', required: true },
 
-  // added "approved" to enum values
+  // Added "approved" to enum values
   status: {
     type: String,
     enum: ['submitted', 'under_review', 'accepted', 'activated', 'rejected', 'approved'],
@@ -17,11 +17,18 @@ const registrationSchema = new mongoose.Schema({
   reviewed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'NG_User', default: null },
   reviewed_at: { type: Date, default: null },
   notes: String,
+
   date_of_birth: Date,
   education: String,
   experience: String,
   motivation: String,
-  passport_photo: String,
+
+  // ✅ Keep old single-photo field (for backward compatibility)
+  passport_photo: { type: String, default: null },
+  documents: {
+    type: [String],
+    default: []
+  }
 }, {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
 });

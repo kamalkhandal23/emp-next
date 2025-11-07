@@ -13,40 +13,36 @@ export default function Enrollment() {
     motivation: '',
     amount: '',
     agreeTerms: false,
-    passportPhoto: '' // data URL (base64) for preview and submit
+    passportPhoto: '',      // Base64 for preview
+    passportPhotoFile: null // Actual file for backend upload
   })
 
   const [currentStep, setCurrentStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null)
-  const [paymentType, setPaymentType] = useState('free') // 'free' or 'paid'
-  const [showCourseDetails, setShowCourseDetails] = useState(false)
-  const [selectedCourseDetails, setSelectedCourseDetails] = useState(null)
+  const [paymentType, setPaymentType] = useState('free')
 
   const [courses, setCourses] = useState([
-    // fallback in case API is unavailable; these do not contain Mongo IDs
     { _id: 'fullstack', title: 'Full Stack Development', duration: '6 months', description: 'Master modern web development with React, Node.js, and cloud technologies', prerequisites: 'Basic programming knowledge helpful but not required', icon: '🌐' },
     { _id: 'cybersecurity', title: 'Cybersecurity Fundamentals', duration: '4 months', description: 'Learn essential cybersecurity concepts and hands-on security practices', prerequisites: 'Basic computer knowledge required', icon: '🔒' },
     { _id: 'digital-marketing', title: 'Digital Marketing & Media', duration: '3 months', description: 'Create compelling digital content and master modern marketing strategies', prerequisites: 'No prior experience required', icon: '📱' }
   ])
 
-  // Fetch courses from API on mount to get real MongoDB _id values
+  // Fetch real courses from backend
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/courses`)
         if (!res.ok) throw new Error('Failed to fetch courses')
         const json = await res.json()
-        // API may return { success: true, data: { courses: [...] } } or plain array
         const apiCourses = json?.data?.courses || json?.courses || json
         if (Array.isArray(apiCourses) && apiCourses.length > 0) {
-          // map to ensure each course has an _id and fallback fields
           setCourses(apiCourses.map(c => ({
             _id: c._id || c.id || c.slug || c.title,
             title: c.title || c.name || 'Untitled Course',
-            duration: c.duration || c.length || 'N/A',
+            duration: c.duration || 'N/A',
             description: c.description || '',
-            prerequisites: c.prerequisites || c.prereq || '',
+            prerequisites: c.prerequisites || '',
             icon: c.icon || '🎓'
           })))
         }
@@ -54,10 +50,10 @@ export default function Enrollment() {
         console.warn('Could not load courses from API, using fallback list.', err)
       }
     }
-
     fetchCourses()
   }, [])
 
+  // Handle text/checkbox inputs
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
     setFormData(prev => ({
@@ -66,11 +62,11 @@ export default function Enrollment() {
     }))
   }
 
+  // Handle passport photo file upload
   const handleFileChange = (e) => {
-    const file = e.target.files && e.target.files[0]
+    const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate type (JPEG/PNG) and size (<= 2MB)
     const validTypes = ['image/jpeg', 'image/png']
     const maxBytes = 2 * 1024 * 1024
     if (!validTypes.includes(file.type)) {
@@ -78,99 +74,77 @@ export default function Enrollment() {
       return
     }
     if (file.size > maxBytes) {
-      alert('Image is too large. Max size is 2 MB.')
+      alert('Image too large. Max 2MB allowed.')
       return
     }
 
     const reader = new FileReader()
     reader.onload = () => {
-      setFormData(prev => ({ ...prev, passportPhoto: reader.result }))
+      setFormData(prev => ({
+        ...prev,
+        passportPhoto: reader.result, // Base64 preview
+        passportPhotoFile: file       // Actual file for upload
+      }))
     }
     reader.readAsDataURL(file)
   }
 
   const handleNext = () => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1)
-    }
+    if (currentStep < 3) setCurrentStep(currentStep + 1)
   }
 
   const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1)
   }
 
+  // ✅ Main submit (multipart form upload)
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
-      // Prepare registration data
-      const registrationData = {
-        full_name: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        // send the MongoDB ID for the course if available; fallback to the string value
-        course_id: formData.course,
-        //course_id: "68fc5efd3d9639feee13d1ac",
+      // Build FormData for multipart/form-data
+      const formDataToSend = new FormData()
+      formDataToSend.append('full_name', formData.fullName)
+      formDataToSend.append('email', formData.email)
+      formDataToSend.append('phone', formData.phone)
+      formDataToSend.append('course_id', formData.course)
+      formDataToSend.append('date_of_birth', formData.dateOfBirth)
+      formDataToSend.append('education', formData.education)
+      formDataToSend.append('experience', formData.experience)
+      formDataToSend.append('motivation', formData.motivation)
 
-        date_of_birth: formData.dateOfBirth,
-        education: formData.education,
-        experience: formData.experience,
-        motivation: formData.motivation,
-        // Optional passport photo (base64 data URL). Backend can extract and store.
-        passport_photo: formData.passportPhoto || undefined
+      if (formData.passportPhotoFile) {
+        formDataToSend.append('passport_photo', formData.passportPhotoFile);
       }
 
-      // If user selected paid, start payment flow
-      if (paymentType === 'paid') {
-        const payRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/student/payment/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...registrationData, amount: formData.amount || 10000 /* paise/cents depending on gateway */ })
-        })
-
-        if (payRes.ok) {
-          const payData = await payRes.json()
-          // Expecting { success: true, data: { paymentUrl } }
-          const paymentUrl = payData?.data?.paymentUrl
-          if (paymentUrl) {
-            // Redirect user to payment page (mock or real gateway)
-            window.location.href = paymentUrl
-            return
-          }
+      // ✅ Attach additional documents (if any)
+      if (formData.documents && formData.documents.length > 0) {
+        for (let i = 0; i < formData.documents.length; i++) {
+          formDataToSend.append('documents', formData.documents[i]);
         }
-
-        const err = await payRes.json().catch(() => ({ message: 'Payment initiation failed' }))
-        alert(`Payment initiation failed: ${err.message || 'Unknown error'}`)
-        setSubmitStatus('error')
-        return
       }
 
-      // Free registration - submit directly
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/student/registration/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(registrationData)
-      })
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/student/registration/register`,
+        {
+          method: 'POST',
+          body: formDataToSend
+        }
+      )
 
+      const data = await response.json()
       if (response.ok) {
-        const data = await response.json()
         setSubmitStatus('success')
-        // Store registration ID for future reference
-        localStorage.setItem('registrationId', data.data?.registration_id || data.data?.registration?._id)
+        localStorage.setItem('registrationId', data.data?.registration_id)
       } else {
-        const errorData = await response.json()
+        alert(`Registration failed: ${data.message || 'Unknown error'}`)
         setSubmitStatus('error')
-        alert(`Registration failed: ${errorData.message}`)
       }
     } catch (error) {
       console.error('Registration error:', error)
-      // Fallback to success for demo purposes
-      setSubmitStatus('success')
+      alert('Something went wrong during registration.')
+      setSubmitStatus('error')
     } finally {
       setIsSubmitting(false)
     }
@@ -189,34 +163,23 @@ export default function Enrollment() {
     }
   }
 
+  // ✅ Success screen
   if (submitStatus === 'success') {
     return (
       <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-        <div style={{
-          maxWidth: '600px',
-          margin: '0 auto',
-          textAlign: 'center'
-        }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div className="service-card" style={{
             background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)',
             border: '2px solid #22c55e',
             padding: '3rem 2rem'
           }}>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
-            <h1 style={{ color: '#15803d', marginBottom: '1rem' }}>
-              Enrollment Successful!
-            </h1>
+            <h1 style={{ color: '#15803d', marginBottom: '1rem' }}>Enrollment Successful!</h1>
             <p style={{ color: '#166534', marginBottom: '2rem', fontSize: '1.125rem' }}>
               Welcome to NextGenFreeEdu! Your enrollment for <strong>{courses.find(c => c._id === formData.course)?.title}</strong> has been confirmed.
             </p>
 
-            <div style={{
-              background: 'white',
-              borderRadius: '0.5rem',
-              padding: '1.5rem',
-              marginBottom: '2rem',
-              textAlign: 'left'
-            }}>
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', marginBottom: '2rem', textAlign: 'left' }}>
               <h3 style={{ color: '#374151', marginBottom: '1rem' }}>What's Next?</h3>
               <ul style={{ color: '#6b7280', lineHeight: '1.6' }}>
                 <li>Check your email for course access details</li>
@@ -228,12 +191,8 @@ export default function Enrollment() {
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <Link to="/nextgen/login" className="btn-primary">
-                Login to Dashboard
-              </Link>
-              <Link to="/nextgen" className="btn-secondary">
-                Back to Home
-              </Link>
+              <Link to="/nextgen/login" className="btn-primary">Login to Dashboard</Link>
+              <Link to="/nextgen" className="btn-secondary">Back to Home</Link>
             </div>
           </div>
         </div>
@@ -241,135 +200,83 @@ export default function Enrollment() {
     )
   }
 
+  // ✅ Main form
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '700', color: '#111827', marginBottom: '1rem' }}>
-            Course Enrollment
-          </h1>
-          <p style={{ color: '#6b7280', fontSize: '1.125rem' }}>
-            Join thousands of students in our free, industry-focused courses
-          </p>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: '700', color: '#111827', marginBottom: '1rem' }}>Course Enrollment</h1>
+          <p style={{ color: '#6b7280', fontSize: '1.125rem' }}>Join thousands of students in our free, industry-focused courses</p>
         </div>
 
-        {/* Progress Indicator */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginBottom: '3rem',
-          gap: '1rem'
-        }}>
+        {/* Steps UI */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem', gap: '1rem' }}>
           {[1, 2, 3].map((step) => (
             <div key={step} style={{ display: 'flex', alignItems: 'center' }}>
               <div style={{
-                width: '2.5rem',
-                height: '2.5rem',
-                borderRadius: '50%',
+                width: '2.5rem', height: '2.5rem', borderRadius: '50%',
                 background: currentStep >= step ? '#3b82f6' : '#e5e7eb',
                 color: currentStep >= step ? 'white' : '#9ca3af',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '600',
-                fontSize: '0.875rem'
-              }}>
-                {step}
-              </div>
-              {step < 3 && (
-                <div style={{
-                  width: '3rem',
-                  height: '2px',
-                  background: currentStep > step ? '#3b82f6' : '#e5e7eb',
-                  marginLeft: '0.5rem'
-                }} />
-              )}
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600'
+              }}>{step}</div>
+              {step < 3 && <div style={{
+                width: '3rem', height: '2px', background: currentStep > step ? '#3b82f6' : '#e5e7eb', marginLeft: '0.5rem'
+              }} />}
             </div>
           ))}
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="contact-form">
-          {/* Step 1: Personal Information */}
+          {/* Step 1 */}
           {currentStep === 1 && (
             <div>
-              <h2 style={{ marginBottom: '1.5rem', color: '#374151' }}>
-                Step 1: Personal Information
-              </h2>
+              <h2 style={{ marginBottom: '1.5rem', color: '#374151' }}>Step 1: Personal Information</h2>
 
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Full Name *</label>
-                  <input
-                    type="text"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleInputChange}
-                    required
-                    className="form-input"
-                    placeholder="Enter your full name"
-                  />
+                  <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} required className="form-input" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Email Address *</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    required
-                    className="form-input"
-                    placeholder="your.email@example.com"
-                  />
+                  <input type="email" name="email" value={formData.email} onChange={handleInputChange} required className="form-input" />
                 </div>
               </div>
 
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Phone Number *</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    required
-                    className="form-input"
-                    placeholder="+91 XXXXX XXXXX"
-                  />
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} required className="form-input" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Date of Birth *</label>
-                  <input
-                    type="date"
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleInputChange}
-                    required
-                    className="form-input"
-                  />
+                  <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} required className="form-input" />
                 </div>
               </div>
 
-              {/* Passport size photo upload (optional) */}
               <div className="form-group">
                 <label className="form-label">Passport Size Photo (JPEG/PNG, max 2MB)</label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg"
-                  onChange={handleFileChange}
-                  className="form-input"
-                />
+                <input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} className="form-input" />
                 {formData.passportPhoto && (
                   <div style={{ marginTop: '0.75rem' }}>
-                    <img
-                      src={formData.passportPhoto}
-                      alt="Passport preview"
-                      style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}
-                    />
+                    <img src={formData.passportPhoto} alt="Preview" style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }} />
                   </div>
                 )}
               </div>
+              <div className="form-group">
+                <label className="form-label">Upload Additional Documents (optional)</label>
+                <input
+                  type="file"
+                  name="documents"
+                  multiple
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={(e) => setFormData(prev => ({ ...prev, documents: e.target.files }))}
+                  className="form-input"
+                />
+              </div>
             </div>
+
           )}
 
           {/* Step 2: Educational Background & Course Selection */}
@@ -438,8 +345,8 @@ export default function Enrollment() {
                       />
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <span style={{  fontSize: '1.5rem' }}>{course.icon}</span>
-                          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color:'black'}}>
+                          <span style={{ fontSize: '1.5rem' }}>{course.icon}</span>
+                          <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: '600', color: 'black' }}>
                             {course.title}
                           </h3>
                           <span style={{
