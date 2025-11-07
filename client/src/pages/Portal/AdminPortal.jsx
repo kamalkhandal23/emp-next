@@ -11,6 +11,7 @@ export default function AdminPortal() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [studentRegistrations, setStudentRegistrations] = useState([]);
+  const [selectedRegistration,setSelectedRegistration] = useState([]);
 
   // Mock data
   const adminStats = {
@@ -168,9 +169,9 @@ export default function AdminPortal() {
       ? new Date(registration.created_at).toLocaleDateString()
       : registration.registrationDate;
 
-    /* alert(
+     alert(
       `Registration Details:\n\nName: ${name}\nEmail: ${registration.email}\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${registration.status}`
-    ); */
+    ); 
     setSelectedRegistration({
     ...registration,
     name,
@@ -1025,7 +1026,7 @@ export default function AdminPortal() {
                   );
                 })}
               </div>
-              /* Registration Detail Modal */}
+              {/* Registration Detail Modal */}
               {selectedRegistration &&(
                 <div
                   className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50"
@@ -1035,18 +1036,18 @@ export default function AdminPortal() {
                     className="bg-white p-6 rounded-2xl shadow-lg w-11/12 max-w-2xl relative"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <button
+                    {/* <button
                       onClick={() => setSelectedRegistration(null)}
                       className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"
                     >
                       ✕
-                    </button>
+                    </button> */}
 
                     <h2 className="text-2xl font-semibold mb-4 text-center">
                       Registration Details
                     </h2>
 
-                    <div className="space-y-2 text-gray-700">
+                    {/* <div className="space-y-2 text-gray-700">
                       <p><strong>Name:</strong> {selectedRegistration.name}</p>
                       <p><strong>Email:</strong> {selectedRegistration.email}</p>
                       <p><strong>Phone:</strong> {selectedRegistration.phone}</p>
@@ -1055,7 +1056,7 @@ export default function AdminPortal() {
                       <p><strong>Documents:</strong> {selectedRegistration.documents}</p>
                       <p><strong>Registration Date:</strong> {selectedRegistration.registrationDate}</p>
                       <p><strong>Status:</strong> {selectedRegistration.status}</p>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               )}

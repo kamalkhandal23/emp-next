@@ -23,7 +23,7 @@ const registrationSchema = new mongoose.Schema({
   experience: String,
   motivation: String,
 
-  // ✅ Keep old single-photo field (for backward compatibility)
+  // Keep old single-photo field (for backward compatibility)
   passport_photo: { type: String, default: null },
   documents: {
     type: [String],

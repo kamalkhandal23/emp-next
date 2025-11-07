@@ -48,7 +48,7 @@ router.post('/login', (req, res) => {
 
 //  All routes below this require authentication
 router.use(auth);
-router.use(authorize(['admin']));
+router.use(authorize(["admin","course_manager"]));
 
 // Validation rules
 const userValidation = [
