@@ -168,10 +168,21 @@ export default function AdminPortal() {
       ? new Date(registration.created_at).toLocaleDateString()
       : registration.registrationDate;
 
-    alert(
+    /* alert(
       `Registration Details:\n\nName: ${name}\nEmail: ${registration.email}\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${registration.status}`
-    );
+    ); */
+    setSelectedRegistration({
+    ...registration,
+    name,
+    course,
+    phone,
+    address,
+    documents,
+    registrationDate,
+  });
   };
+
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -1014,7 +1025,40 @@ export default function AdminPortal() {
                   );
                 })}
               </div>
+              /* Registration Detail Modal */}
+              {selectedRegistration &&(
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50"
+                  onClick={() => setSelectedRegistration(null)}
+                >
+                  <div
+                    className="bg-white p-6 rounded-2xl shadow-lg w-11/12 max-w-2xl relative"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => setSelectedRegistration(null)}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-xl"
+                    >
+                      ✕
+                    </button>
 
+                    <h2 className="text-2xl font-semibold mb-4 text-center">
+                      Registration Details
+                    </h2>
+
+                    <div className="space-y-2 text-gray-700">
+                      <p><strong>Name:</strong> {selectedRegistration.name}</p>
+                      <p><strong>Email:</strong> {selectedRegistration.email}</p>
+                      <p><strong>Phone:</strong> {selectedRegistration.phone}</p>
+                      <p><strong>Course:</strong> {selectedRegistration.course}</p>
+                      <p><strong>Address:</strong> {selectedRegistration.address}</p>
+                      <p><strong>Documents:</strong> {selectedRegistration.documents}</p>
+                      <p><strong>Registration Date:</strong> {selectedRegistration.registrationDate}</p>
+                      <p><strong>Status:</strong> {selectedRegistration.status}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Quick Actions */}
               <div style={{ marginTop: "2rem" }}>
                 <div className="portal-card">
