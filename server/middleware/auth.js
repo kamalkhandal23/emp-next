@@ -47,6 +47,7 @@ export const auth = async (req, res, next) => {
         status: "active",
         isActive: true,
       };
+      console.log("Authenticated User:", req.user);
       return next();
     }
 
@@ -67,6 +68,10 @@ export const auth = async (req, res, next) => {
     }
 
     req.user = user;
+
+    
+    console.log("Authenticated User:", req.user);
+
     next();
   } catch (error) {
     console.error("Auth Middleware Error:", error);
@@ -140,13 +145,13 @@ export const checkResourceAccess = (resourceField = "employee") => {
 
     const { role, _id } = req.user;
 
-    // Admins & HR always allowed
+    
     if (["admin", "hr"].includes(role)) return next();
 
-    // Team leads or managers (extendable)
+    
     if (["manager", "team_lead"].includes(role)) return next();
 
-    // Regular employee: only own data
+    
     const resourceId =
       req.params.id || req.body[resourceField] || req.query[resourceField];
 
@@ -183,12 +188,14 @@ export const optionalAuth = async (req, res, next) => {
         status: "active",
         isActive: true,
       };
+      console.log("Authenticated User (optional):", req.user);
       return next();
     }
 
     const user = await User.findById(decoded.id).select("-password");
     if (user && (user.isActive || user.status === "active")) {
       req.user = user;
+      console.log("Authenticated User (optional):", req.user);
     }
 
     next();

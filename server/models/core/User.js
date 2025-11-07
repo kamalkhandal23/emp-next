@@ -3,85 +3,63 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    // Basic Info
+    
     firstName: {
       type: String,
-      required: [true, "First name is required"],
       trim: true,
       maxlength: [50, "First name cannot exceed 50 characters"],
     },
     lastName: {
       type: String,
-      required: [true, "Last name is required"],
       trim: true,
       maxlength: [50, "Last name cannot exceed 50 characters"],
     },
+    full_name: { type: String, trim: true }, 
+
     email: {
       type: String,
-      required: [true, "Email is required"],
       unique: true,
+      sparse: true,
       lowercase: true,
       trim: true,
-      match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/,
-        "Please enter a valid email",
-      ],
-    },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      select: false,
-      minlength: [6, "Password must be at least 6 characters"],
     },
 
-    // Employee Info
-    employeeId: {
+    login_id: {
       type: String,
       unique: true,
       sparse: true,
       trim: true,
     },
-    phone: {
-      type: String,
-      trim: true,
-      match: [/^[\+]?[1-9][\d]{0,15}$/, "Please enter a valid phone number"],
-    },
+
+    // Password
+    password: { type: String, select: true },
+    password_hash: { type: String, select: true },
+
+    // Employee Info
+    employeeId: { type: String, unique: true, sparse: true, trim: true },
+    phone: { type: String, trim: true },
 
     // Professional Info
     role: {
       type: String,
-      enum: ["admin", "hr", "manager", "team_lead", "employee", "student"],
+      enum: [
+        "admin",
+        "super_admin",
+        "course_manager",
+        "student",
+        "hr",
+        "employee",
+      ],
       default: "employee",
     },
-    department: {
-      type: String,
-      default: "Engineering",
-    },
-    position: {
-      type: String,
-      default: "Associate",
-    },
-    team: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
-    manager: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    department: { type: String, default: "Engineering" },
+    position: { type: String, default: "Associate" },
 
     // Employment Details
     joinDate: { type: Date, default: Date.now },
-    salary: { type: Number, min: 0 },
-    employmentType: {
-      type: String,
-      enum: ["full-time", "part-time", "contract", "intern"],
-      default: "full-time",
-    },
-    workLocation: {
-      type: String,
-      enum: ["office", "remote", "hybrid"],
-      default: "office",
-    },
-
-    // Status
     status: {
       type: String,
-      enum: ["active", "inactive", "terminated", "on-leave"],
+      enum: ["active", "inactive", "terminated", "on-leave", "pending"],
       default: "active",
     },
 
@@ -109,63 +87,71 @@ const userSchema = new mongoose.Schema(
     emailVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-// Virtuals
+/* ---------------- Virtuals ---------------- */
 userSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
+  return this.full_name || `${this.firstName || ""} ${this.lastName || ""}`.trim();
 });
 
 userSchema.virtual("isLocked").get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
-// Indexes
+/* ---------------- Indexes ---------------- */
 userSchema.index({ role: 1, department: 1, status: 1 });
 
-//  Hash password before save
+/* ---------------- Pre-save Hooks ---------------- */
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
   try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    // Only hash if plain text password provided
+    if (this.isModified("password") && this.password && !this.password.startsWith("$2b$")) {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+    }
+
+    // Only hash password_hash if it's plain text (not already a hash)
+    if (this.isModified("password_hash") && this.password_hash && !this.password_hash.startsWith("$2b$")) {
+      const salt = await bcrypt.genSalt(10);
+      this.password_hash = await bcrypt.hash(this.password_hash, salt);
+    }
+
+    // Auto-generate employeeId if not present
+    if (!this.employeeId && this.isNew && this.role !== "student") {
+      const count = await this.constructor.countDocuments({ role: { $ne: "student" } });
+      this.employeeId = `EMP${String(count + 1).padStart(4, "0")}`;
+    }
+
     next();
   } catch (err) {
     next(err);
   }
 });
 
-//  Generate Employee ID
-userSchema.pre("save", async function (next) {
-  if (!this.employeeId && this.isNew && this.role !== "student") {
-    try {
-      const count = await this.constructor.countDocuments({
-        role: { $ne: "student" },
-      });
-      this.employeeId = `EMP${String(count + 1).padStart(4, "0")}`;
-    } catch (err) {
-      return next(err);
-    }
-  }
-  next();
-});
-
-//  Compare password
+/* ---------------- Password Compare ---------------- */
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  if (!this.password) return false;
-  return bcrypt.compare(candidatePassword, this.password);
+  // Check both possible password fields
+  const hashedPassword = this.password_hash || this.password;
+  if (!hashedPassword) return false;
+  return await bcrypt.compare(candidatePassword, hashedPassword);
 };
 
-//  Permissions
+/* ---------------- Permissions ---------------- */
 userSchema.methods.getPermissions = function () {
   const rolePermissions = {
     admin: ["manage_system", "view_reports", "manage_employees"],
+    super_admin: ["manage_everything"],
     hr: ["manage_employees", "view_reports"],
     manager: ["manage_tasks", "view_reports"],
+    course_manager: ["manage_courses", "approve_students"],
     team_lead: ["manage_tasks"],
     employee: [],
+    student: [],
   };
   return [...(rolePermissions[this.role] || []), ...(this.permissions || [])];
 };
@@ -174,11 +160,13 @@ userSchema.methods.hasPermission = function (perm) {
   return this.getPermissions().includes(perm);
 };
 
-// Statics
-userSchema.statics.findByEmail = function (email) {
-  return this.findOne({ email: email.toLowerCase() });
+/* ---------------- Statics ---------------- */
+userSchema.statics.findByIdentifier = function (identifier) {
+  return this.findOne({
+    $or: [{ email: identifier }, { login_id: identifier }],
+  });
 };
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.models.NG_User || mongoose.model("NG_User", userSchema);
 
 export default User;
