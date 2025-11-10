@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 export default function AdminPortal() {
-  const { token } = useAuth();
+  //const { token } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginData, setLoginData] = useState({ username: "", password: "" });
@@ -11,14 +11,14 @@ export default function AdminPortal() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [studentRegistrations, setStudentRegistrations] = useState([]);
-  const [selectedRegistration,setSelectedRegistration] = useState([]);
+  const [selectedRegistration, setSelectedRegistration] = useState([]);
 
   // Mock data
   const adminStats = {
-    totalEmployees: 45,
-    activeProjects: 12,
-    pendingTasks: 28,
-    completedTasks: 156,
+    totalEmployees: "45",
+    activeProjects: "12",
+    pendingTasks: "28",
+    completedTasks: "156",
     totalRevenue: "₹2,45,000",
     monthlyGrowth: "+12%",
   };
@@ -127,7 +127,7 @@ export default function AdminPortal() {
     setLoading(true);
     try {
       const token = localStorage.getItem("authToken");
-  
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
         {
@@ -139,7 +139,7 @@ export default function AdminPortal() {
           body: JSON.stringify({ reason }),
         }
       );
-  
+
       if (response.ok) {
         await fetchRegistrations();
         alert("Registration rejected successfully!");
@@ -154,7 +154,7 @@ export default function AdminPortal() {
       setLoading(false);
     }
   };
-  
+
 
   // Handle view registration details
   const handleViewDetails = (registration) => {
@@ -169,18 +169,18 @@ export default function AdminPortal() {
       ? new Date(registration.created_at).toLocaleDateString()
       : registration.registrationDate;
 
-     alert(
+    alert(
       `Registration Details:\n\nName: ${name}\nEmail: ${registration.email}\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${registration.status}`
-    ); 
+    );
     setSelectedRegistration({
-    ...registration,
-    name,
-    course,
-    phone,
-    address,
-    documents,
-    registrationDate,
-  });
+      ...registration,
+      name,
+      course,
+      phone,
+      address,
+      documents,
+      registrationDate,
+    });
   };
 
 
@@ -211,6 +211,7 @@ export default function AdminPortal() {
       }
 
       const data = await response.json();
+      console.log(data)
 
       // Save token for future API calls
       localStorage.setItem("authToken", data.token);
@@ -384,8 +385,7 @@ export default function AdminPortal() {
         <div className="container">
           {activeTab === "dashboard" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Overview</h2>
-
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>System Overview</h2>
               <div className="stats-grid">
                 <div className="stat-card">
                   <div className="stat-number">{adminStats.totalEmployees}</div>
@@ -414,7 +414,7 @@ export default function AdminPortal() {
               >
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title"  style={{ color:"black" }}>Recent Activities</h3>
+                    <h3 className="portal-card-title" style={{ color: "black" }}>Recent Activities</h3>
                   </div>
                   <div>
                     {recentActivities.map((activity) => (
@@ -453,7 +453,7 @@ export default function AdminPortal() {
 
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title"  style={{ color:"black" }} >System Health</h3>
+                    <h3 className="portal-card-title" style={{ color: "black" }} >System Health</h3>
                   </div>
                   <div
                     style={{
@@ -522,7 +522,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2 style={{ marginBottom: "2rem", color:"black" }}>Employee Management</h2>
+                <h2 style={{ marginBottom: "2rem", color: "black" }}>Employee Management</h2>
                 <button className="btn-primary">Add New Employee</button>
               </div>
 
@@ -599,7 +599,7 @@ export default function AdminPortal() {
 
           {activeTab === "projects" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>Project Overview</h2>
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>Project Overview</h2>
 
               <div className="stats-grid">
                 <div className="stat-card">
@@ -686,7 +686,7 @@ export default function AdminPortal() {
 
           {activeTab === "system" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Management</h2>
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>System Management</h2>
 
               <div
                 style={{
@@ -696,7 +696,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Database Management</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Database Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -714,7 +714,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black", textAlign: "center" }}>User Management</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>User Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -732,7 +732,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Security Settings</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Security Settings</h3>
                   <div
                     style={{
                       display: "flex",
@@ -762,7 +762,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2 style={{ marginBottom: "2rem", color:"black" }}>Student Registrations</h2>
+                <h2 style={{ marginBottom: "2rem", color: "black" }}>Student Registrations</h2>
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <select
                     className="form-input"
@@ -1027,7 +1027,7 @@ export default function AdminPortal() {
                 })}
               </div>
               {/* Registration Detail Modal */}
-              {selectedRegistration &&(
+              {selectedRegistration && (
                 <div
                   className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50"
                   onClick={() => setSelectedRegistration(null)}
@@ -1145,7 +1145,7 @@ export default function AdminPortal() {
 
           {activeTab === "reports" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>Reports & Analytics</h2>
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>Reports & Analytics</h2>
 
               <div
                 style={{
@@ -1155,7 +1155,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Employee Reports</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Employee Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1175,7 +1175,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Project Reports</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Project Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1193,7 +1193,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}} >Financial Reports</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }} >Financial Reports</h3>
                   <div
                     style={{
                       display: "flex",
