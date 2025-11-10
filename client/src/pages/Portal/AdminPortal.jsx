@@ -11,7 +11,9 @@ export default function AdminPortal() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [studentRegistrations, setStudentRegistrations] = useState([]);
-  const [selectedRegistration,setSelectedRegistration] = useState([]);
+  const [selectedRegistration, setSelectedRegistration] = useState([]);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   // Mock data
   const adminStats = {
@@ -122,12 +124,58 @@ export default function AdminPortal() {
     }
   };
 
+
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    setEditForm({
+      full_name: student.full_name,
+      email: student.email,
+      phone: typeof student.phone === "object" ? student.phone.value || "" : student.phone || "",
+      education: student.education,
+      course: student.course,
+      status: student.status,
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm({ ...editForm, [name]: value });
+  };
+
+  const saveChanges = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5002/api"}/nextgen/admin/students/${editingStudent._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          body: JSON.stringify(editForm),
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Student updated successfully!");
+        setEditingStudent(null);
+        // Refresh or update local list
+      } else {
+        alert(`❌ ${data.message}`);
+      }
+    } catch (err) {
+      console.error("Error updating student:", err);
+      alert("Something went wrong!");
+    }
+  };
+
   // Handle registration rejection
   const handleRejectRegistration = async (registrationId, reason) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("authToken");
-  
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
         {
@@ -139,7 +187,7 @@ export default function AdminPortal() {
           body: JSON.stringify({ reason }),
         }
       );
-  
+
       if (response.ok) {
         await fetchRegistrations();
         alert("Registration rejected successfully!");
@@ -154,7 +202,7 @@ export default function AdminPortal() {
       setLoading(false);
     }
   };
-  
+
 
   // Handle view registration details
   const handleViewDetails = (registration) => {
@@ -169,18 +217,18 @@ export default function AdminPortal() {
       ? new Date(registration.created_at).toLocaleDateString()
       : registration.registrationDate;
 
-     alert(
+    alert(
       `Registration Details:\n\nName: ${name}\nEmail: ${registration.email}\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${registration.status}`
-    ); 
+    );
     setSelectedRegistration({
-    ...registration,
-    name,
-    course,
-    phone,
-    address,
-    documents,
-    registrationDate,
-  });
+      ...registration,
+      name,
+      course,
+      phone,
+      address,
+      documents,
+      registrationDate,
+    });
   };
 
 
@@ -384,7 +432,7 @@ export default function AdminPortal() {
         <div className="container">
           {activeTab === "dashboard" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Overview</h2>
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>System Overview</h2>
 
               <div className="stats-grid">
                 <div className="stat-card">
@@ -414,7 +462,7 @@ export default function AdminPortal() {
               >
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title"  style={{ color:"black" }}>Recent Activities</h3>
+                    <h3 className="portal-card-title" style={{ color: "black" }}>Recent Activities</h3>
                   </div>
                   <div>
                     {recentActivities.map((activity) => (
@@ -453,7 +501,7 @@ export default function AdminPortal() {
 
                 <div className="portal-card">
                   <div className="portal-card-header">
-                    <h3 className="portal-card-title"  style={{ color:"black" }} >System Health</h3>
+                    <h3 className="portal-card-title" style={{ color: "black" }} >System Health</h3>
                   </div>
                   <div
                     style={{
@@ -522,7 +570,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2 style={{ marginBottom: "2rem", color:"black" }}>Employee Management</h2>
+                <h2 style={{ marginBottom: "2rem", color: "black" }}>Employee Management</h2>
                 <button className="btn-primary">Add New Employee</button>
               </div>
 
@@ -599,7 +647,7 @@ export default function AdminPortal() {
 
           {activeTab === "projects" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>Project Overview</h2>
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>Project Overview</h2>
 
               <div className="stats-grid">
                 <div className="stat-card">
@@ -686,7 +734,7 @@ export default function AdminPortal() {
 
           {activeTab === "system" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>System Management</h2>
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>System Management</h2>
 
               <div
                 style={{
@@ -696,7 +744,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Database Management</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Database Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -714,7 +762,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black", textAlign: "center" }}>User Management</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>User Management</h3>
                   <div
                     style={{
                       display: "flex",
@@ -732,7 +780,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Security Settings</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Security Settings</h3>
                   <div
                     style={{
                       display: "flex",
@@ -762,7 +810,7 @@ export default function AdminPortal() {
                   marginBottom: "2rem",
                 }}
               >
-                <h2 style={{ marginBottom: "2rem", color:"black" }}>Student Registrations</h2>
+                <h2 style={{ marginBottom: "2rem", color: "black" }}>Student Registrations</h2>
                 <div style={{ display: "flex", gap: "1rem" }}>
                   <select
                     className="form-input"
@@ -852,9 +900,10 @@ export default function AdminPortal() {
                     if (!val) return "N/A";
                     if (typeof val === "string" || typeof val === "number") return val;
                     if (Array.isArray(val)) return val.join(", ");
-                    if (typeof val === "object") return "[Encrypted]";
-                    return String(val);
+                    return "N/A";
                   };
+
+
 
                   const documents = Array.isArray(registration.documents)
                     ? registration.documents
@@ -995,6 +1044,88 @@ export default function AdminPortal() {
                         </button>
                       </div>
 
+                      {editingStudent && (
+                        <div className="modal-overlay">
+                          <div className="modal">
+                            <h3 style={{ marginBottom: "1rem", color: "white" }}>Edit Student Details</h3>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                              <div>
+                                <label>Full Name</label>
+                                <input
+                                  name="full_name"
+                                  value={editForm.full_name}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Email</label>
+                                <input
+                                  name="email"
+                                  value={editForm.email}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Phone</label>
+                                <input
+                                  name="phone"
+                                  value={editForm.phone}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Education</label>
+                                <input
+                                  name="education"
+                                  value={editForm.education}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Status</label>
+                                <select
+                                  name="status"
+                                  value={editForm.status}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                >
+                                  <option value="submitted">Submitted</option>
+                                  <option value="approved">Approved</option>
+                                  <option value="rejected">Rejected</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginTop: "1rem",
+                              }}
+                            >
+                              <button className="btn-primary" onClick={saveChanges}>
+                                Save Changes
+                              </button>
+                              <button
+                                className="btn-secondary"
+                                onClick={() => setEditingStudent(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Notes */}
                       <div style={{ fontSize: "0.875rem" }}>
                         {registration.status === "approved" &&
@@ -1021,13 +1152,19 @@ export default function AdminPortal() {
                             )}
                           </div>
                         )}
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleEdit(registration)}
+                        >
+                          Edit
+                        </button>
                       </div>
                     </div>
                   );
                 })}
               </div>
               {/* Registration Detail Modal */}
-              {selectedRegistration &&(
+              {selectedRegistration && (
                 <div
                   className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50"
                   onClick={() => setSelectedRegistration(null)}
@@ -1145,7 +1282,7 @@ export default function AdminPortal() {
 
           {activeTab === "reports" && (
             <div>
-              <h2 style={{ marginBottom: "2rem", color:"black" }}>Reports & Analytics</h2>
+              <h2 style={{ marginBottom: "2rem", color: "black" }}>Reports & Analytics</h2>
 
               <div
                 style={{
@@ -1155,7 +1292,7 @@ export default function AdminPortal() {
                 }}
               >
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Employee Reports</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Employee Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1175,7 +1312,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}}>Project Reports</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }}>Project Reports</h3>
                   <div
                     style={{
                       display: "flex",
@@ -1193,7 +1330,7 @@ export default function AdminPortal() {
                 </div>
 
                 <div className="portal-card">
-                  <h3 className="portal-card-title" style={{ color:"black" , textAlign: "center"}} >Financial Reports</h3>
+                  <h3 className="portal-card-title" style={{ color: "black", textAlign: "center" }} >Financial Reports</h3>
                   <div
                     style={{
                       display: "flex",
