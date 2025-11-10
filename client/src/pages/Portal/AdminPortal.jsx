@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 export default function AdminPortal() {
-  const { token } = useAuth();
+  //const { token } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginData, setLoginData] = useState({ username: "", password: "" });
@@ -11,16 +11,16 @@ export default function AdminPortal() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [studentRegistrations, setStudentRegistrations] = useState([]);
-  const [selectedRegistration, setSelectedRegistration] = useState([]);
+  const [selectedRegistration,  setSelectedRegistration] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);
   const [editForm, setEditForm] = useState({});
 
   // Mock data
   const adminStats = {
-    totalEmployees: 45,
-    activeProjects: 12,
-    pendingTasks: 28,
-    completedTasks: 156,
+    totalEmployees: "45",
+    activeProjects: "12",
+    pendingTasks: "28",
+    completedTasks: "156",
     totalRevenue: "₹2,45,000",
     monthlyGrowth: "+12%",
   };
@@ -176,6 +176,7 @@ export default function AdminPortal() {
     try {
       const token = localStorage.getItem("authToken");
 
+
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
         {
@@ -187,6 +188,7 @@ export default function AdminPortal() {
           body: JSON.stringify({ reason }),
         }
       );
+
 
       if (response.ok) {
         await fetchRegistrations();
@@ -204,6 +206,7 @@ export default function AdminPortal() {
   };
 
 
+
   // Handle view registration details
   const handleViewDetails = (registration) => {
     const name = registration.full_name || registration.fullName;
@@ -218,9 +221,19 @@ export default function AdminPortal() {
       : registration.registrationDate;
 
     alert(
+    alert(
       `Registration Details:\n\nName: ${name}\nEmail: ${registration.email}\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${registration.status}`
     );
+    );
     setSelectedRegistration({
+      ...registration,
+      name,
+      course,
+      phone,
+      address,
+      documents,
+      registrationDate,
+    });
       ...registration,
       name,
       course,
@@ -259,6 +272,7 @@ export default function AdminPortal() {
       }
 
       const data = await response.json();
+      console.log(data)
 
       // Save token for future API calls
       localStorage.setItem("authToken", data.token);
