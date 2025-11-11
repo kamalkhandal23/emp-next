@@ -21,6 +21,7 @@ export default function Enrollment() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState(null)
   const [paymentType, setPaymentType] = useState('free')
+  
 
   const [courses, setCourses] = useState([
     { _id: 'fullstack', title: 'Full Stack Development', duration: '6 months', description: 'Master modern web development with React, Node.js, and cloud technologies', prerequisites: 'Basic programming knowledge helpful but not required', icon: '🌐' },

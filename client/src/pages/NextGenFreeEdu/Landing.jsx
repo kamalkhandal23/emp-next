@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import apiClient from '../../utils/api'
 import profilePic1 from '../../assets/profilePic1.jpeg'
 import profilePic2 from '../../assets/profilePic2.jpeg'
 import profilePic3 from '../../assets/profilePic3.jpeg'
@@ -7,6 +8,9 @@ import profilePic3 from '../../assets/profilePic3.jpeg'
 
 export default function NextGenLanding() {
   const [activeFeature, setActiveFeature] = useState(0)
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const features = [
     {
@@ -35,41 +39,7 @@ export default function NextGenLanding() {
     }
   ]
 
-  const courses = [
-    {
-      title: 'Full Stack Development',
-      duration: '6 months',
-      level: 'Beginner to Advanced',
-      students: '500+',
-      rating: 4.8,
-      description: 'Master modern web development with React, Node.js, and cloud technologies.',
-      skills: ['React & Redux', 'Node.js & Express', 'MongoDB & PostgreSQL', 'AWS Deployment', 'API Development'],
-      price: 'Free',
-      icon: '🌐'
-    },
-    {
-      title: 'Cybersecurity Fundamentals',
-      duration: '4 months',
-      level: 'Intermediate',
-      students: '300+',
-      rating: 4.9,
-      description: 'Learn essential cybersecurity concepts and hands-on security practices.',
-      skills: ['Network Security', 'Ethical Hacking', 'Risk Assessment', 'Security Tools', 'Incident Response'],
-      price: 'Free',
-      icon: '🔒'
-    },
-    {
-      title: 'Digital Marketing & Media',
-      duration: '3 months',
-      level: 'Beginner',
-      students: '400+',
-      rating: 4.7,
-      description: 'Create compelling digital content and master modern marketing strategies.',
-      skills: ['Content Creation', 'Social Media Marketing', 'SEO & Analytics', 'Video Production', 'Brand Strategy'],
-      price: 'Free',
-      icon: '📱'
-    }
-  ]
+
 
   const stats = [
     { number: '1000+', label: 'Active Students', icon: '👨‍🎓' },
@@ -125,6 +95,33 @@ export default function NextGenLanding() {
     const [timeLeft, setTimeLeft] = useState(getTimeLeft(enrollmentCloseDate.getTime()))
 
     useEffect(() => {
+    // Fetch courses on component mount
+    const fetchCourses = async () => {
+      try {
+        const response = await apiClient.getNextGenCourses()
+        const fetchedCourses = response.data.courses || []
+
+        // Map fetched courses to include default values for missing fields
+        const coursesWithDefaults = fetchedCourses.map(course => ({
+          ...course,
+          level: 'Beginner to Advanced',
+          students: '100+',
+          rating: 4.8,
+          skills: ['Web Development', 'Programming'],
+          price: 'Free'
+        }))
+
+        setCourses(coursesWithDefaults)
+      } catch (err) {
+        console.error('Error fetching courses:', err)
+        setError('Failed to load courses. Please try again later.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCourses()
+
     // Update countdown every second
     const timer = setInterval(() => {
       const updatedTimeLeft = getTimeLeft(enrollmentCloseDate.getTime())
@@ -261,92 +258,104 @@ export default function NextGenLanding() {
         <p className="section-content" style={{ marginBottom: '2rem' }}>
           Choose from our comprehensive range of industry-focused courses designed by experts.
         </p>
-        
-        <div className="services-grid">
-          {courses.map((course, index) => (
-            <div key={index} className="service-card" style={{ height: 'fit-content' }}>
-              <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}>
-                {course.icon}
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                <h3 className="service-title" style={{ margin: 0 }}>{course.title}</h3>
-                <span style={{ 
-                  background: '#22c55e', 
-                  color: 'white', 
-                  padding: '0.25rem 0.75rem', 
-                  borderRadius: '1rem',
-                  fontSize: '0.75rem',
-                  fontWeight: '600'
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '2rem' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+            <p>Loading courses...</p>
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
+            <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>❌</div>
+            <p>{error}</p>
+          </div>
+        ) : (
+          <div className="services-grid">
+            {courses.map((course, index) => (
+              <div key={index} className="service-card" style={{ height: 'fit-content' }}>
+                <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}>
+                  {course.icon}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h3 className="service-title" style={{ margin: 0 }}>{course.title}</h3>
+                  <span style={{
+                    background: '#22c55e',
+                    color: 'white',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '1rem',
+                    fontSize: '0.75rem',
+                    fontWeight: '600'
+                  }}>
+                    {course.price}
+                  </span>
+                </div>
+
+                <p className="service-description" style={{ marginBottom: '1rem' }}>
+                  {course.description}
+                </p>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.5rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.875rem',
+                  color: '#6b7280'
                 }}>
-                  {course.price}
-                </span>
-              </div>
-              
-              <p className="service-description" style={{ marginBottom: '1rem' }}>
-                {course.description}
-              </p>
-              
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: '1fr 1fr', 
-                gap: '0.5rem',
-                marginBottom: '1rem',
-                fontSize: '0.875rem',
-                color: '#6b7280'
-              }}>
-                <div><strong>Duration:</strong> {course.duration}</div>
-                <div><strong>Level:</strong> {course.level}</div>
-                <div><strong>Students:</strong> {course.students}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <strong>Rating:</strong> 
-                  <span style={{ color: '#fbbf24' }}>⭐</span>
-                  {course.rating}
+                  <div><strong>Duration:</strong> {course.duration}</div>
+                  <div><strong>Level:</strong> {course.level}</div>
+                  <div><strong>Students:</strong> {course.students}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <strong>Rating:</strong>
+                    <span style={{ color: '#fbbf24' }}>⭐</span>
+                    {course.rating}
+                  </div>
                 </div>
-              </div>
-              
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
-                  Skills You'll Learn:
-                </h4>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {course.skills.slice(0, 3).map((skill, skillIndex) => (
-                    <span key={skillIndex} style={{
-                      background: '#f3f4f6',
-                      color: '#374151',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '0.25rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '500'
-                    }}>
-                      {skill}
-                    </span>
-                  ))}
-                  {course.skills.length > 3 && (
-                    <span style={{
-                      background: '#dbeafe',
-                      color: '#1d4ed8',
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: '0.25rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '500'
-                    }}>
-                      +{course.skills.length - 3} more
-                    </span>
-                  )}
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                    Skills You'll Learn:
+                  </h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {course.skills.slice(0, 3).map((skill, skillIndex) => (
+                      <span key={skillIndex} style={{
+                        background: '#f3f4f6',
+                        color: '#374151',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        {skill}
+                      </span>
+                    ))}
+                    {course.skills.length > 3 && (
+                      <span style={{
+                        background: '#dbeafe',
+                        color: '#1d4ed8',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        +{course.skills.length - 3} more
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                <Link
+                  to="/nextgen/enroll"
+                  className="btn-primary"
+                  style={{ width: '100%', textAlign: 'center', display: 'block', textDecoration: 'none' }}
+                >
+                  Enroll in This Course
+                </Link>
               </div>
-              
-              <Link 
-                to="/nextgen/enroll" 
-                className="btn-primary"
-                style={{ width: '100%', textAlign: 'center', display: 'block', textDecoration: 'none' }}
-              >
-                Enroll in This Course
-              </Link>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/*Closing Timer*/}
