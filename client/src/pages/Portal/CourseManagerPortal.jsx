@@ -34,11 +34,19 @@ export default function CourseManagerPortal() {
         slug: "",
         title: "",
         subtitle: "",
-        duration: "",
         description: "",
         prerequisites: "",
         icon: "🎓",
         visibility: "draft",
+        courseCode: "",
+        category: "",
+        level: "",
+        duration: { weeks: "", hoursPerWeek: "" },
+        credits: "",
+        instructor: { name: "", email: "" },
+        enrollment: { capacity: "" },
+        schedule: { startDate: "", endDate: "" },
+        pricing: { amount: "" }
     });
 
     // Mock data fallbacks
@@ -154,53 +162,53 @@ export default function CourseManagerPortal() {
 
     useEffect(() => {
         const fetchRegistrations = async () => {
-          try {
-            const response = await axios.get(
-              "http://localhost:5002/api/nextgen/registrations",
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-    
-            
-            setStudentRegistrations(response.data);
-    
-            
-            // setStudentRegistrations(response.data.data);
-    
-            console.log("Fetched registrations:", response.data);
-          } catch (error) {
-            console.error("Error fetching registrations:", error);
-          }
+            try {
+                const response = await axios.get(
+                    "http://localhost:5002/api/nextgen/registrations",
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+
+
+                setStudentRegistrations(response.data);
+
+
+                // setStudentRegistrations(response.data.data);
+
+                console.log("Fetched registrations:", response.data);
+            } catch (error) {
+                console.error("Error fetching registrations:", error);
+            }
         };
-    
+
         fetchRegistrations();
-      }, []);
-    
-      // Initialize registrations on component mount
-      useEffect(() => {
+    }, []);
+
+    // Initialize registrations on component mount
+    useEffect(() => {
         if (isLoggedIn) {
-          fetchRegistrations();
+            fetchRegistrations();
         }
-      }, [isLoggedIn]);
-    
-      // Fetch registrations from API
-      const fetchRegistrations = async () => {
+    }, [isLoggedIn]);
+
+    // Fetch registrations from API
+    const fetchRegistrations = async () => {
         try {
-          const token = localStorage.getItem("token"); // get token from localStorage
-    
-          const res = await axios.get("http://localhost:5002/api/nextgen/registrations", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            withCredentials: true,
-          });
-    
-          console.log(res.data);
+            const token = localStorage.getItem("token"); // get token from localStorage
+
+            const res = await axios.get("http://localhost:5002/api/nextgen/registrations", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                withCredentials: true,
+            });
+
+            console.log(res.data);
         } catch (error) {
-          console.error("Error fetching registrations:", error);
+            console.error("Error fetching registrations:", error);
         }
-      };
+    };
 
     const fetchCourses = async () => {
         setLoading(true);
@@ -229,75 +237,75 @@ export default function CourseManagerPortal() {
     /* ----------------- Action Handlers ----------------- */
 
     // Handle registration approval
-  const handleApproveRegistration = async (id) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("authToken");
-      console.log("🔹 Token from localStorage:", token);
+    const handleApproveRegistration = async (id) => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("authToken");
+            console.log("🔹 Token from localStorage:", token);
 
-      if (!token) {
-        alert("No token found! Please login again.");
-        return;
-      }
+            if (!token) {
+                alert("No token found! Please login again.");
+                return;
+            }
 
-      const url = `http://localhost:5002/api/nextgen/admin/registrations/${id}/approve`;
-      console.log("🔹 Requesting:", url);
+            const url = `http://localhost:5002/api/nextgen/admin/registrations/${id}/approve`;
+            console.log("🔹 Requesting:", url);
 
-      const res = await axios.put(
-        url,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+            const res = await axios.put(
+                url,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log(" Response:", res.data);
+            alert(res.data?.message || "Registration approved successfully!");
+            fetchRegistrations();
+        } catch (error) {
+            console.error("Full error object:", error);
+            console.error("Error response:", error.response?.data);
+            alert(error.response?.data?.message || "Approval failed!");
+        } finally {
+            setLoading(false);
         }
-      );
+    };
 
-      console.log(" Response:", res.data);
-      alert(res.data?.message || "Registration approved successfully!");
-      fetchRegistrations();
-    } catch (error) {
-      console.error("Full error object:", error);
-      console.error("Error response:", error.response?.data);
-      alert(error.response?.data?.message || "Approval failed!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Handle registration rejection
+    const handleRejectRegistration = async (registrationId, reason) => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem("authToken");
 
-  // Handle registration rejection
-  const handleRejectRegistration = async (registrationId, reason) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("authToken");
-  
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ reason }),
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ reason }),
+                }
+            );
+
+            if (response.ok) {
+                await fetchRegistrations();
+                alert("Registration rejected successfully!");
+            } else {
+                const errorData = await response.json();
+                alert(`Error rejecting registration: ${errorData.message}`);
+            }
+        } catch (error) {
+            console.error("Error rejecting registration:", error);
+            alert("Error rejecting registration");
+        } finally {
+            setLoading(false);
         }
-      );
-  
-      if (response.ok) {
-        await fetchRegistrations();
-        alert("Registration rejected successfully!");
-      } else {
-        const errorData = await response.json();
-        alert(`Error rejecting registration: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error("Error rejecting registration:", error);
-      alert("Error rejecting registration");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+    };
+
 
     const handleViewDetails = (registration) => {
         const name = registration?.full_name || registration?.fullName || "Unnamed";
@@ -330,7 +338,8 @@ export default function CourseManagerPortal() {
         setShowCourseDetails(true);
     };
 
-    const handleAddCourse = async () => {
+    const handleAddCourse = async (e) => {
+        console.log("Adding course:", newCourse);
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
@@ -503,6 +512,128 @@ export default function CourseManagerPortal() {
                                         { value: "published", label: "Published" },
                                     ]}
                                 />
+                                <TextField
+                                    label="Course Code"
+                                    value={newCourse.courseCode}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, courseCode: v.toUpperCase() }))}
+                                    required
+                                    placeholder="e.g., CS101"
+                                />
+
+                                <Select
+                                    label="Category"
+                                    value={newCourse.category}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, category: v }))}
+                                    options={[
+                                        { value: "Technology", label: "Technology" },
+                                        { value: "Business", label: "Business" },
+                                        { value: "Design", label: "Design" },
+                                        { value: "Marketing", label: "Marketing" },
+                                        { value: "Healthcare", label: "Healthcare" },
+                                        { value: "Education", label: "Education" },
+                                        { value: "Other", label: "Other" }
+                                    ]}
+                                    required
+                                />
+
+                                <Select
+                                    label="Level"
+                                    value={newCourse.level}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, level: v }))}
+                                    options={[
+                                        { value: "Beginner", label: "Beginner" },
+                                        { value: "Intermediate", label: "Intermediate" },
+                                        { value: "Advanced", label: "Advanced" }
+                                    ]}
+                                    required
+                                />
+
+                                <TextField
+                                    label="Duration (weeks)"
+                                    type="number"
+                                    value={newCourse.duration.weeks}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, duration: { ...p.duration, weeks: Number(v) } }))
+                                    }
+                                    required
+                                />
+
+                                <TextField
+                                    label="Hours per Week"
+                                    type="number"
+                                    value={newCourse.duration.hoursPerWeek}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, duration: { ...p.duration, hoursPerWeek: Number(v) } }))
+                                    }
+                                    required
+                                />
+
+                                <TextField
+                                    label="Credits"
+                                    type="number"
+                                    value={newCourse.credits}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, credits: Number(v) }))}
+                                    required
+                                />
+
+                                <TextField
+                                    label="Instructor Name"
+                                    value={newCourse.instructor.name}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, instructor: { ...p.instructor, name: v } }))
+                                    }
+                                    required
+                                />
+
+                                <TextField
+                                    label="Instructor Email"
+                                    value={newCourse.instructor.email}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, instructor: { ...p.instructor, email: v } }))
+                                    }
+                                    required
+                                />
+
+                                <TextField
+                                    label="Enrollment Capacity"
+                                    type="number"
+                                    value={newCourse.enrollment.capacity}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, enrollment: { ...p.enrollment, capacity: Number(v) } }))
+                                    }
+                                    required
+                                />
+
+                                <TextField
+                                    label="Start Date"
+                                    type="date"
+                                    value={newCourse.schedule.startDate}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, schedule: { ...p.schedule, startDate: v } }))
+                                    }
+                                    required
+                                />
+
+                                <TextField
+                                    label="End Date"
+                                    type="date"
+                                    value={newCourse.schedule.endDate}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, schedule: { ...p.schedule, endDate: v } }))
+                                    }
+                                    required
+                                />
+
+                                <TextField
+                                    label="Price"
+                                    type="number"
+                                    value={newCourse.pricing.amount}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, pricing: { ...p.pricing, amount: Number(v) } }))
+                                    }
+                                    required
+                                />
+
                             </div>
 
                             <div
@@ -1164,10 +1295,24 @@ export default function CourseManagerPortal() {
                         }}
                     >
                         <div style={{ display: "grid", gap: "1rem" }}>
-                            <TextField label="Slug" value={newCourse.slug} onChange={(v) => setNewCourse((p) => ({ ...p, slug: v }))} required placeholder="course-slug" />
+                            <TextField
+                                label="Slug"
+                                value={newCourse.slug}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, slug: v }))}
+                                required
+                                placeholder="course-slug"
+                            />
                             <TextField label="Title" value={newCourse.title} onChange={(v) => setNewCourse((p) => ({ ...p, title: v }))} required placeholder="Course Title" />
                             <TextField label="Subtitle" value={newCourse.subtitle} onChange={(v) => setNewCourse((p) => ({ ...p, subtitle: v }))} placeholder="Course Subtitle" />
-                            <TextField label="Duration" value={newCourse.duration} onChange={(v) => setNewCourse((p) => ({ ...p, duration: v }))} placeholder="e.g., 3 months" />
+                            <TextField
+                                label="Duration (weeks)"
+                                type="number"
+                                value={newCourse.duration.weeks}
+                                onChange={(v) =>
+                                    setNewCourse((p) => ({ ...p, duration: { ...p.duration, weeks: Number(v) } }))
+                                }
+                                required
+                            />
                             <TextArea label="Description" value={newCourse.description} onChange={(v) => setNewCourse((p) => ({ ...p, description: v }))} rows={3} />
                             <TextField label="Prerequisites" value={newCourse.prerequisites} onChange={(v) => setNewCourse((p) => ({ ...p, prerequisites: v }))} />
                             <TextField label="Icon" value={newCourse.icon} onChange={(v) => setNewCourse((p) => ({ ...p, icon: v }))} placeholder="🎓" />
