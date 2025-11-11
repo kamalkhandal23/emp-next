@@ -1,4 +1,4 @@
-import Course from '../models/education/courseModel.js';
+import Course from '../models/education/NG_Courses.js';
 import Student from '../models/education/studentModel.js';
 import mongoose from 'mongoose';
 import { validationResult } from 'express-validator';

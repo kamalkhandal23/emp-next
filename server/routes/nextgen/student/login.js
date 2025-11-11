@@ -1,6 +1,5 @@
 import Router from "express"
 import NG_Approved_Students from '../../../models/nextgen/core/NG_ApprovedStudents.js';
-import NG_Courses from "../../../models/nextgen/core/NG_Courses.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 const router = Router()
@@ -26,7 +25,7 @@ router.post("/student/login", async (req, res) => {
       $or: [{ email: identifier.toLowerCase() }, { student_id: identifier }],
     }).populate({
       path : "course",
-      model : "NG_Courses",
+      model : "Ng_Courses",
       select : "title subtitle duration"
     });
 

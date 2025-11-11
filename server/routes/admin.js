@@ -1,6 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 import jwt from "jsonwebtoken";
+import NG_Student from "../models/nextgen/core/Registration.js";
 import {
   getDashboardStats,
   getSystemHealth,
@@ -19,6 +20,38 @@ import {
 import { auth, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Update student details by ID
+router.put("/students/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+   
+    if (typeof updates.phone === "object") {
+      updates.phone = updates.phone.value || "";
+    }
+
+    const updatedStudent = await NG_Student.findByIdAndUpdate(
+      id,
+      { $set: updates },
+      { new: true, runValidators: false }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Student updated successfully",
+      data: updatedStudent,
+    });
+  } catch (error) {
+    console.error("Error updating student:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+});
 
 /* ---------------------- ADMIN LOGIN ROUTE ---------------------- */
 // This should be placed BEFORE router.use(auth)

@@ -23,16 +23,28 @@ const courseValidation = [
 ];
 
 // Public routes
+
+// @route : /api/nextgen/courses/
+// @des : get all the courses from Ng_Courses
+// @method : Get
 router.get('/', getAllCourses);
+
+// @route : /api/nextgen/courses/:id
+// @des : get particular id  course from Ng_Courses
+// @method : Get
 router.get('/:id', getCourseById);
 
 // Protected routes (Admin/Course Manager)
 router.use(auth);
 router.use(authorize(['admin', 'course_manager']));
 
+
 router.post('/', courseValidation, createCourse);
 router.put('/:id', courseValidation, updateCourse);
 router.delete('/:id', deleteCourse);
-router.get('/:id/statistics', getCourseStatistics);
+
+
+
+// router.get('/:id/statistics', getCourseStatistics);
 
 export default router;

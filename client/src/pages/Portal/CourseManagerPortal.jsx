@@ -27,8 +27,19 @@ export default function CourseManagerPortal() {
     // Misc
     const [loading, setLoading] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
+    const [showEditCourse,setShowEditCourse] = useState(false)
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [showCourseDetails, setShowCourseDetails] = useState(false);
+    const [editCourse, setEditCourse] = useState({
+        slug: "",
+        title: "",
+        subtitle: "",
+        duration: "",
+        description: "",
+        prerequisites: "",
+        icon: "🎓",
+        visibility: "draft",
+    });
 
     const [newCourse, setNewCourse] = useState({
         slug: "",
@@ -183,10 +194,18 @@ export default function CourseManagerPortal() {
         };
 
         fetchRegistrations();
+<<<<<<< HEAD
     }, []);
 
     // Initialize registrations on component mount
     useEffect(() => {
+=======
+        fetchCourses();
+      }, []);
+    
+      // Initialize registrations on component mount
+      useEffect(() => {
+>>>>>>> main
         if (isLoggedIn) {
             fetchRegistrations();
         }
@@ -333,9 +352,19 @@ export default function CourseManagerPortal() {
         }
     };
 
-    const handleViewCourse = (course) => {
+    const handleEditCourse = (course) => {
         setSelectedCourse(course);
-        setShowCourseDetails(true);
+        setEditCourse({
+            slug: course.slug || "",
+            title: course.title || "",
+            subtitle: course.subtitle || "",
+            duration: course.duration || "",
+            description: course.description || "",
+            prerequisites: course.prerequisites || "",
+            icon: course.icon || "🎓",
+            visibility: course.visibility || "draft",
+        });
+        setShowEditCourse(true);
     };
 
     const handleAddCourse = async (e) => {
@@ -373,6 +402,64 @@ export default function CourseManagerPortal() {
         } catch (e) {
             console.error("Add course failed:", e);
             alert("Error adding course");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteCourse = async (course) => {
+        try {
+            const token = localStorage.getItem("authToken");
+        const res = await fetch(
+            `http://localhost:5002/api/nextgen/courses/${course._id}`,
+            {
+                method: "DELETE" ,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+
+            }
+        );
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Course deleted successfully");
+            setCourses((prev) => prev.filter((c) => c._id !== course._id));
+        } else {
+            message.error(data.message || "Failed to delete course");
+        }
+        } catch (error) {
+        console.error(error);
+        alert("Server error while deleting course");
+        }
+    };
+
+    const handleEditCourseSubmit = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem("authToken");
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/courses/${selectedCourse._id}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(editCourse),
+            });
+
+            if (res.ok) {
+                await fetchCourses();
+                setShowEditCourse(false);
+                setSelectedCourse(null);
+                alert("Course updated successfully!");
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(`Error updating course: ${err?.message || "Failed"}`);
+            }
+        } catch (e) {
+            console.error("Edit course failed:", e);
+            alert("Error updating course");
         } finally {
             setLoading(false);
         }
@@ -659,6 +746,8 @@ export default function CourseManagerPortal() {
                     </Modal>
                 )}
 
+
+
                 {/* View Course Modal */}
                 {showCourseDetails && selectedCourse && (
                     <Modal title={`${selectedCourse?.icon || ""} ${selectedCourse?.title || ""}`} onClose={() => { setShowCourseDetails(false); setSelectedCourse(null); }}>
@@ -875,6 +964,7 @@ export default function CourseManagerPortal() {
                                         gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto",
                                         fontWeight: 600,
                                         background: "#f8fafc",
+                                        color: "black"
                                     }}
                                 >
                                     <div>Course Title</div>
@@ -906,10 +996,10 @@ export default function CourseManagerPortal() {
                                         </div>
                                         <div>{course?.enrolled_count || 0}</div>
                                         <div style={{ display: "flex", gap: "0.5rem" }}>
-                                            <button className="action-button primary" onClick={() => handleViewCourse(course)}>
-                                                View
+                                            <button className="action-button primary" onClick={() => handleEditCourse(course)}>
+                                                Edit
                                             </button>
-                                            <button className="action-button">Edit</button>
+                                            <button className="action-button" onClick={()=> handleDeleteCourse(course)}>Delete</button>
                                         </div>
                                     </div>
                                 ))}
@@ -920,7 +1010,7 @@ export default function CourseManagerPortal() {
                     {/* SYSTEM */}
                     {activeTab === "system" && (
                         <section>
-                            <h2 style={{ marginBottom: "2rem", color: "black" }}>System Management</h2>
+                            <h2 style={{ marginBottom: "2rem", color: "black" }}>Assignments and exams</h2>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
                                 <Card title="Database Management">
                                     <ActionList
@@ -932,9 +1022,9 @@ export default function CourseManagerPortal() {
                                         ]}
                                     />
                                 </Card>
-                                <Card title="User Management">
+                                <Card title="Exams">
                                     <ActionList
-                                        actions={["Create User", "Manage Roles", "Reset Passwords", "View Sessions"]}
+                                        actions={["Create exams", "Manage Roles", "Reset Passwords", "View Sessions"]}
                                     />
                                 </Card>
                                 <Card title="Security Settings">
@@ -1333,6 +1423,93 @@ export default function CourseManagerPortal() {
                             </button>
                             <button type="submit" className="btn-primary" disabled={loading}>
                                 {loading ? "Adding..." : "Add Course"}
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Edit Course Modal (logged-in view) */}
+            {showEditCourse && selectedCourse && (
+                <Modal title="Edit Course" onClose={() => { setShowEditCourse(false); setSelectedCourse(null); }}>
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleEditCourseSubmit();
+                        }}
+                    >
+                        <div style={{ display: "grid", gap: "1rem" }}>
+                            <TextField
+                                label="Slug"
+                                value={editCourse.slug}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, slug: v }))}
+                                required
+                                placeholder="course-slug"
+                            />
+                            <TextField
+                                label="Title"
+                                value={editCourse.title}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, title: v }))}
+                                required
+                                placeholder="Course Title"
+                            />
+                            <TextField
+                                label="Subtitle"
+                                value={editCourse.subtitle}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, subtitle: v }))}
+                                placeholder="Course Subtitle"
+                            />
+                            <TextField
+                                label="Duration"
+                                value={editCourse.duration}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, duration: v }))}
+                                placeholder="e.g., 3 months"
+                            />
+                            <TextArea
+                                label="Description"
+                                value={editCourse.description}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, description: v }))}
+                                rows={3}
+                            />
+                            <TextField
+                                label="Prerequisites"
+                                value={editCourse.prerequisites}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, prerequisites: v }))}
+                            />
+                            <TextField
+                                label="Icon"
+                                value={editCourse.icon}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, icon: v }))}
+                                placeholder="🎓"
+                            />
+                            <Select
+                                label="Visibility"
+                                value={editCourse.visibility}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, visibility: v }))}
+                                options={[
+                                    { value: "draft", label: "Draft" },
+                                    { value: "published", label: "Published" },
+                                ]}
+                            />
+                        </div>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "1rem",
+                                justifyContent: "flex-end",
+                                marginTop: "2rem",
+                            }}
+                        >
+                            <button
+                                type="button"
+                                onClick={() => { setShowEditCourse(false); setSelectedCourse(null); }}
+                                className="btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button type="submit" className="btn-primary" disabled={loading}>
+                                {loading ? "Updating..." : "Update Course"}
                             </button>
                         </div>
                     </form>

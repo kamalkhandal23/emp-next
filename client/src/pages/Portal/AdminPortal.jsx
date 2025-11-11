@@ -11,7 +11,9 @@ export default function AdminPortal() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [studentRegistrations, setStudentRegistrations] = useState([]);
-  const [selectedRegistration, setSelectedRegistration] = useState([]);
+  const [selectedRegistration,  setSelectedRegistration] = useState([]);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   // Mock data
   const adminStats = {
@@ -122,11 +124,58 @@ export default function AdminPortal() {
     }
   };
 
+
+  const handleEdit = (student) => {
+    setEditingStudent(student);
+    setEditForm({
+      full_name: student.full_name,
+      email: student.email,
+      phone: typeof student.phone === "object" ? student.phone.value || "" : student.phone || "",
+      education: student.education,
+      course: student.course,
+      status: student.status,
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm({ ...editForm, [name]: value });
+  };
+
+  const saveChanges = async () => {
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5002/api"}/nextgen/admin/students/${editingStudent._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+          body: JSON.stringify(editForm),
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        alert("✅ Student updated successfully!");
+        setEditingStudent(null);
+        // Refresh or update local list
+      } else {
+        alert(`❌ ${data.message}`);
+      }
+    } catch (err) {
+      console.error("Error updating student:", err);
+      alert("Something went wrong!");
+    }
+  };
+
   // Handle registration rejection
   const handleRejectRegistration = async (registrationId, reason) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("authToken");
+
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
@@ -139,6 +188,7 @@ export default function AdminPortal() {
           body: JSON.stringify({ reason }),
         }
       );
+
 
       if (response.ok) {
         await fetchRegistrations();
@@ -156,6 +206,7 @@ export default function AdminPortal() {
   };
 
 
+
   // Handle view registration details
   const handleViewDetails = (registration) => {
     const name = registration.full_name || registration.fullName;
@@ -169,9 +220,11 @@ export default function AdminPortal() {
       ? new Date(registration.created_at).toLocaleDateString()
       : registration.registrationDate;
 
+    
     alert(
       `Registration Details:\n\nName: ${name}\nEmail: ${registration.email}\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${registration.status}`
     );
+    
     setSelectedRegistration({
       ...registration,
       name,
@@ -181,6 +234,7 @@ export default function AdminPortal() {
       documents,
       registrationDate,
     });
+    
   };
 
 
@@ -386,6 +440,7 @@ export default function AdminPortal() {
           {activeTab === "dashboard" && (
             <div>
               <h2 style={{ marginBottom: "2rem", color: "black" }}>System Overview</h2>
+
               <div className="stats-grid">
                 <div className="stat-card">
                   <div className="stat-number">{adminStats.totalEmployees}</div>
@@ -852,9 +907,10 @@ export default function AdminPortal() {
                     if (!val) return "N/A";
                     if (typeof val === "string" || typeof val === "number") return val;
                     if (Array.isArray(val)) return val.join(", ");
-                    if (typeof val === "object") return "[Encrypted]";
-                    return String(val);
+                    return "N/A";
                   };
+
+
 
                   const documents = Array.isArray(registration.documents)
                     ? registration.documents
@@ -995,6 +1051,88 @@ export default function AdminPortal() {
                         </button>
                       </div>
 
+                      {editingStudent && (
+                        <div className="modal-overlay">
+                          <div className="modal">
+                            <h3 style={{ marginBottom: "1rem", color: "white" }}>Edit Student Details</h3>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                              <div>
+                                <label>Full Name</label>
+                                <input
+                                  name="full_name"
+                                  value={editForm.full_name}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Email</label>
+                                <input
+                                  name="email"
+                                  value={editForm.email}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Phone</label>
+                                <input
+                                  name="phone"
+                                  value={editForm.phone}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Education</label>
+                                <input
+                                  name="education"
+                                  value={editForm.education}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                />
+                              </div>
+
+                              <div>
+                                <label>Status</label>
+                                <select
+                                  name="status"
+                                  value={editForm.status}
+                                  onChange={handleEditChange}
+                                  style={{ width: "100%" }}
+                                >
+                                  <option value="submitted">Submitted</option>
+                                  <option value="approved">Approved</option>
+                                  <option value="rejected">Rejected</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                marginTop: "1rem",
+                              }}
+                            >
+                              <button className="btn-primary" onClick={saveChanges}>
+                                Save Changes
+                              </button>
+                              <button
+                                className="btn-secondary"
+                                onClick={() => setEditingStudent(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Notes */}
                       <div style={{ fontSize: "0.875rem" }}>
                         {registration.status === "approved" &&
@@ -1021,6 +1159,12 @@ export default function AdminPortal() {
                             )}
                           </div>
                         )}
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleEdit(registration)}
+                        >
+                          Edit
+                        </button>
                       </div>
                     </div>
                   );

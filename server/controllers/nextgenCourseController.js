@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import Course from '../models/nextgen/education/Course.js';
+import NG_Courses from '../models/education/NG_Courses.js';
 import Registration from '../models/nextgen/core/Registration.js';
 import { validationResult } from 'express-validator';
 
@@ -15,7 +15,8 @@ export const getAllCourses = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    const query = { visibility };
+    const query = {visibility };
+
 
     if (search) {
       query.$or = [
@@ -28,13 +29,13 @@ export const getAllCourses = async (req, res) => {
     const sortOptions = {};
     sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
-    const courses = await Course.find(query)
-      .populate('created_by', 'full_name')
+    const courses = await NG_Courses.find(query)
+      // .populate('created_by', 'full_name')  // field missing of created by which need to be added in the future
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort(sortOptions);
 
-    const total = await Course.countDocuments(query);
+    const total = await NG_Courses.countDocuments(query);
 
     res.json({
       success: true,
@@ -60,8 +61,8 @@ export const getAllCourses = async (req, res) => {
 // Get course by ID
 export const getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id)
-      .populate('created_by', 'full_name');
+    const course = await NG_Courses.findById(req.params.id)
+      // .populate('created_by', 'full_name');
 
     if (!course) {
       return res.status(404).json({
@@ -91,33 +92,36 @@ export const createCourse = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
-        errors: errors.array()
+        errors: errors.array(),
       });
     }
 
     const courseData = {
       ...req.body,
-      created_by: req.user._id
+      created_by: req.user._id, // Only if schema includes this field
     };
 
-    const course = await Course.create(courseData);
+    const course = await NG_Courses.create(courseData);
 
     res.status(201).json({
       success: true,
       message: 'Course created successfully',
-      data: { course }
+      data: { course },
     });
   } catch (error) {
     console.error('Create course error:', error);
+
     if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
       return res.status(400).json({
         success: false,
-        message: 'Course slug already exists'
+        message: `Duplicate value for field: ${field}`,
       });
     }
+
     res.status(500).json({
       success: false,
-      message: 'Server error creating course'
+      message: 'Server error creating course',
     });
   }
 };
@@ -130,33 +134,51 @@ export const updateCourse = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
-        errors: errors.array()
+        errors: errors.array(),
       });
     }
 
-    const course = await Course.findByIdAndUpdate(
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID',
+      });
+    }
+
+    const { created_by, _id, ...updateData } = req.body;
+
+    const course = await NG_Courses.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     ).populate('created_by', 'full_name');
 
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: 'Course not found',
       });
     }
 
     res.json({
       success: true,
       message: 'Course updated successfully',
-      data: { course }
+      data: { course },
     });
   } catch (error) {
     console.error('Update course error:', error);
+
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({
+        success: false,
+        message: `Duplicate value for field: ${field}`,
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Server error updating course'
+      message: 'Server error updating course',
     });
   }
 };
@@ -164,8 +186,9 @@ export const updateCourse = async (req, res) => {
 // Delete course
 export const deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
-
+    const course = await NG_Courses.findById(req.params.id);
+    console.log(course)
+    
     if (!course) {
       return res.status(404).json({
         success: false,
@@ -187,7 +210,7 @@ export const deleteCourse = async (req, res) => {
       });
     }
 
-    await Course.findByIdAndDelete(req.params.id);
+    await NG_Courses.findByIdAndDelete(req.params.id);
 
     res.json({
       success: true,
@@ -207,7 +230,7 @@ export const getCourseStatistics = async (req, res) => {
   try {
     const courseId = req.params.id;
 
-    const course = await Course.findById(courseId);
+    const course = await NG_Courses.findById(courseId);
     if (!course) {
       return res.status(404).json({
         success: false,
