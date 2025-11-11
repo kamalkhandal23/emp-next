@@ -5,7 +5,7 @@ const registrationSchema = new mongoose.Schema({
   full_name: { type: String, required: true },
   email: { type: String, required: true },
   phone: { c: String, iv: String, tag: String },
-  course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'NG_Course', required: true },
+  course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Ng_Courses', required: true },
 
   // Added "approved" to enum values
   status: {

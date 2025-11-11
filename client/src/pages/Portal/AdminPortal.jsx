@@ -220,11 +220,11 @@ export default function AdminPortal() {
       ? new Date(registration.created_at).toLocaleDateString()
       : registration.registrationDate;
 
-    alert(
+    
     alert(
       `Registration Details:\n\nName: ${name}\nEmail: ${registration.email}\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${registration.status}`
     );
-    );
+    
     setSelectedRegistration({
       ...registration,
       name,
@@ -234,14 +234,7 @@ export default function AdminPortal() {
       documents,
       registrationDate,
     });
-      ...registration,
-      name,
-      course,
-      phone,
-      address,
-      documents,
-      registrationDate,
-    });
+    
   };
 
 
