@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 
+
 /**
  * Course Manager Portal (stable build)
  * - No unbalanced JSX
@@ -27,6 +28,7 @@ export default function CourseManagerPortal() {
     // Misc
     const [loading, setLoading] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
+    const [showEditCourse,setShowEditCourse] = useState(false)
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [showCourseDetails, setShowCourseDetails] = useState(false);
 
@@ -175,6 +177,7 @@ export default function CourseManagerPortal() {
         };
     
         fetchRegistrations();
+        fetchCourses();
       }, []);
     
       // Initialize registrations on component mount
@@ -325,9 +328,11 @@ export default function CourseManagerPortal() {
         }
     };
 
-    const handleViewCourse = (course) => {
+    const handleEditCourse = (course) => {
         setSelectedCourse(course);
-        setShowCourseDetails(true);
+        console.log(course)
+        setShowEditCourse(true)
+        console.log(showEditCourse)
     };
 
     const handleAddCourse = async () => {
@@ -366,6 +371,34 @@ export default function CourseManagerPortal() {
             alert("Error adding course");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteCourse = async (course) => {
+        try {
+            const token = localStorage.getItem("authToken");
+        const res = await fetch(
+            `http://localhost:5002/api/nextgen/courses/${course._id}`,
+            { 
+                method: "DELETE" ,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+
+            }
+        );
+        const data = await res.json();
+
+        if (data.success) {
+            alert("Course deleted successfully");
+            setCourses((prev) => prev.filter((c) => c._id !== course._id));
+        } else {
+            message.error(data.message || "Failed to delete course");
+        }
+        } catch (error) {
+        console.error(error);
+        alert("Server error while deleting course");
         }
     };
 
@@ -441,6 +474,95 @@ export default function CourseManagerPortal() {
 
                 {/* Add Course Modal */}
                 {showAddCourse && (
+                    <Modal title="Add New Course" onClose={() => setShowAddCourse(false)}>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleAddCourse();
+                            }}
+                        >
+                            <div style={{ display: "grid", gap: "1rem" }}>
+                                <TextField
+                                    label="Slug"
+                                    value={newCourse.slug}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, slug: v }))}
+                                    required
+                                    placeholder="course-slug"
+                                />
+                                <TextField
+                                    label="Title"
+                                    value={newCourse.title}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, title: v }))}
+                                    required
+                                    placeholder="Course Title"
+                                />
+                                <TextField
+                                    label="Subtitle"
+                                    value={newCourse.subtitle}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, subtitle: v }))}
+                                    placeholder="Course Subtitle"
+                                />
+                                <TextField
+                                    label="Duration"
+                                    value={newCourse.duration}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, duration: v }))}
+                                    placeholder="e.g., 3 months"
+                                />
+                                <TextArea
+                                    label="Description"
+                                    value={newCourse.description}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, description: v }))}
+                                    rows={3}
+                                />
+                                <TextField
+                                    label="Prerequisites"
+                                    value={newCourse.prerequisites}
+                                    onChange={(v) =>
+                                        setNewCourse((p) => ({ ...p, prerequisites: v }))
+                                    }
+                                />
+                                <TextField
+                                    label="Icon"
+                                    value={newCourse.icon}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, icon: v }))}
+                                    placeholder="🎓"
+                                />
+                                <Select
+                                    label="Visibility"
+                                    value={newCourse.visibility}
+                                    onChange={(v) => setNewCourse((p) => ({ ...p, visibility: v }))}
+                                    options={[
+                                        { value: "draft", label: "Draft" },
+                                        { value: "published", label: "Published" },
+                                    ]}
+                                />
+                            </div>
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    gap: "1rem",
+                                    justifyContent: "flex-end",
+                                    marginTop: "2rem",
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddCourse(false)}
+                                    className="btn-secondary"
+                                >
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn-primary" disabled={loading}>
+                                    {loading ? "Adding..." : "Add Course"}
+                                </button>
+                            </div>
+                        </form>
+                    </Modal>
+                )}
+
+                {/* Open Edit Model for Courses */}
+                {showEditCourse && (
                     <Modal title="Add New Course" onClose={() => setShowAddCourse(false)}>
                         <form
                             onSubmit={(e) => {
@@ -744,6 +866,7 @@ export default function CourseManagerPortal() {
                                         gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto",
                                         fontWeight: 600,
                                         background: "#f8fafc",
+                                        color: "black"
                                     }}
                                 >
                                     <div>Course Title</div>
@@ -775,10 +898,10 @@ export default function CourseManagerPortal() {
                                         </div>
                                         <div>{course?.enrolled_count || 0}</div>
                                         <div style={{ display: "flex", gap: "0.5rem" }}>
-                                            <button className="action-button primary" onClick={() => handleViewCourse(course)}>
-                                                View
+                                            <button className="action-button primary" onClick={() => handleEditCourse(course)}>
+                                                Edit
                                             </button>
-                                            <button className="action-button">Edit</button>
+                                            <button className="action-button" onClick={()=> handleDeleteCourse(course)}>Delete</button>
                                         </div>
                                     </div>
                                 ))}
