@@ -396,6 +396,9 @@ export default function CourseManagerPortal() {
         if (action === "Create exams") {
         navigate("/portal/coursemanager/createexam");
         }
+        if (action === "Manage Exams") {
+        navigate("/portal/coursemanager/manageexams");
+        }
     };
 
     const handleDeleteCourse = async (course) => {
@@ -690,7 +693,7 @@ export default function CourseManagerPortal() {
                         ["dashboard", "Dashboard"],
                         ["employees", "Student Management"],
                         ["projects", "Course Overview"],
-                        ["system", "System Management"],
+                        ["system", "Assignments and exams"],
                         ["student-registrations", "Student Registrations"],
                         ["reports", "Reports & Analytics"],
                     ].map(([key, label]) => (
@@ -893,7 +896,7 @@ export default function CourseManagerPortal() {
                                 </Card>
                                 <Card title="Exams">
                                     <ActionList
-                                        actions={["Create exams", "Manage Roles", "Reset Passwords", "View Sessions"]}
+                                        actions={["Create exams", "Manage Exams", "Reset Passwords", "View Sessions"]}
                                         onActionClick={handleActionClick} // 👈 attach handler
                                     />
                                 </Card>
