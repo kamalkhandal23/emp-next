@@ -881,10 +881,10 @@ export default function CourseManagerPortal() {
                         <section>
                             <h2 style={{ marginBottom: "2rem", color: "black" }}>Assignments and exams</h2>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
-                                <Card title="Database Management">
+                                <Card title="Assignments">
                                     <ActionList
                                         actions={[
-                                            "Backup Database",
+                                            "Create Assignments",
                                             "Restore Database",
                                             "Optimize Database",
                                             "View Logs",

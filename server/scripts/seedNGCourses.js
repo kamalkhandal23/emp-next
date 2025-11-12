@@ -8,14 +8,14 @@ dotenv.config();
 
 const seedNGCourses = async () => {
   try {
-    // Connect to database - using the provided MongoDB Atlas URI
-    const mongoUri = 'mongodb+srv://bhanuprakashsyagamreddy:oxfordV2Cluster@cluster0.f1p7jgs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+    // Connect to database - using the provided MongoDB Atlas URI for test database
+    const mongoUri = 'mongodb+srv://bhanuprakashsyagamreddy:oxfordV2Cluster@cluster0.f1p7jgs.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB');
 
     // Clear existing NG_Courses if needed (optional, comment out if you want to keep existing)
-    // await Course.deleteMany({});
-    // console.log('Cleared existing NG_Courses');
+    await Course.deleteMany({});
+    console.log('Cleared existing NG_Courses');
 
     // Sample test courses
     const testCourses = [
@@ -29,6 +29,7 @@ const seedNGCourses = async () => {
         icon: '🌐',
         visibility: 'published',
         banner_url: 'https://example.com/banner1.jpg',
+        courseCode: 'WEB101',
         // created_by: null for now, or set to an existing user ID if available
       },
       {
@@ -41,6 +42,7 @@ const seedNGCourses = async () => {
         icon: '⚡',
         visibility: 'published',
         banner_url: 'https://example.com/banner2.jpg',
+        courseCode: 'JS201',
       },
       {
         slug: 'react-fundamentals',
@@ -52,6 +54,7 @@ const seedNGCourses = async () => {
         icon: '⚛️',
         visibility: 'published',
         banner_url: 'https://example.com/banner3.jpg',
+        courseCode: 'REACT101',
       },
       {
         slug: 'node-js-backend-development',
@@ -63,6 +66,7 @@ const seedNGCourses = async () => {
         icon: '🟢',
         visibility: 'published',
         banner_url: 'https://example.com/banner4.jpg',
+        courseCode: 'NODE201',
       },
       {
         slug: 'data-structures-and-algorithms',
@@ -74,6 +78,7 @@ const seedNGCourses = async () => {
         icon: '📊',
         visibility: 'published',
         banner_url: 'https://example.com/banner5.jpg',
+        courseCode: 'DSA301',
       }
     ];
 

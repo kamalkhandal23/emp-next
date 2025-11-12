@@ -10,6 +10,7 @@ const courseSchema = new mongoose.Schema({
   icon: { type: String, default: '🎓' },
   visibility: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft', index: true },
   banner_url: String,
+  courseCode: { type: String, required: true, unique: true, uppercase: true },
   created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'NG_User' },
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 

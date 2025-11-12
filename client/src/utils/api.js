@@ -443,6 +443,40 @@ class ApiClient {
       },
     })
   }
+
+  // NextGen Exam endpoints
+  async createNextGenExam(examData) {
+    return this.request('/nextgen/exams/create', {
+      method: 'POST',
+      body: examData,
+    })
+  }
+
+  async getAllNextGenExams(params = {}) {
+    const queryString = new URLSearchParams(params).toString()
+    return this.request(`/nextgen/exams${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getNextGenExamById(id) {
+    return this.request(`/nextgen/exams/id/${id}`)
+  }
+
+  async getNextGenExamByName(examName) {
+    return this.request(`/nextgen/exams/name/${encodeURIComponent(examName)}`)
+  }
+
+  async updateNextGenExamStatus(id, status) {
+    return this.request(`/nextgen/exams/${id}/status`, {
+      method: 'PATCH',
+      body: { status },
+    })
+  }
+
+  async deleteNextGenExam(id) {
+    return this.request(`/nextgen/exams/${id}`, {
+      method: 'DELETE',
+    })
+  }
 }
 
 export const apiClient = new ApiClient()
