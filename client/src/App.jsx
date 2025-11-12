@@ -27,6 +27,7 @@ import EmployeePortal from "./pages/Portal/EmployeePortal";
 import CourseManagerPortal from "./pages/Portal/CourseManagerPortal";
 import TestConnection from "./pages/TestConnection";
 import PrivacyPolicy from "./pages/NextGenFreeEdu/PrivacyPolicy";
+import CreateExam from "./pages/NextGenFreeEdu/CreateExam";
 
 function MainLayout() {
   return (
@@ -163,6 +164,7 @@ export default function App() {
               path="portal/coursemanager"
               element={<CourseManagerPortal />}
             />
+            <Route path="/portal/coursemanager/createexam" element={<CreateExam/>}/>
             <Route path="test" element={<TestConnection />} />
           </Routes>
         </AuthProvider>

@@ -391,6 +391,13 @@ export default function CourseManagerPortal() {
         }
     };
 
+    const handleActionClick = (action) => {
+        console.log(action)
+        if (action === "Create exams") {
+        navigate("/portal/coursemanager/createexam");
+        }
+    };
+
     const handleDeleteCourse = async (course) => {
         try {
             const token = localStorage.getItem("authToken");
@@ -887,6 +894,7 @@ export default function CourseManagerPortal() {
                                 <Card title="Exams">
                                     <ActionList
                                         actions={["Create exams", "Manage Roles", "Reset Passwords", "View Sessions"]}
+                                        onActionClick={handleActionClick} // 👈 attach handler
                                     />
                                 </Card>
                                 <Card title="Security Settings">
@@ -1436,16 +1444,20 @@ function Card({ title, children }) {
     );
 }
 
-function ActionList({ actions = [] }) {
-    return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {actions.map((a, i) => (
-                <button key={i} className={`action-button ${i === 0 ? "primary" : ""}`}>
-                    {a}
-                </button>
-            ))}
-        </div>
-    );
+function ActionList({ actions = [], onActionClick }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      {actions.map((a, i) => (
+        <button
+          key={i}
+          className={`action-button ${i === 0 ? "primary" : ""}`}
+          onClick={() => onActionClick && onActionClick(a)} // 🔥 call handler
+        >
+          {a}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 function KVRow({ label, value, success = false }) {
