@@ -1,12 +1,17 @@
 import React, { useState } from "react";
+import { apiClient } from "../../utils/api";
 
 function CreateExam() {
   const [totalQuestions, setTotalQuestions] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [examName , setExamName] = useState("")
+  const [courseName, setCourseName] = useState(""); // NEW: course name field
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [questionTypes, setQuestionTypes] = useState({});
   const [questionData, setQuestionData] = useState({}); // NEW: store actual questions
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -48,11 +53,85 @@ function CreateExam() {
   const allQuestionsTyped =
     Object.keys(questionTypes).length === totalQuestions;
 
+  const handleFinalizeExam = async () => {
+    // Validate all questions are filled
+    const allQuestionsFilled = Object.keys(questionData).every(qNum => {
+      const q = questionData[qNum];
+      if (!q.question || q.question.trim() === '') return false;
+      
+      if (q.type === 'MCQ') {
+        return q.options && q.options.length === 4 && 
+               q.options.every(opt => opt && opt.trim() !== '') &&
+               q.answer && q.answer.trim() !== '';
+      }
+      
+      if (q.type === 'Coding') {
+        return q.testCase && q.testCase.trim() !== '';
+      }
+      
+      if (q.type === 'Answer-based') {
+        return q.answer && q.answer.trim() !== '';
+      }
+      
+      return true;
+    });
+
+    if (!allQuestionsFilled) {
+      alert('⚠️ Please fill in all question details before finalizing the exam.');
+      return;
+    }
+
+    if (!examName || examName.trim() === '') {
+      alert('⚠️ Please provide an exam name.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const examData = {
+        examName: examName.trim(),
+        totalQuestions: parseInt(totalQuestions),
+        questionData: questionData
+      };
+
+      console.log('Submitting exam data:', examData);
+
+      const response = await apiClient.createNextGenExam(examData);
+
+      if (response.success) {
+        setSubmitSuccess(true);
+        alert(`✅ Exam "${examName}" created successfully!\n\nExam ID: ${response.data.id}`);
+        
+        // Reset form after successful submission
+        setTimeout(() => {
+          setTotalQuestions("");
+          setSubmitted(false);
+          setExamName("");
+          setCourseName("");
+          setSelectedQuestion(null);
+          setQuestionTypes({});
+          setQuestionData({});
+          setSubmitSuccess(false);
+        }, 2000);
+      } else {
+        throw new Error(response.message || 'Failed to create exam');
+      }
+    } catch (error) {
+      console.error('Error creating exam:', error);
+      setSubmitError(error.message || 'Failed to create exam. Please try again.');
+      alert(`❌ Error: ${error.message || 'Failed to create exam. Please try again.'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-10">
       <div className="max-w-5xl mx-auto bg-white shadow-2xl rounded-xl p-6 md:p-10">
         <header className="text-center mb-10 border-b pb-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-blue-800 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-black tracking-tight" style={{color: "black" }}>
             ✍️ Exam Creator 
           </h1>
           <p className="text-gray-500 mt-2">
@@ -70,16 +149,29 @@ function CreateExam() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
                 <label className="text-lg text-gray-700 font-medium text-left">
+                    Course Name
+                </label>
+
+                <input
+                    type="text"
+                    value={courseName}
+                    onChange={(e) => setCourseName(e.target.value)}
+                    className="border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm"
+                    placeholder="e.g, React Development"
+                    required
+                />
+
+                <label className="text-lg text-gray-700 font-medium text-left">
                     Name of your Exam
                 </label>
 
                  <input
-                    type="string"
+                    type="text"
                     value={examName}
                     onChange={(e) => setExamName(e.target.value)}
                     className="border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm"
                     placeholder="e.g, React fundamentals"
-                    min="1"
+                    required
                 />
 
                 <label className="text-lg text-gray-700 font-medium text-left">
@@ -95,11 +187,12 @@ function CreateExam() {
                 className="border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm"
                 placeholder="e.g., 10"
                 min="1"
+                required
               />
 
               <button
                 type="submit"
-                disabled={totalQuestions < 1}
+                disabled={totalQuestions < 1 || !examName.trim() || !courseName.trim()}
                 className="w-full bg-blue-400 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 shadow-md"
               >
                 Start Designing
@@ -110,9 +203,14 @@ function CreateExam() {
           <>
             {/* Step 2: Choose question types */}
             <div className="flex flex-col gap-8">
-              <h2 className="text-3xl font-bold text-black bg-blue-400">
-                {examName}
-              </h2>
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-600 mb-2" style={{color: "black"}}>
+                  Course: {courseName}
+                </h2>
+                <h2 className="text-3xl font-bold text-black" style={{color: "black"}}>
+                  {examName}
+                </h2>
+              </div>
 
               <div className="border p-4 rounded-lg bg-gray-50">
                 <p className="text-sm text-gray-600 font-medium mb-3">
@@ -144,10 +242,8 @@ function CreateExam() {
               {/* Step 3: Choose or edit question content */}
               {selectedQuestion  && examName && (
                 <div className="p-6 bg-yellow-50 border-t-4 border-yellow-400 rounded-lg shadow-lg">
-                    <h3 className="text-xl font-bold mb-4 text-yellow-800">
-                    Question {examName}
-                  </h3>
-                  <h3 className="text-xl font-bold mb-4 text-yellow-800">
+                    
+                  <h3 className="text-xl font-bold mb-4 text-black" style={{color:"black"}}> 
                     Question {selectedQuestion}
                   </h3>
 
@@ -291,14 +387,45 @@ function CreateExam() {
 
             {allQuestionsTyped && (
               <div className="mt-8 text-center">
+                {submitError && (
+                  <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                    <p className="font-semibold">Error:</p>
+                    <p>{submitError}</p>
+                  </div>
+                )}
+                
+                {submitSuccess && (
+                  <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                    <p className="font-semibold">✅ Exam created successfully!</p>
+                    <p>Redirecting...</p>
+                  </div>
+                )}
+
                 <button
-                  onClick={() =>
-                    console.log("Final Exam Data:", questionData)
-                  }
-                  className="bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 px-10 rounded-xl transition duration-200 text-lg shadow-xl"
+                  onClick={handleFinalizeExam}
+                  disabled={isSubmitting || submitSuccess}
+                  className={`bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 px-10 rounded-xl transition duration-200 text-lg shadow-xl ${
+                    isSubmitting || submitSuccess ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Finalize Exam Structure
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Creating Exam...
+                    </span>
+                  ) : submitSuccess ? (
+                    '✅ Exam Created!'
+                  ) : (
+                    'Finalize & Submit Exam'
+                  )}
                 </button>
+                
+                <p className="mt-3 text-sm text-gray-600">
+                  This will save your exam to the database
+                </p>
               </div>
             )}
           </>
