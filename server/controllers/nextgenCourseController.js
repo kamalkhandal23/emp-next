@@ -10,13 +10,20 @@ export const getAllCourses = async (req, res) => {
       page = 1,
       limit = 10,
       search,
-      visibility = 'published',
+      visibility,
       sortBy = 'created_at',
       sortOrder = 'desc'
     } = req.query;
 
-    const query = {visibility };
+    // Build query object
+    const query = {};
 
+    // Only filter by visibility if explicitly provided
+    if (visibility) {
+      query.visibility = visibility;
+    }
+
+    console.log('Query for getAllCourses:', query);
 
     if (search) {
       query.$or = [
@@ -36,6 +43,9 @@ export const getAllCourses = async (req, res) => {
       .sort(sortOptions);
 
     const total = await NG_Courses.countDocuments(query);
+
+    console.log('Found courses count:', courses.length);
+    console.log('Total courses in DB matching query:', total);
 
     res.json({
       success: true,

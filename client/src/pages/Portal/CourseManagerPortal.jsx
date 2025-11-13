@@ -24,10 +24,16 @@ export default function CourseManagerPortal() {
     const [studentRegistrations, setStudentRegistrations] = useState([]);
     const [courses, setCourses] = useState([]);
 
+    // Filter state
+    const [courseFilter, setCourseFilter] = useState({
+        visibility: "all", // all, published, draft, archived
+        search: ""
+    });
+
     // Misc
     const [loading, setLoading] = useState(false);
     const [showAddCourse, setShowAddCourse] = useState(false);
-    const [showEditCourse,setShowEditCourse] = useState(false)
+    const [showEditCourse, setShowEditCourse] = useState(false)
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [showCourseDetails, setShowCourseDetails] = useState(false);
     const [editCourse, setEditCourse] = useState({
@@ -37,8 +43,10 @@ export default function CourseManagerPortal() {
         duration: "",
         description: "",
         prerequisites: "",
-        icon: "🎓",
+        icon: "📘",
         visibility: "draft",
+        banner_url: "",
+        courseCode: "",
     });
 
     const [newCourse, setNewCourse] = useState({
@@ -48,9 +56,36 @@ export default function CourseManagerPortal() {
         duration: "",
         description: "",
         prerequisites: "",
-        icon: "🎓",
+        icon: "📘",
         visibility: "draft",
+        banner_url: "",
+        courseCode: "",
     });
+
+    // Filtered courses based on frontend filters
+    const filteredCourses = useMemo(() => {
+        let filtered = [...courses];
+
+        // Filter by visibility
+        if (courseFilter.visibility !== "all") {
+            filtered = filtered.filter(course =>
+                course.visibility === courseFilter.visibility
+            );
+        }
+
+        // Filter by search term
+        if (courseFilter.search.trim()) {
+            const searchTerm = courseFilter.search.toLowerCase().trim();
+            filtered = filtered.filter(course =>
+                course.title?.toLowerCase().includes(searchTerm) ||
+                course.subtitle?.toLowerCase().includes(searchTerm) ||
+                course.description?.toLowerCase().includes(searchTerm) ||
+                course.courseCode?.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        return filtered;
+    }, [courses, courseFilter]);
 
     // Mock data fallbacks
     const mockRegistrations = useMemo(
@@ -165,151 +200,203 @@ export default function CourseManagerPortal() {
 
     useEffect(() => {
         const fetchRegistrations = async () => {
-          try {
-            const response = await axios.get(
-              "http://localhost:5002/api/nextgen/registrations",
-              {
-                headers: { Authorization: `Bearer ${token}` },
-              }
-            );
-    
-            
-            setStudentRegistrations(response.data);
-    
-            
-            // setStudentRegistrations(response.data.data);
-    
-            console.log("Fetched registrations:", response.data);
-          } catch (error) {
-            console.error("Error fetching registrations:", error);
-          }
+            try {
+                const response = await axios.get(
+                    "http://localhost:5002/api/nextgen/registrations",
+                    {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }
+                );
+
+
+                setStudentRegistrations(response.data);
+
+
+                // setStudentRegistrations(response.data.data);
+
+                console.log("Fetched registrations:", response.data);
+            } catch (error) {
+                console.error("Error fetching registrations:", error);
+            }
         };
-    
+
         fetchRegistrations();
         fetchCourses();
-      }, []);
-    
-      // Initialize registrations on component mount
-      useEffect(() => {
+    }, []);
+
+    // Initialize registrations on component mount
+    useEffect(() => {
         if (isLoggedIn) {
-          fetchRegistrations();
+            fetchRegistrations();
+            fetchCourses(); // Also fetch courses when logged in
         }
-      }, [isLoggedIn]);
-    
-      // Fetch registrations from API
-      const fetchRegistrations = async () => {
+    }, [isLoggedIn]);
+
+    // Fetch registrations from API
+    const fetchRegistrations = async () => {
         try {
-          const token = localStorage.getItem("token"); // get token from localStorage
-    
-          const res = await axios.get("http://localhost:5002/api/nextgen/registrations", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            withCredentials: true,
-          });
-    
-          console.log(res.data);
+            const token = localStorage.getItem("token"); // get token from localStorage
+
+            const res = await axios.get("http://localhost:5002/api/nextgen/registrations", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                withCredentials: true,
+            });
+
+            console.log(res.data);
         } catch (error) {
-          console.error("Error fetching registrations:", error);
+            console.error("Error fetching registrations:", error);
         }
-      };
+    };
 
     const fetchCourses = async () => {
         setLoading(true);
         try {
-            const token = localStorage.getItem("authToken");
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/courses`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+            console.log("Fetching courses with token:", token);
+
+            const headers = {
+                "Content-Type": "application/json",
+            };
+
+            // Only add Authorization header if token exists
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002'}/api/nextgen/courses`, {
+                headers,
             });
+
+            console.log("Courses API response status:", res.status);
 
             if (res.ok) {
                 const data = await res.json();
-                setCourses(data?.data?.courses ?? []);
+                console.log("Full API response:", data);
+                console.log("Courses data structure:", data?.data);
+                console.log("Raw data type:", typeof data);
+                console.log("Raw data keys:", Object.keys(data || {}));
+
+                // Handle different possible response structures
+                let coursesArray = [];
+                if (data?.data?.courses) {
+                    coursesArray = data.data.courses;
+                    console.log("Using data.data.courses path, found:", coursesArray.length);
+                } else if (data?.courses) {
+                    coursesArray = data.courses;
+                    console.log("Using data.courses path, found:", coursesArray.length);
+                } else if (Array.isArray(data?.data)) {
+                    coursesArray = data.data;
+                    console.log("Using data.data array path, found:", coursesArray.length);
+                } else if (Array.isArray(data)) {
+                    coursesArray = data;
+                    console.log("Using data array path, found:", coursesArray.length);
+                } else {
+                    console.warn("Unknown data structure:", data);
+                }
+
+                console.log("Processed courses array length:", coursesArray.length);
+                console.log("Processed courses array:", coursesArray);
+
+                // Check for any filtering or issues with individual courses
+                coursesArray.forEach((course, index) => {
+                    console.log(`Course ${index + 1}:`, {
+                        id: course?._id,
+                        title: course?.title,
+                        slug: course?.slug,
+                        visibility: course?.visibility
+                    });
+                });
+
+                setCourses(coursesArray);
             } else {
+                const errorData = await res.json().catch(() => null);
+                console.error("Failed to fetch courses:", res.status, errorData);
                 setCourses([]);
             }
         } catch (e) {
+            console.error("Error fetching courses:", e);
             setCourses([]);
         } finally {
             setLoading(false);
         }
     };
 
-    /* ----------------- Action Handlers ----------------- */
+    useEffect(() => {
+        // This effect runs when fetchCourses changes
+        // Add any logic here if needed
+    }, [fetchCourses]);    /* ----------------- Action Handlers ----------------- */
 
     // Handle registration approval
-  const handleApproveRegistration = async (id) => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("authToken");
-      console.log("🔹 Token from localStorage:", token);
+    const handleApproveRegistration = async (id) => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem("authToken");
+            console.log("🔹 Token from localStorage:", token);
 
-      if (!token) {
-        alert("No token found! Please login again.");
-        return;
-      }
+            if (!token) {
+                alert("No token found! Please login again.");
+                return;
+            }
 
-      const url = `http://localhost:5002/api/nextgen/admin/registrations/${id}/approve`;
-      console.log("🔹 Requesting:", url);
+            const url = `http://localhost:5002/api/nextgen/admin/registrations/${id}/approve`;
+            console.log("🔹 Requesting:", url);
 
-      const res = await axios.put(
-        url,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+            const res = await axios.put(
+                url,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            console.log(" Response:", res.data);
+            alert(res.data?.message || "Registration approved successfully!");
+            fetchRegistrations();
+        } catch (error) {
+            console.error("Full error object:", error);
+            console.error("Error response:", error.response?.data);
+            alert(error.response?.data?.message || "Approval failed!");
+        } finally {
+            setLoading(false);
         }
-      );
+    };
 
-      console.log(" Response:", res.data);
-      alert(res.data?.message || "Registration approved successfully!");
-      fetchRegistrations();
-    } catch (error) {
-      console.error("Full error object:", error);
-      console.error("Error response:", error.response?.data);
-      alert(error.response?.data?.message || "Approval failed!");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Handle registration rejection
+    const handleRejectRegistration = async (registrationId, reason) => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem("authToken");
 
-  // Handle registration rejection
-  const handleRejectRegistration = async (registrationId, reason) => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem("authToken");
-  
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ reason }),
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/nextgen/admin/registrations/${registrationId}/reject`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ reason }),
+                }
+            );
+
+            if (response.ok) {
+                await fetchRegistrations();
+                alert("Registration rejected successfully!");
+            } else {
+                const errorData = await response.json();
+                alert(`Error rejecting registration: ${errorData.message}`);
+            }
+        } catch (error) {
+            console.error("Error rejecting registration:", error);
+            alert("Error rejecting registration");
+        } finally {
+            setLoading(false);
         }
-      );
-  
-      if (response.ok) {
-        await fetchRegistrations();
-        alert("Registration rejected successfully!");
-      } else {
-        const errorData = await response.json();
-        alert(`Error rejecting registration: ${errorData.message}`);
-      }
-    } catch (error) {
-      console.error("Error rejecting registration:", error);
-      alert("Error rejecting registration");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+    };
+
 
     const handleViewDetails = (registration) => {
         const name = registration?.full_name || registration?.fullName || "Unnamed";
@@ -334,6 +421,10 @@ export default function CourseManagerPortal() {
         if (loginData.username && loginData.password) {
             // (You can integrate real auth here)
             setIsLoggedIn(true);
+            // Fetch courses after login
+            setTimeout(() => {
+                fetchCourses();
+            }, 100);
         }
     };
 
@@ -346,28 +437,49 @@ export default function CourseManagerPortal() {
             duration: course.duration || "",
             description: course.description || "",
             prerequisites: course.prerequisites || "",
-            icon: course.icon || "🎓",
+            icon: course.icon || "📘",
             visibility: course.visibility || "draft",
+            banner_url: course.banner_url || "",
+            courseCode: course.courseCode || "",
         });
         setShowEditCourse(true);
     };
 
-    const handleAddCourse = async () => {
+    const handleAddCourse = async (e) => {
+        console.log("Adding course:", newCourse);
         setLoading(true);
         try {
-            const token = localStorage.getItem("authToken");
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/courses`, {
+            // Auto-generate slug if not provided
+            const courseData = {
+                ...newCourse,
+                slug: newCourse.slug || newCourse.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, ''),
+                created_by: "673b7e6b4d5f8e4a9b2c1d0e" // Hardcoded user ID for now - should be from auth context
+            };
+
+            console.log("Course data to send:", courseData);
+
+            const headers = {
+                "Content-Type": "application/json",
+            };
+
+            // Only add Authorization header if token exists
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002'}/api/nextgen/courses`, {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newCourse),
+                headers,
+                body: JSON.stringify(courseData),
             });
 
+            console.log("Add course response status:", res.status);
+
             if (res.ok) {
+                console.log("Course added successfully, refreshing list...");
                 await fetchCourses();
                 setShowAddCourse(false);
+                // Reset form to include all fields
                 setNewCourse({
                     slug: "",
                     title: "",
@@ -375,17 +487,77 @@ export default function CourseManagerPortal() {
                     duration: "",
                     description: "",
                     prerequisites: "",
-                    icon: "🎓",
+                    icon: "📘",
                     visibility: "draft",
+                    banner_url: "",
+                    courseCode: "",
                 });
                 alert("Course added successfully!");
             } else {
                 const err = await res.json().catch(() => ({}));
-                alert(`Error adding course: ${err?.message || "Failed"}`);
+                console.error("API Error:", err);
+                console.error("Response Status:", res.status);
+                alert(`Error adding course: ${err?.message || `HTTP ${res.status}: ${res.statusText}`}`);
             }
         } catch (e) {
             console.error("Add course failed:", e);
-            alert("Error adding course");
+            alert(`Error adding course: ${e.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleDeleteCourse = async (course) => {
+        try {
+            const token = localStorage.getItem("authToken");
+            const res = await fetch(
+                `http://localhost:5002/api/nextgen/courses/${course._id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+
+                }
+            );
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Course deleted successfully");
+                setCourses((prev) => prev.filter((c) => c._id !== course._id));
+            } else {
+                message.error(data.message || "Failed to delete course");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Server error while deleting course");
+        }
+    };
+
+    const handleEditCourseSubmit = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5002'}/api/nextgen/courses/${selectedCourse._id}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(editCourse),
+            });
+
+            if (res.ok) {
+                await fetchCourses();
+                setShowEditCourse(false);
+                setSelectedCourse(null);
+                alert("Course updated successfully!");
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(`Error updating course: ${err?.message || "Failed"}`);
+            }
+        } catch (e) {
+            console.error("Edit course failed:", e);
+            alert("Error updating course");
         } finally {
             setLoading(false);
         }
@@ -394,42 +566,42 @@ export default function CourseManagerPortal() {
     const handleActionClick = (action) => {
         console.log(action)
         if (action === "Create exams") {
-        navigate("/portal/coursemanager/createexam");
+            navigate("/portal/coursemanager/createexam");
         }
         if (action === "Manage Exams") {
-        navigate("/portal/coursemanager/manageexams");
+            navigate("/portal/coursemanager/manageexams");
         }
     };
 
-    const handleDeleteCourse = async (course) => {
+    /* const handleDeleteCourse = async (course) => {
         try {
             const token = localStorage.getItem("authToken");
-        const res = await fetch(
-            `http://localhost:5002/api/nextgen/courses/${course._id}`,
-            {
-                method: "DELETE" ,
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
+            const res = await fetch(
+                `http://localhost:5002/api/nextgen/courses/${course._id}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
 
+                }
+            );
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Course deleted successfully");
+                setCourses((prev) => prev.filter((c) => c._id !== course._id));
+            } else {
+                message.error(data.message || "Failed to delete course");
             }
-        );
-        const data = await res.json();
-
-        if (data.success) {
-            alert("Course deleted successfully");
-            setCourses((prev) => prev.filter((c) => c._id !== course._id));
-        } else {
-            message.error(data.message || "Failed to delete course");
-        }
         } catch (error) {
-        console.error(error);
-        alert("Server error while deleting course");
+            console.error(error);
+            alert("Server error while deleting course");
         }
-    };
+    }; */
 
-    const handleEditCourseSubmit = async () => {
+    /* const handleEditCourseSubmit = async () => {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
@@ -457,7 +629,7 @@ export default function CourseManagerPortal() {
         } finally {
             setLoading(false);
         }
-    };
+    }; */
 
     /* ---------------- UI Sections ---------------- */
 
@@ -528,98 +700,6 @@ export default function CourseManagerPortal() {
                         </div>
                     </div>
                 </div>
-
-                {/* Add Course Modal */}
-                {showAddCourse && (
-                    <Modal title="Add New Course" onClose={() => setShowAddCourse(false)}>
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                handleAddCourse();
-                            }}
-                        >
-                            <div style={{ display: "grid", gap: "1rem" }}>
-                                <TextField
-                                    label="Slug"
-                                    value={newCourse.slug}
-                                    onChange={(v) => setNewCourse((p) => ({ ...p, slug: v }))}
-                                    required
-                                    placeholder="course-slug"
-                                />
-                                <TextField
-                                    label="Title"
-                                    value={newCourse.title}
-                                    onChange={(v) => setNewCourse((p) => ({ ...p, title: v }))}
-                                    required
-                                    placeholder="Course Title"
-                                />
-                                <TextField
-                                    label="Subtitle"
-                                    value={newCourse.subtitle}
-                                    onChange={(v) => setNewCourse((p) => ({ ...p, subtitle: v }))}
-                                    placeholder="Course Subtitle"
-                                />
-                                <TextField
-                                    label="Duration"
-                                    value={newCourse.duration}
-                                    onChange={(v) => setNewCourse((p) => ({ ...p, duration: v }))}
-                                    placeholder="e.g., 3 months"
-                                />
-                                <TextArea
-                                    label="Description"
-                                    value={newCourse.description}
-                                    onChange={(v) => setNewCourse((p) => ({ ...p, description: v }))}
-                                    rows={3}
-                                />
-                                <TextField
-                                    label="Prerequisites"
-                                    value={newCourse.prerequisites}
-                                    onChange={(v) =>
-                                        setNewCourse((p) => ({ ...p, prerequisites: v }))
-                                    }
-                                />
-                                <TextField
-                                    label="Icon"
-                                    value={newCourse.icon}
-                                    onChange={(v) => setNewCourse((p) => ({ ...p, icon: v }))}
-                                    placeholder="🎓"
-                                />
-                                <Select
-                                    label="Visibility"
-                                    value={newCourse.visibility}
-                                    onChange={(v) => setNewCourse((p) => ({ ...p, visibility: v }))}
-                                    options={[
-                                        { value: "draft", label: "Draft" },
-                                        { value: "published", label: "Published" },
-                                    ]}
-                                />
-                            </div>
-
-                            <div
-                                style={{
-                                    display: "flex",
-                                    gap: "1rem",
-                                    justifyContent: "flex-end",
-                                    marginTop: "2rem",
-                                }}
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => setShowAddCourse(false)}
-                                    className="btn-secondary"
-                                >
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn-primary" disabled={loading}>
-                                    {loading ? "Adding..." : "Add Course"}
-                                </button>
-                            </div>
-                        </form>
-                    </Modal>
-                )}
-
-
-
                 {/* View Course Modal */}
                 {showCourseDetails && selectedCourse && (
                     <Modal title={`${selectedCourse?.icon || ""} ${selectedCourse?.title || ""}`} onClose={() => { setShowCourseDetails(false); setSelectedCourse(null); }}>
@@ -813,9 +893,20 @@ export default function CourseManagerPortal() {
                         <section>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
                                 <h2 style={{ margin: 0, color: "black" }}>Course Overview</h2>
-                                <button className="btn-primary" onClick={() => setShowAddCourse(true)}>
-                                    Add Course
-                                </button>
+                                <div style={{ display: "flex", gap: "1rem" }}>
+                                    <button
+                                        className="btn-secondary"
+                                        onClick={() => {
+                                            console.log("Manual refresh clicked");
+                                            fetchCourses();
+                                        }}
+                                    >
+                                        Refresh Courses
+                                    </button>
+                                    <button className="btn-primary" onClick={() => setShowAddCourse(true)}>
+                                        Add Course
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="stats-grid">
@@ -826,6 +917,74 @@ export default function CourseManagerPortal() {
                                     value={courses.reduce((t, c) => t + (c.enrolled_count || 0), 0)}
                                     label="Total Enrollments"
                                 />
+                            </div>
+
+                            {/* Debug Info */}
+                            <div style={{
+                                margin: "1rem 0",
+                                padding: "1rem",
+                                background: "#f0f9ff",
+                                borderRadius: "0.5rem",
+                                fontSize: "0.875rem"
+                            }}>
+                                <strong>Debug Info:</strong> Found {courses.length} courses | Token: {token ? "✅ Present" : "❌ Missing"} | Loading: {loading ? "Yes" : "No"}
+                            </div>
+
+                            {/* Course Filters */}
+                            <div style={{
+                                margin: "1rem 0",
+                                padding: "1rem",
+                                background: "#f8fafc",
+                                borderRadius: "0.5rem",
+                                display: "flex",
+                                gap: "1rem",
+                                alignItems: "center",
+                                flexWrap: "wrap"
+                            }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                    <label style={{ fontSize: "0.875rem", fontWeight: "500" }}>Search:</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Search courses..."
+                                        value={courseFilter.search}
+                                        onChange={(e) => setCourseFilter(prev => ({ ...prev, search: e.target.value }))}
+                                        style={{
+                                            padding: "0.5rem",
+                                            border: "1px solid #d1d5db",
+                                            borderRadius: "0.375rem",
+                                            fontSize: "0.875rem",
+                                            minWidth: "200px"
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                    <label style={{ fontSize: "0.875rem", fontWeight: "500" }}>Visibility:</label>
+                                    <select
+                                        value={courseFilter.visibility}
+                                        onChange={(e) => setCourseFilter(prev => ({ ...prev, visibility: e.target.value }))}
+                                        style={{
+                                            padding: "0.5rem",
+                                            border: "1px solid #d1d5db",
+                                            borderRadius: "0.375rem",
+                                            fontSize: "0.875rem",
+                                            minWidth: "120px"
+                                        }}
+                                    >
+                                        <option value="all">All Courses</option>
+                                        <option value="published">Published</option>
+                                        <option value="draft">Draft</option>
+                                        <option value="archived">Archived</option>
+                                    </select>
+                                </div>
+
+                                <div style={{
+                                    marginLeft: "auto",
+                                    fontSize: "0.875rem",
+                                    color: "#6b7280"
+                                }}>
+                                    Showing {filteredCourses.length} of {courses.length} courses
+                                </div>
                             </div>
 
                             <div className="data-table">
@@ -847,34 +1006,45 @@ export default function CourseManagerPortal() {
                                     <div>Actions</div>
                                 </div>
 
-                                {courses.map((course, idx) => (
-                                    <div
-                                        key={course?._id || idx}
-                                        className="table-row"
-                                        style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto" }}
-                                    >
-                                        <div style={{ fontWeight: 500 }}>
-                                            {course?.icon} {course?.title}
+                                {filteredCourses.length > 0 ? (
+                                    filteredCourses.map((course, idx) => (
+                                        <div
+                                            key={course?._id || idx}
+                                            className="table-row"
+                                            style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto" }}
+                                        >
+                                            <div style={{ fontWeight: 500 }}>
+                                                {course?.icon} {course?.title}
+                                            </div>
+                                            <div>{course?.subtitle || ""}</div>
+                                            <div>{course?.duration || ""}</div>
+                                            <div>
+                                                <span
+                                                    className={`status-badge status-${course?.visibility === "published" ? "active" : "pending"
+                                                        }`}
+                                                >
+                                                    {course?.visibility}
+                                                </span>
+                                            </div>
+                                            <div>{course?.enrolled_count || 0}</div>
+                                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                                                <button className="action-button primary" onClick={() => handleEditCourse(course)}>
+                                                    Edit
+                                                </button>
+                                                <button className="action-button" onClick={() => handleDeleteCourse(course)}>Delete</button>
+                                            </div>
                                         </div>
-                                        <div>{course?.subtitle || ""}</div>
-                                        <div>{course?.duration || ""}</div>
-                                        <div>
-                                            <span
-                                                className={`status-badge status-${course?.visibility === "published" ? "active" : "pending"
-                                                    }`}
-                                            >
-                                                {course?.visibility}
-                                            </span>
-                                        </div>
-                                        <div>{course?.enrolled_count || 0}</div>
-                                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                                            <button className="action-button primary" onClick={() => handleEditCourse(course)}>
-                                                Edit
-                                            </button>
-                                            <button className="action-button" onClick={()=> handleDeleteCourse(course)}>Delete</button>
-                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{
+                                        textAlign: "center",
+                                        padding: "2rem",
+                                        color: "#6b7280",
+                                        gridColumn: "1 / -1"
+                                    }}>
+                                        {loading ? "Loading courses..." : "No courses found. Add a course to get started!"}
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </section>
                     )}
@@ -896,8 +1066,7 @@ export default function CourseManagerPortal() {
                                 </Card>
                                 <Card title="Exams">
                                     <ActionList
-                                        actions={["Create exams", "Manage Exams", "Reset Passwords", "View Sessions"]}
-                                        onActionClick={handleActionClick} // 👈 attach handler
+                                        actions={["Create exams", "Manage Roles", "Reset Passwords", "View Sessions"]}
                                     />
                                 </Card>
                                 <Card title="Security Settings">
@@ -1258,13 +1427,84 @@ export default function CourseManagerPortal() {
                         }}
                     >
                         <div style={{ display: "grid", gap: "1rem" }}>
-                            <TextField label="Slug" value={newCourse.slug} onChange={(v) => setNewCourse((p) => ({ ...p, slug: v }))} required placeholder="course-slug" />
-                            <TextField label="Title" value={newCourse.title} onChange={(v) => setNewCourse((p) => ({ ...p, title: v }))} required placeholder="Course Title" />
-                            <TextField label="Subtitle" value={newCourse.subtitle} onChange={(v) => setNewCourse((p) => ({ ...p, subtitle: v }))} placeholder="Course Subtitle" />
-                            <TextField label="Duration" value={newCourse.duration} onChange={(v) => setNewCourse((p) => ({ ...p, duration: v }))} placeholder="e.g., 3 months" />
-                            <TextArea label="Description" value={newCourse.description} onChange={(v) => setNewCourse((p) => ({ ...p, description: v }))} rows={3} />
-                            <TextField label="Prerequisites" value={newCourse.prerequisites} onChange={(v) => setNewCourse((p) => ({ ...p, prerequisites: v }))} />
-                            <TextField label="Icon" value={newCourse.icon} onChange={(v) => setNewCourse((p) => ({ ...p, icon: v }))} placeholder="🎓" />
+                            <TextField
+                                label="Course Code"
+                                value={newCourse.courseCode}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, courseCode: v.toUpperCase() }))}
+                                required
+                                placeholder="e.g., CS101"
+                            />
+
+                            <TextField
+                                label="Title"
+                                value={newCourse.title}
+                                onChange={(v) => {
+                                    setNewCourse((p) => ({
+                                        ...p,
+                                        title: v,
+                                        // Auto-generate slug from title if slug is empty
+                                        slug: p.slug === "" ? v.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : p.slug
+                                    }))
+                                }}
+                                required
+                                placeholder="Course Title"
+                            />
+
+                            <TextField
+                                label="Slug"
+                                value={newCourse.slug}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, slug: v.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') }))}
+                                required
+                                placeholder="course-slug (auto-generated from title)"
+                                helperText="URL-friendly identifier for the course"
+                            />
+
+                            <TextField
+                                label="Subtitle"
+                                value={newCourse.subtitle}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, subtitle: v }))}
+                                placeholder="Brief description or tagline"
+                            />
+
+                            <TextField
+                                label="Duration"
+                                value={newCourse.duration}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, duration: v }))}
+                                placeholder="e.g., 12 weeks, 3 months, 6 hours"
+                            />
+
+                            <TextArea
+                                label="Description"
+                                value={newCourse.description}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, description: v }))}
+                                rows={4}
+                                placeholder="Detailed description of what this course covers..."
+                            />
+
+                            <TextArea
+                                label="Prerequisites"
+                                value={newCourse.prerequisites}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, prerequisites: v }))}
+                                rows={3}
+                                placeholder="What students need to know before taking this course..."
+                            />
+
+                            <TextField
+                                label="Icon"
+                                value={newCourse.icon}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, icon: v }))}
+                                placeholder="📘"
+                                helperText="Emoji or icon to represent the course"
+                            />
+
+                            <TextField
+                                label="Banner URL"
+                                value={newCourse.banner_url}
+                                onChange={(v) => setNewCourse((p) => ({ ...p, banner_url: v }))}
+                                placeholder="https://example.com/banner.jpg"
+                                helperText="URL to course banner image"
+                            />
+
                             <Select
                                 label="Visibility"
                                 value={newCourse.visibility}
@@ -1272,6 +1512,7 @@ export default function CourseManagerPortal() {
                                 options={[
                                     { value: "draft", label: "Draft" },
                                     { value: "published", label: "Published" },
+                                    { value: "archived", label: "Archived" }
                                 ]}
                             />
                         </div>
@@ -1288,6 +1529,8 @@ export default function CourseManagerPortal() {
                 </Modal>
             )}
 
+
+
             {/* Edit Course Modal (logged-in view) */}
             {showEditCourse && selectedCourse && (
                 <Modal title="Edit Course" onClose={() => { setShowEditCourse(false); setSelectedCourse(null); }}>
@@ -1299,12 +1542,13 @@ export default function CourseManagerPortal() {
                     >
                         <div style={{ display: "grid", gap: "1rem" }}>
                             <TextField
-                                label="Slug"
-                                value={editCourse.slug}
-                                onChange={(v) => setEditCourse((p) => ({ ...p, slug: v }))}
+                                label="Course Code"
+                                value={editCourse.courseCode}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, courseCode: v.toUpperCase() }))}
                                 required
-                                placeholder="course-slug"
+                                placeholder="e.g., CS101"
                             />
+
                             <TextField
                                 label="Title"
                                 value={editCourse.title}
@@ -1312,35 +1556,62 @@ export default function CourseManagerPortal() {
                                 required
                                 placeholder="Course Title"
                             />
+
+                            <TextField
+                                label="Slug"
+                                value={editCourse.slug}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, slug: v.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') }))}
+                                required
+                                placeholder="course-slug"
+                                helperText="URL-friendly identifier for the course"
+                            />
+
                             <TextField
                                 label="Subtitle"
                                 value={editCourse.subtitle}
                                 onChange={(v) => setEditCourse((p) => ({ ...p, subtitle: v }))}
-                                placeholder="Course Subtitle"
+                                placeholder="Brief description or tagline"
                             />
+
                             <TextField
                                 label="Duration"
                                 value={editCourse.duration}
                                 onChange={(v) => setEditCourse((p) => ({ ...p, duration: v }))}
-                                placeholder="e.g., 3 months"
+                                placeholder="e.g., 12 weeks, 3 months"
                             />
+
                             <TextArea
                                 label="Description"
                                 value={editCourse.description}
                                 onChange={(v) => setEditCourse((p) => ({ ...p, description: v }))}
-                                rows={3}
+                                rows={4}
+                                placeholder="Detailed description of the course"
                             />
-                            <TextField
+
+                            <TextArea
                                 label="Prerequisites"
                                 value={editCourse.prerequisites}
                                 onChange={(v) => setEditCourse((p) => ({ ...p, prerequisites: v }))}
+                                rows={3}
+                                placeholder="Prerequisites for this course"
                             />
+
                             <TextField
                                 label="Icon"
                                 value={editCourse.icon}
                                 onChange={(v) => setEditCourse((p) => ({ ...p, icon: v }))}
-                                placeholder="🎓"
+                                placeholder="📘"
+                                helperText="Emoji or icon to represent the course"
                             />
+
+                            <TextField
+                                label="Banner URL"
+                                value={editCourse.banner_url}
+                                onChange={(v) => setEditCourse((p) => ({ ...p, banner_url: v }))}
+                                placeholder="https://example.com/banner.jpg"
+                                helperText="URL to course banner image"
+                            />
+
                             <Select
                                 label="Visibility"
                                 value={editCourse.visibility}
@@ -1348,6 +1619,7 @@ export default function CourseManagerPortal() {
                                 options={[
                                     { value: "draft", label: "Draft" },
                                     { value: "published", label: "Published" },
+                                    { value: "archived", label: "Archived" }
                                 ]}
                             />
                         </div>
@@ -1448,19 +1720,19 @@ function Card({ title, children }) {
 }
 
 function ActionList({ actions = [], onActionClick }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      {actions.map((a, i) => (
-        <button
-          key={i}
-          className={`action-button ${i === 0 ? "primary" : ""}`}
-          onClick={() => onActionClick && onActionClick(a)} // 🔥 call handler
-        >
-          {a}
-        </button>
-      ))}
-    </div>
-  );
+    return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {actions.map((a, i) => (
+                <button
+                    key={i}
+                    className={`action-button ${i === 0 ? "primary" : ""}`}
+                    onClick={() => onActionClick && onActionClick(a)} // 🔥 call handler
+                >
+                    {a}
+                </button>
+            ))}
+        </div>
+    );
 }
 
 function KVRow({ label, value, success = false }) {
