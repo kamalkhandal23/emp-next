@@ -68,7 +68,7 @@ export default function CourseManagerPortal() {
 
         // Filter by visibility
         if (courseFilter.visibility !== "all") {
-            filtered = filtered.filter(course => 
+            filtered = filtered.filter(course =>
                 course.visibility === courseFilter.visibility
             );
         }
@@ -909,7 +909,7 @@ export default function CourseManagerPortal() {
                                     </select>
                                 </div>
 
-                                <div style={{ 
+                                <div style={{
                                     marginLeft: "auto",
                                     fontSize: "0.875rem",
                                     color: "#6b7280"
