@@ -5,6 +5,7 @@ import {
   getExamById,
   getExamByName,
   updateExamStatus,
+  updateExam,
   deleteExam
 } from '../../controllers/nextgen/examController.js';
 
@@ -24,6 +25,9 @@ router.get('/name/:examName', getExamByName);
 
 // Update exam status
 router.patch('/:id/status', updateExamStatus);
+
+// Update entire exam
+router.put('/:id', updateExam);
 
 // Delete exam
 router.delete('/:id', deleteExam);

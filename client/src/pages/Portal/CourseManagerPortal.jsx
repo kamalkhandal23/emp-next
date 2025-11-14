@@ -396,6 +396,9 @@ export default function CourseManagerPortal() {
         if (action === "Create exams") {
         navigate("/portal/coursemanager/createexam");
         }
+        if (action === "Create Assignments") {
+        navigate("/portal/coursemanager/createassignment");
+        }
         if (action === "Manage Exams") {
         navigate("/portal/coursemanager/manageexams");
         }
@@ -892,6 +895,7 @@ export default function CourseManagerPortal() {
                                             "Optimize Database",
                                             "View Logs",
                                         ]}
+                                        onActionClick={handleActionClick}
                                     />
                                 </Card>
                                 <Card title="Exams">

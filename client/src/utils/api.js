@@ -477,6 +477,13 @@ class ApiClient {
       method: 'DELETE',
     })
   }
+
+  async updateNextGenExam(id, examData) {
+    return this.request(`/nextgen/exams/${id}`, {
+      method: 'PUT',
+      body: examData,
+    })
+  }
 }
 
 export const apiClient = new ApiClient()

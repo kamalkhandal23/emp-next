@@ -11,7 +11,43 @@ export default function ManageExams() {
     totalQuestions: 0,
     questions: {}
   });
+
+  const handleTotalQuestionsChange = (value) => {
+    const newTotal = parseInt(value);
+    if (isNaN(newTotal) || newTotal < 1) return;
+    setEditForm({ ...editForm, totalQuestions: newTotal });
+    setEditingExam({ ...editingExam, totalQuestions: newTotal });
+    const currentCount = Object.keys(questionData).length;
+    if (newTotal > currentCount) {
+      const newQuestionData = { ...questionData };
+      for (let i = currentCount + 1; i <= newTotal; i++) {
+        newQuestionData[i.toString()] = { type: '', question: '', options: [], answer: '', testCase: '' };
+      }
+      setQuestionData(newQuestionData);
+    } else if (newTotal < currentCount) {
+      const newQuestionData = {};
+      for (let i = 1; i <= newTotal; i++) {
+        if (questionData[i.toString()]) {
+          newQuestionData[i.toString()] = questionData[i.toString()];
+        } else {
+          newQuestionData[i.toString()] = { type: '', question: '', options: [], answer: '', testCase: '' };
+        }
+      }
+      setQuestionData(newQuestionData);
+    }
+    // Update questionTypes
+    setQuestionTypes((prev) => {
+      const newTypes = {};
+      for (let i = 1; i <= newTotal; i++) {
+        newTypes[i.toString()] = prev[i.toString()] || '';
+      }
+      return newTypes;
+    });
+  };
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [questionTypes, setQuestionTypes] = useState({});
+  const [questionData, setQuestionData] = useState({});
 
   useEffect(() => {
     fetchExams();
@@ -34,27 +70,119 @@ export default function ManageExams() {
     }
   };
 
-  const handleEditExam = (exam) => {
-    setEditingExam(exam);
-    setEditForm({
-      examName: exam.examName,
-      totalQuestions: exam.totalQuestions,
-      questions: { ...exam.questions }
+  const handleEditExam = async (exam) => {
+    try {
+      setLoading(true);
+      // Fetch full exam data including questions
+      const response = await apiClient.getNextGenExamById(exam._id);
+      if (response.success) {
+        const fullExam = response.data;
+        setEditingExam(fullExam);
+        setEditForm({
+          examName: fullExam.examName,
+          totalQuestions: fullExam.totalQuestions,
+          questions: { ...fullExam.questions }
+        });
+        // Initialize question types and data for editing
+        const types = {};
+        const data = {};
+        Object.entries(fullExam.questions).forEach(([qNum, qData]) => {
+          types[qNum] = qData.type;
+          data[qNum] = { ...qData };
+        });
+        setQuestionTypes(types);
+        setQuestionData(data);
+        setSelectedQuestion(null);
+        setShowEditModal(true);
+      } else {
+        throw new Error(response.message || "Failed to fetch exam details");
+      }
+    } catch (err) {
+      console.error("Error fetching exam details:", err);
+      alert(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTypeSelect = (qNum, type) => {
+    setQuestionTypes((prev) => ({ ...prev, [qNum]: type }));
+    setQuestionData((prev) => ({
+      ...prev,
+      [qNum]: prev[qNum] || { type, question: "", options: [], answer: "" },
+    }));
+  };
+
+  const handleQuestionChange = (qNum, field, value) => {
+    setQuestionData((prev) => ({
+      ...prev,
+      [qNum]: { ...prev[qNum], [field]: value },
+    }));
+  };
+
+  const handleOptionChange = (qNum, index, value) => {
+    setQuestionData((prev) => {
+      const updatedOptions = [...(prev[qNum]?.options || [])];
+      updatedOptions[index] = value;
+      return { ...prev, [qNum]: { ...prev[qNum], options: updatedOptions } };
     });
-    setShowEditModal(true);
+  };
+
+  const handleSaveQuestion = (qNum) => {
+    alert(`Question ${qNum} saved ✅`);
+    setSelectedQuestion(null);
   };
 
   const handleUpdateExam = async () => {
     try {
       setLoading(true);
-      // For now, we'll just update the status or basic info
-      // In a full implementation, you'd want to update the entire exam
-      const response = await apiClient.updateNextGenExamStatus(editingExam._id, 'published');
+
+      // Validate all questions are filled
+      const allQuestionsFilled = Object.keys(questionData).every(qNum => {
+        const q = questionData[qNum];
+        if (!q.type) return false;
+        if (!q.question || q.question.trim() === '') return false;
+
+        if (q.type === 'MCQ') {
+          return q.options && q.options.length === 4 &&
+                 q.options.every(opt => opt && opt.trim() !== '') &&
+                 q.answer && q.answer.trim() !== '';
+        }
+
+        if (q.type === 'Coding') {
+          return q.testCase && q.testCase.trim() !== '';
+        }
+
+        if (q.type === 'Answer-based') {
+          return q.answer && q.answer.trim() !== '';
+        }
+
+        return true;
+      });
+
+      if (!allQuestionsFilled) {
+        alert('⚠️ Please fill in all question details before updating the exam.');
+        return;
+      }
+
+      const examData = {
+        examName: editingExam.examName,
+        totalQuestions: editingExam.totalQuestions,
+        questionData: questionData,
+        status: editingExam.status
+      };
+
+      console.log('Updating exam data:', examData);
+
+      const response = await apiClient.updateNextGenExam(editingExam._id, examData);
 
       if (response.success) {
         alert("Exam updated successfully!");
         setShowEditModal(false);
         setEditingExam(null);
+        setSelectedQuestion(null);
+        setQuestionTypes({});
+        setQuestionData({});
         fetchExams(); // Refresh the list
       } else {
         throw new Error(response.message || "Failed to update exam");
@@ -328,10 +456,29 @@ export default function ManageExams() {
 
             <div style={{ display: "grid", gap: "1rem" }}>
               <div>
-                <strong>Exam Name:</strong> {editingExam.examName}
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>
+                  Exam Name:
+                </label>
+                <input
+                  type="text"
+                  value={editingExam.examName}
+                  onChange={(e) => setEditingExam({ ...editingExam, examName: e.target.value })}
+                  className="form-input"
+                  style={{ width: "100%" }}
+                />
               </div>
               <div>
-                <strong>Total Questions:</strong> {editingExam.totalQuestions}
+                <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>
+                  Total Questions:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editingExam.totalQuestions}
+                  onChange={(e) => handleTotalQuestionsChange(e.target.value)}
+                  className="form-input"
+                  style={{ width: "100%" }}
+                />
               </div>
               <div>
                 <strong>Status:</strong>
@@ -347,11 +494,180 @@ export default function ManageExams() {
                 </select>
               </div>
 
+              {/* Edit Questions */}
+              <div>
+                <strong>Edit Questions:</strong>
+                <p style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.5rem" }}>
+                  Click a question number to select and edit it.
+                </p>
+                <div style={{ marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                  {Array.from({ length: editingExam.totalQuestions }, (_, i) => i + 1).map((num) => {
+                    const isSelected = selectedQuestion === num;
+                    const type = questionTypes[num];
+                    return (
+                      <button
+                        key={num}
+                        onClick={() => setSelectedQuestion(num)}
+                        className={`px-3 py-1 rounded-full font-semibold border-2 transition ${
+                          type
+                            ? "bg-green-100 border-green-500 text-green-700 hover:bg-green-200"
+                            : "bg-white border-gray-300 text-gray-600 hover:bg-gray-100"
+                        } ${isSelected ? "scale-105 shadow-md" : ""}`}
+                      >
+                        Q{num} {type && "✓"}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Edit Selected Question */}
+              {selectedQuestion && (
+                <div style={{ marginTop: "1rem", padding: "1rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem", backgroundColor: "#f9fafb" }}>
+                  <h4 style={{ marginBottom: "1rem", color: "black" }}>Editing Question {selectedQuestion}</h4>
+
+                  {!questionTypes[selectedQuestion] ? (
+                    <div className="flex gap-4">
+                      {["MCQ", "Coding", "Answer-based"].map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => handleTypeSelect(selectedQuestion, type)}
+                          className="py-2 px-4 rounded-lg font-bold bg-white border-2 border-gray-300 hover:bg-yellow-100"
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      {questionTypes[selectedQuestion] === "MCQ" && (
+                        <div className="flex flex-col gap-4">
+                          <input
+                            type="text"
+                            placeholder="Enter MCQ question"
+                            value={questionData[selectedQuestion]?.question || ""}
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                selectedQuestion,
+                                "question",
+                                e.target.value
+                              )
+                            }
+                            className="border px-4 py-2 rounded"
+                          />
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <input
+                              key={i}
+                              type="text"
+                              placeholder={`Option ${i + 1}`}
+                              value={
+                                questionData[selectedQuestion]?.options?.[i] ||
+                                ""
+                              }
+                              onChange={(e) =>
+                                handleOptionChange(
+                                  selectedQuestion,
+                                  i,
+                                  e.target.value
+                                )
+                              }
+                              className="border px-4 py-2 rounded"
+                            />
+                          ))}
+                          <input
+                            type="text"
+                            placeholder="Correct answer (e.g. 2)"
+                            value={questionData[selectedQuestion]?.answer || ""}
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                selectedQuestion,
+                                "answer",
+                                e.target.value
+                              )
+                            }
+                            className="border px-4 py-2 rounded"
+                          />
+                        </div>
+                      )}
+
+                      {questionTypes[selectedQuestion] === "Coding" && (
+                        <div className="flex flex-col gap-4">
+                          <input
+                            type="text"
+                            placeholder="Enter coding question"
+                            value={questionData[selectedQuestion]?.question || ""}
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                selectedQuestion,
+                                "question",
+                                e.target.value
+                              )
+                            }
+                            className="border px-4 py-2 rounded"
+                          />
+                          <textarea
+                            placeholder="Describe test case or expected logic"
+                            value={
+                              questionData[selectedQuestion]?.testCase || ""
+                            }
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                selectedQuestion,
+                                "testCase",
+                                e.target.value
+                              )
+                            }
+                            className="border px-4 py-2 rounded"
+                          />
+                        </div>
+                      )}
+
+                      {questionTypes[selectedQuestion] === "Answer-based" && (
+                        <div className="flex flex-col gap-4">
+                          <input
+                            type="text"
+                            placeholder="Enter question"
+                            value={questionData[selectedQuestion]?.question || ""}
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                selectedQuestion,
+                                "question",
+                                e.target.value
+                              )
+                            }
+                            className="border px-4 py-2 rounded"
+                          />
+                          <textarea
+                            placeholder="Expected short answer"
+                            value={questionData[selectedQuestion]?.answer || ""}
+                            onChange={(e) =>
+                              handleQuestionChange(
+                                selectedQuestion,
+                                "answer",
+                                e.target.value
+                              )
+                            }
+                            className="border px-4 py-2 rounded"
+                          />
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => handleSaveQuestion(selectedQuestion)}
+                        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg"
+                      >
+                        Save Question
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Questions Preview */}
               <div>
-                <strong>Questions:</strong>
+                <strong>Questions Preview:</strong>
                 <div style={{ marginTop: "1rem", maxHeight: "300px", overflowY: "auto" }}>
-                  {Object.entries(editingExam.questions).map(([qNum, qData]) => (
+                  {Object.entries(questionData).map(([qNum, qData]) => (
                     <div key={qNum} style={{ marginBottom: "1rem", padding: "1rem", border: "1px solid #e5e7eb", borderRadius: "0.5rem" }}>
                       <div style={{ fontWeight: 500, marginBottom: "0.5rem" }}>
                         Question {qNum}: {qData.question}
