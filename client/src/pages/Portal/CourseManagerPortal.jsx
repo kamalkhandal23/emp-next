@@ -27,6 +27,7 @@ export default function CourseManagerPortal() {
     // Filter state
     const [courseFilter, setCourseFilter] = useState({
         visibility: "all", // all, published, draft, archived
+        status: "all", // all, coming_soon, open, closed, registration_not_started, registration_closed
         search: ""
     });
 
@@ -47,6 +48,10 @@ export default function CourseManagerPortal() {
         visibility: "draft",
         banner_url: "",
         courseCode: "",
+        start_date: "",
+        end_date: "",
+        registration_start: "",
+        registration_end: "",
     });
 
     const [newCourse, setNewCourse] = useState({
@@ -60,6 +65,10 @@ export default function CourseManagerPortal() {
         visibility: "draft",
         banner_url: "",
         courseCode: "",
+        start_date: "",
+        end_date: "",
+        registration_start: "",
+        registration_end: "",
     });
 
     // Filtered courses based on frontend filters
@@ -70,6 +79,13 @@ export default function CourseManagerPortal() {
         if (courseFilter.visibility !== "all") {
             filtered = filtered.filter(course =>
                 course.visibility === courseFilter.visibility
+            );
+        }
+
+        // Filter by status
+        if (courseFilter.status !== "all") {
+            filtered = filtered.filter(course =>
+                course.courseStatus === courseFilter.status
             );
         }
 
@@ -86,6 +102,26 @@ export default function CourseManagerPortal() {
 
         return filtered;
     }, [courses, courseFilter]);
+
+    // Helper function to get status styling
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'coming_soon':
+                return { className: 'status-badge status-pending', text: 'Coming Soon' };
+            case 'open':
+                return { className: 'status-badge status-active', text: 'Open' };
+            case 'closed':
+                return { className: 'status-badge status-inactive', text: 'Closed' };
+            case 'registration_not_started':
+                return { className: 'status-badge status-pending', text: 'Registration Not Started' };
+            case 'registration_closed':
+                return { className: 'status-badge status-warning', text: 'Registration Closed' };
+            case 'draft':
+                return { className: 'status-badge status-pending', text: 'Draft' };
+            default:
+                return { className: 'status-badge status-pending', text: status || 'Unknown' };
+        }
+    };
 
     // Mock data fallbacks
     const mockRegistrations = useMemo(
@@ -430,6 +466,14 @@ export default function CourseManagerPortal() {
 
     const handleEditCourse = (course) => {
         setSelectedCourse(course);
+        
+        // Helper function to format date for datetime-local input
+        const formatDateForInput = (dateString) => {
+            if (!dateString) return "";
+            const date = new Date(dateString);
+            return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
+        };
+        
         setEditCourse({
             slug: course.slug || "",
             title: course.title || "",
@@ -441,6 +485,10 @@ export default function CourseManagerPortal() {
             visibility: course.visibility || "draft",
             banner_url: course.banner_url || "",
             courseCode: course.courseCode || "",
+            start_date: formatDateForInput(course.start_date),
+            end_date: formatDateForInput(course.end_date),
+            registration_start: formatDateForInput(course.registration_start),
+            registration_end: formatDateForInput(course.registration_end),
         });
         setShowEditCourse(true);
     };
@@ -491,6 +539,10 @@ export default function CourseManagerPortal() {
                     visibility: "draft",
                     banner_url: "",
                     courseCode: "",
+                    start_date: "",
+                    end_date: "",
+                    registration_start: "",
+                    registration_end: "",
                 });
                 alert("Course added successfully!");
             } else {
@@ -911,12 +963,9 @@ export default function CourseManagerPortal() {
 
                             <div className="stats-grid">
                                 <StatCard value={courses.length} label="Total Courses" />
-                                <StatCard value={courses.filter((c) => c.visibility === "published").length} label="Published Courses" />
-                                <StatCard value={courses.filter((c) => c.visibility === "draft").length} label="Draft Courses" />
-                                <StatCard
-                                    value={courses.reduce((t, c) => t + (c.enrolled_count || 0), 0)}
-                                    label="Total Enrollments"
-                                />
+                                <StatCard value={courses.filter((c) => c.courseStatus === "open").length} label="Open Courses" />
+                                <StatCard value={courses.filter((c) => c.courseStatus === "coming_soon").length} label="Coming Soon" />
+                                <StatCard value={courses.filter((c) => c.courseStatus === "closed").length} label="Closed Courses" />
                             </div>
 
                             {/* Debug Info */}
@@ -978,6 +1027,28 @@ export default function CourseManagerPortal() {
                                     </select>
                                 </div>
 
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                    <label style={{ fontSize: "0.875rem", fontWeight: "500" }}>Status:</label>
+                                    <select
+                                        value={courseFilter.status}
+                                        onChange={(e) => setCourseFilter(prev => ({ ...prev, status: e.target.value }))}
+                                        style={{
+                                            padding: "0.5rem",
+                                            border: "1px solid #d1d5db",
+                                            borderRadius: "0.375rem",
+                                            fontSize: "0.875rem",
+                                            minWidth: "140px"
+                                        }}
+                                    >
+                                        <option value="all">All Status</option>
+                                        <option value="coming_soon">Coming Soon</option>
+                                        <option value="open">Open</option>
+                                        <option value="registration_closed">Registration Closed</option>
+                                        <option value="closed">Closed</option>
+                                        <option value="draft">Draft</option>
+                                    </select>
+                                </div>
+
                                 <div style={{
                                     marginLeft: "auto",
                                     fontSize: "0.875rem",
@@ -992,7 +1063,7 @@ export default function CourseManagerPortal() {
                                 <div
                                     className="table-row"
                                     style={{
-                                        gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto",
+                                        gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr auto",
                                         fontWeight: 600,
                                         background: "#f8fafc",
                                         color: "black"
@@ -1002,6 +1073,7 @@ export default function CourseManagerPortal() {
                                     <div>Subtitle</div>
                                     <div>Duration</div>
                                     <div>Visibility</div>
+                                    <div>Status</div>
                                     <div>Enrollments</div>
                                     <div>Actions</div>
                                 </div>
@@ -1011,7 +1083,7 @@ export default function CourseManagerPortal() {
                                         <div
                                             key={course?._id || idx}
                                             className="table-row"
-                                            style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto" }}
+                                            style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr auto" }}
                                         >
                                             <div style={{ fontWeight: 500 }}>
                                                 {course?.icon} {course?.title}
@@ -1025,6 +1097,16 @@ export default function CourseManagerPortal() {
                                                 >
                                                     {course?.visibility}
                                                 </span>
+                                            </div>
+                                            <div>
+                                                {(() => {
+                                                    const statusInfo = getStatusStyle(course?.courseStatus);
+                                                    return (
+                                                        <span className={statusInfo.className}>
+                                                            {statusInfo.text}
+                                                        </span>
+                                                    );
+                                                })()}
                                             </div>
                                             <div>{course?.enrolled_count || 0}</div>
                                             <div style={{ display: "flex", gap: "0.5rem" }}>
@@ -1515,6 +1597,66 @@ export default function CourseManagerPortal() {
                                     { value: "archived", label: "Archived" }
                                 ]}
                             />
+
+                            {/* Course Timing Section */}
+                            <div style={{ 
+                                gridColumn: "1 / -1", 
+                                borderTop: "2px solid #e5e7eb", 
+                                paddingTop: "1rem", 
+                                marginTop: "1rem" 
+                            }}>
+                                <h4 style={{ margin: "0 0 1rem 0", color: "#374151" }}>Course Timing</h4>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                                    <div>
+                                        <label className="form-label">Registration Start</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={newCourse.registration_start}
+                                            onChange={(e) => setNewCourse((p) => ({ ...p, registration_start: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When students can start registering
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Registration End</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={newCourse.registration_end}
+                                            onChange={(e) => setNewCourse((p) => ({ ...p, registration_end: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When registration closes
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Course Start</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={newCourse.start_date}
+                                            onChange={(e) => setNewCourse((p) => ({ ...p, start_date: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When the course begins
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Course End</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={newCourse.end_date}
+                                            onChange={(e) => setNewCourse((p) => ({ ...p, end_date: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When the course ends
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end", marginTop: "2rem" }}>
@@ -1622,6 +1764,66 @@ export default function CourseManagerPortal() {
                                     { value: "archived", label: "Archived" }
                                 ]}
                             />
+
+                            {/* Course Timing Section */}
+                            <div style={{ 
+                                gridColumn: "1 / -1", 
+                                borderTop: "2px solid #e5e7eb", 
+                                paddingTop: "1rem", 
+                                marginTop: "1rem" 
+                            }}>
+                                <h4 style={{ margin: "0 0 1rem 0", color: "#374151" }}>Course Timing</h4>
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                                    <div>
+                                        <label className="form-label">Registration Start</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={editCourse.registration_start}
+                                            onChange={(e) => setEditCourse((p) => ({ ...p, registration_start: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When students can start registering
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Registration End</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={editCourse.registration_end}
+                                            onChange={(e) => setEditCourse((p) => ({ ...p, registration_end: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When registration closes
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Course Start</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={editCourse.start_date}
+                                            onChange={(e) => setEditCourse((p) => ({ ...p, start_date: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When the course begins
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <label className="form-label">Course End</label>
+                                        <input
+                                            type="datetime-local"
+                                            value={editCourse.end_date}
+                                            onChange={(e) => setEditCourse((p) => ({ ...p, end_date: e.target.value }))}
+                                            className="form-input"
+                                        />
+                                        <small style={{ color: "#6b7280", fontSize: "0.875rem" }}>
+                                            When the course ends
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div
@@ -1675,6 +1877,52 @@ export default function CourseManagerPortal() {
 
                         <KV label="Enrollments" value={selectedCourse?.enrolled_count || 0} />
                         <KV label="Slug" value={selectedCourse?.slug || "N/A"} />
+                        
+                        {/* Course Status */}
+                        <div>
+                            <strong>Course Status:</strong>{" "}
+                            {(() => {
+                                const statusInfo = getStatusStyle(selectedCourse?.courseStatus);
+                                return (
+                                    <span className={statusInfo.className}>
+                                        {statusInfo.text}
+                                    </span>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Timing Information */}
+                        <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "1rem", marginTop: "1rem" }}>
+                            <h4 style={{ margin: "0 0 1rem 0", fontSize: "0.875rem", fontWeight: "600", color: "#374151" }}>
+                                Course Timing
+                            </h4>
+                            <div style={{ display: "grid", gap: "0.5rem", fontSize: "0.875rem" }}>
+                                <KV 
+                                    label="Registration Start" 
+                                    value={selectedCourse?.registration_start ? 
+                                        new Date(selectedCourse.registration_start).toLocaleString() : "Not set"
+                                    } 
+                                />
+                                <KV 
+                                    label="Registration End" 
+                                    value={selectedCourse?.registration_end ? 
+                                        new Date(selectedCourse.registration_end).toLocaleString() : "Not set"
+                                    } 
+                                />
+                                <KV 
+                                    label="Course Start" 
+                                    value={selectedCourse?.start_date ? 
+                                        new Date(selectedCourse.start_date).toLocaleString() : "Not set"
+                                    } 
+                                />
+                                <KV 
+                                    label="Course End" 
+                                    value={selectedCourse?.end_date ? 
+                                        new Date(selectedCourse.end_date).toLocaleString() : "Not set"
+                                    } 
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div

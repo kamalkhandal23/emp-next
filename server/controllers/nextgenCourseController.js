@@ -40,7 +40,18 @@ export const getAllCourses = async (req, res) => {
       // .populate('created_by', 'full_name')  // field missing of created by which need to be added in the future
       .limit(limit * 1)
       .skip((page - 1) * limit)
-      .sort(sortOptions);
+      .sort(sortOptions)
+      .lean(); // Use lean to get plain objects and then add virtuals manually
+
+    // Add virtual fields to each course
+    const coursesWithStatus = courses.map(course => {
+      const courseDoc = new NG_Courses(course);
+      return {
+        ...course,
+        courseStatus: courseDoc.courseStatus,
+        isAccessible: courseDoc.isAccessible()
+      };
+    });
 
     const total = await NG_Courses.countDocuments(query);
 
@@ -50,7 +61,7 @@ export const getAllCourses = async (req, res) => {
     res.json({
       success: true,
       data: {
-        courses,
+        courses: coursesWithStatus,
         pagination: {
           current: parseInt(page),
           pages: Math.ceil(total / limit),
