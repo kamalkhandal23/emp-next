@@ -39,7 +39,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-#.env   # <--- Commented out to track .env in git
+.env
 
 # next.js build output
 .next
