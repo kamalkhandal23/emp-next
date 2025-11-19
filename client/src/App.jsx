@@ -31,6 +31,7 @@ import CreateExam from "./pages/NextGenFreeEdu/CreateExam";
 import CreateAssignment from "./pages/NextGenFreeEdu/CreateAssignment";
 import ManageExams from "./pages/NextGenFreeEdu/ManageExams";
 import CreateCodingExam from "./pages/NextGenFreeEdu/CreateCodingExam";
+import ManageCodingExams from "./pages/NextGenFreeEdu/ManageCodingExams";
 function MainLayout() {
   return (
     <div
@@ -170,6 +171,7 @@ export default function App() {
             <Route path="/portal/coursemanager/createassignment" element={<CreateAssignment/>}/>
             <Route path="/portal/coursemanager/manageexams" element={<ManageExams/>}/>
             <Route path="/portal/coursemanager/createcodingexam" element={<CreateCodingExam/>}/>
+            <Route path="/portal/coursemanager/managecodingexams" element={<ManageCodingExams/>}/>
             <Route path="test" element={<TestConnection />} />
           </Routes>
         </AuthProvider>

@@ -492,6 +492,40 @@ class ApiClient {
       body: examData,
     })
   }
+
+  async getAllNextGenCodingExams(params = {}) {
+    const queryString = new URLSearchParams(params).toString()
+    return this.request(`/nextgen/codingExams${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getNextGenCodingExamById(id) {
+    return this.request(`/nextgen/codingExams/id/${id}`)
+  }
+
+  async getNextGenCodingExamByName(examName) {
+    return this.request(`/nextgen/codingExams/name/${encodeURIComponent(examName)}`)
+  }
+
+  async updateNextGenCodingExamStatus(id, status) {
+    return this.request(`/nextgen/codingExams/${id}/status`, {
+      method: 'PATCH',
+      body: { status },
+    })
+  }
+
+  async updateNextGenCodingExam(id, examData) {
+    return this.request(`/nextgen/codingExams/${id}`, {
+      method: 'PUT',
+      body: examData,
+    })
+  }
+
+  async deleteNextGenCodingExam(id) {
+    return this.request(`/nextgen/codingExams/${id}`, {
+      method: 'DELETE',
+    })
+  }
+  
 }
 
 export const apiClient = new ApiClient()

@@ -405,6 +405,10 @@ export default function CourseManagerPortal() {
         if (action === "Create Coding exams") {
         navigate("/portal/coursemanager/createcodingexam"); 
         }
+        if (action === "Manage Coding Exams") {
+        navigate("/portal/coursemanager/managecodingexams");
+        }
+
     };
 
     const handleDeleteCourse = async (course) => {
