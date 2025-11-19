@@ -137,6 +137,12 @@ export default function ManageExams() {
     try {
       setLoading(true);
 
+      // Validate that exam ID exists
+      if (!editingExam || !editingExam._id) {
+        alert('Error: Exam ID is missing. Please refresh the page and try again.');
+        return;
+      }
+
       // Validate all questions are filled
       const allQuestionsFilled = Object.keys(questionData).every(qNum => {
         const q = questionData[qNum];

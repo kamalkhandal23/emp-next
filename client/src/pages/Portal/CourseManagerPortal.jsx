@@ -402,6 +402,9 @@ export default function CourseManagerPortal() {
         if (action === "Manage Exams") {
         navigate("/portal/coursemanager/manageexams");
         }
+        if (action === "Create Coding exams") {
+        navigate("/portal/coursemanager/createcodingexam"); 
+        }
     };
 
     const handleDeleteCourse = async (course) => {
@@ -891,22 +894,21 @@ export default function CourseManagerPortal() {
                                     <ActionList
                                         actions={[
                                             "Create Assignments",
-                                            "Restore Database",
-                                            "Optimize Database",
-                                            "View Logs",
+                                            "Manage Assignments", "Grade Assignments"
                                         ]}
                                         onActionClick={handleActionClick}
                                     />
                                 </Card>
                                 <Card title="Exams">
                                     <ActionList
-                                        actions={["Create exams", "Manage Exams", "Reset Passwords", "View Sessions"]}
-                                        onActionClick={handleActionClick} // 👈 attach handler
+                                        actions={["Create exams", "Manage Exams", "Grade Exams"]}
+                                        onActionClick={handleActionClick}
                                     />
                                 </Card>
-                                <Card title="Security Settings">
+                                <Card title="Coding exams">
                                     <ActionList
-                                        actions={["Security Audit", "Update Firewall", "SSL Certificate", "Access Logs"]}
+                                        actions={["Create Coding exams", "Manage Coding Exams", "Grade Coding exams"]}
+                                        onActionClick={handleActionClick}
                                     />
                                 </Card>
                             </div>

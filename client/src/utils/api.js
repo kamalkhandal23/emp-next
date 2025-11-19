@@ -484,6 +484,14 @@ class ApiClient {
       body: examData,
     })
   }
+
+  // NextGen Coding Exam endpoints
+  async createNextGenCodingExam(examData) {
+    return this.request('/nextgen/codingExams/create', {
+      method: 'POST',
+      body: examData,
+    })
+  }
 }
 
 export const apiClient = new ApiClient()

@@ -5,21 +5,26 @@ const testDBURI = process.env.MONGODB_URI.replace(/\/[^\/]*$/, '/test');
 const testConnection = mongoose.createConnection(testDBURI);
 
 testConnection.on('connected', () => {
-  console.log('Connected to test database for NGExamWithQuestions');
+  console.log('Connected to test database for NGCodingExamWithQuestions');
 });
 
 testConnection.on('error', (err) => {
-  console.error('Test database connection error for NGExamWithQuestions:', err);
+  console.error('Test database connection error for NGCodingExamWithQuestions:', err);
 });
 
-// Schema for storing complete exam with all questions in one document
-const ngExamWithQuestionsSchema = new mongoose.Schema({
+// Schema for storing complete coding exam with all questions in one document
+const ngCodingExamWithQuestionsSchema = new mongoose.Schema({
   examName: {
     type: String,
     required: true,
     unique: true,
     trim: true,
     index: true
+  },
+  courseName: {
+    type: String,
+    required: true,
+    trim: true
   },
   totalQuestions: {
     type: Number,
@@ -31,7 +36,7 @@ const ngExamWithQuestionsSchema = new mongoose.Schema({
     of: {
       type: {
         type: String,
-        enum: ['MCQ', 'Coding', 'Answer-based'],
+        enum: ['Coding'],
         required: true
       },
       question: {
@@ -64,16 +69,17 @@ const ngExamWithQuestionsSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  collection: 'ng_exams' // Explicitly set collection name
+  collection: 'ng_coding_exam' // Explicitly set collection name
 });
 
 // Index for faster queries
-ngExamWithQuestionsSchema.index({ examName: 1 });
-ngExamWithQuestionsSchema.index({ status: 1 });
-ngExamWithQuestionsSchema.index({ createdAt: -1 });
+ngCodingExamWithQuestionsSchema.index({ examName: 1 });
+ngCodingExamWithQuestionsSchema.index({ courseName: 1 });
+ngCodingExamWithQuestionsSchema.index({ status: 1 });
+ngCodingExamWithQuestionsSchema.index({ createdAt: -1 });
 
-// Method to get exam with questions as object
-ngExamWithQuestionsSchema.methods.getExamData = function() {
+// Method to get coding exam with questions as object
+ngCodingExamWithQuestionsSchema.methods.getCodingExamData = function() {
   const questionsObj = {};
   this.questions.forEach((value, key) => {
     questionsObj[key] = value;
@@ -82,6 +88,7 @@ ngExamWithQuestionsSchema.methods.getExamData = function() {
   return {
     _id: this._id,
     examName: this.examName,
+    courseName: this.courseName,
     totalQuestions: this.totalQuestions,
     questions: questionsObj,
     status: this.status,
@@ -90,8 +97,8 @@ ngExamWithQuestionsSchema.methods.getExamData = function() {
   };
 };
 
-// Static method to create exam from frontend data
-ngExamWithQuestionsSchema.statics.createFromFrontend = async function(examName, totalQuestions, questionData) {
+// Static method to create coding exam from frontend data
+ngCodingExamWithQuestionsSchema.statics.createFromFrontend = async function(examName, courseName, totalQuestions, questionData) {
   const questionsMap = new Map();
 
   // Convert questionData object to Map
@@ -101,6 +108,7 @@ ngExamWithQuestionsSchema.statics.createFromFrontend = async function(examName, 
 
   const exam = new this({
     examName,
+    courseName,
     totalQuestions,
     questions: questionsMap
   });
@@ -108,7 +116,7 @@ ngExamWithQuestionsSchema.statics.createFromFrontend = async function(examName, 
   return await exam.save();
 };
 
-const NGExamWithQuestions = testConnection.models.NG_ExamWithQuestions ||
-  testConnection.model('NG_ExamWithQuestions', ngExamWithQuestionsSchema);
+const NGCodingExamWithQuestions = testConnection.models.NG_CodingExamWithQuestions ||
+  testConnection.model('NG_CodingExamWithQuestions', ngCodingExamWithQuestionsSchema);
 
-export default NGExamWithQuestions;
+export default NGCodingExamWithQuestions;
