@@ -525,7 +525,44 @@ class ApiClient {
       method: 'DELETE',
     })
   }
-  
+
+  // NextGen Assignment endpoints
+  async createNextGenAssignment(assignmentData) {
+    return this.request('/nextgen/assignments/create', {
+      method: 'POST',
+      body: assignmentData,
+    })
+  }
+
+  async getAllNextGenAssignments(params = {}) {
+    const queryString = new URLSearchParams(params).toString()
+    return this.request(`/nextgen/assignments${queryString ? `?${queryString}` : ''}`)
+  }
+
+  async getNextGenAssignmentById(id) {
+    return this.request(`/nextgen/assignments/id/${id}`)
+  }
+
+  async updateNextGenAssignmentStatus(id, status) {
+    return this.request(`/nextgen/assignments/${id}/status`, {
+      method: 'PATCH',
+      body: { status },
+    })
+  }
+
+  async updateNextGenAssignment(id, assignmentData) {
+    return this.request(`/nextgen/assignments/${id}`, {
+      method: 'PUT',
+      body: assignmentData,
+    })
+  }
+
+  async deleteNextGenAssignment(id) {
+    return this.request(`/nextgen/assignments/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
 }
 
 export const apiClient = new ApiClient()

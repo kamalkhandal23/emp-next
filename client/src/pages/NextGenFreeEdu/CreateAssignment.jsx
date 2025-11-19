@@ -99,10 +99,7 @@ function CreateAssignment() {
 
       console.log('Submitting assignment data:', assignmentData);
 
-      // Assuming there's an API for assignments; for now, using a placeholder
-      // const response = await apiClient.createNextGenAssignment(assignmentData);
-      // Since backend might not have it, simulate success
-      const response = { success: true, data: { id: 'simulated-id' } };
+      const response = await apiClient.createNextGenAssignment(assignmentData);
 
       if (response.success) {
         setSubmitSuccess(true);

@@ -408,6 +408,9 @@ export default function CourseManagerPortal() {
         if (action === "Manage Coding Exams") {
         navigate("/portal/coursemanager/managecodingexams");
         }
+        if (action === "Manage Assignments") {
+        navigate("/portal/coursemanager/manageassignments");
+        }
 
     };
 

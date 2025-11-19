@@ -30,6 +30,7 @@ import PrivacyPolicy from "./pages/NextGenFreeEdu/PrivacyPolicy";
 import CreateExam from "./pages/NextGenFreeEdu/CreateExam";
 import CreateAssignment from "./pages/NextGenFreeEdu/CreateAssignment";
 import ManageExams from "./pages/NextGenFreeEdu/ManageExams";
+import ManageAssignments from "./pages/NextGenFreeEdu/ManageAssignments";
 import CreateCodingExam from "./pages/NextGenFreeEdu/CreateCodingExam";
 import ManageCodingExams from "./pages/NextGenFreeEdu/ManageCodingExams";
 function MainLayout() {
@@ -172,6 +173,7 @@ export default function App() {
             <Route path="/portal/coursemanager/manageexams" element={<ManageExams/>}/>
             <Route path="/portal/coursemanager/createcodingexam" element={<CreateCodingExam/>}/>
             <Route path="/portal/coursemanager/managecodingexams" element={<ManageCodingExams/>}/>
+            <Route path="/portal/coursemanager/manageassignments" element={<ManageAssignments/>}/>
             <Route path="test" element={<TestConnection />} />
           </Routes>
         </AuthProvider>
