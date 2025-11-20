@@ -15,12 +15,17 @@ export default function Login() {
     switch (role) {
       case 'admin':
       case 'super_admin':
-      
-        return '/portal/admin'; // your main admin dashboard
+        return '/portal/admin';
       case 'course_manager':
-        return '/portal/coursemanager'
+        return '/portal/coursemanager';
+      case 'manager':
+        return '/portal/manager';
+      case 'team_lead':
+        return '/portal/team-lead';
+      case 'hr':
+        return '/portal/hr';
       case 'employee':
-        return '/employee-portal'; 
+        return '/employee-portal';
       case 'student':
         return '/nextgen/dashboard';
       default:
