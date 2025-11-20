@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import apiClient from '../../utils/api'
+import CourseCard from '../../components/CourseCard'
 import profilePic1 from '../../assets/profilePic1.jpeg'
 import profilePic2 from '../../assets/profilePic2.jpeg'
 import profilePic3 from '../../assets/profilePic3.jpeg'
@@ -270,89 +271,15 @@ export default function NextGenLanding() {
             <p>{error}</p>
           </div>
         ) : (
-          <div className="services-grid">
+          <div 
+            style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '2rem',
+              alignItems: 'stretch'
+            }}>
             {courses.map((course, index) => (
-              <div key={index} className="service-card" style={{ height: 'fit-content' }}>
-                <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}>
-                  {course.icon}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <h3 className="service-title" style={{ margin: 0 }}>{course.title}</h3>
-                  <span style={{
-                    background: '#22c55e',
-                    color: 'white',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '1rem',
-                    fontSize: '0.75rem',
-                    fontWeight: '600'
-                  }}>
-                    {course.price}
-                  </span>
-                </div>
-
-                <p className="service-description" style={{ marginBottom: '1rem' }}>
-                  {course.description}
-                </p>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '0.5rem',
-                  marginBottom: '1rem',
-                  fontSize: '0.875rem',
-                  color: '#6b7280'
-                }}>
-                  <div><strong>Duration:</strong> {course.duration}</div>
-                  <div><strong>Level:</strong> {course.level}</div>
-                  <div><strong>Students:</strong> {course.students}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <strong>Rating:</strong>
-                    <span style={{ color: '#fbbf24' }}>⭐</span>
-                    {course.rating}
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
-                    Skills You'll Learn:
-                  </h4>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {course.skills.slice(0, 3).map((skill, skillIndex) => (
-                      <span key={skillIndex} style={{
-                        background: '#f3f4f6',
-                        color: '#374151',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        {skill}
-                      </span>
-                    ))}
-                    {course.skills.length > 3 && (
-                      <span style={{
-                        background: '#dbeafe',
-                        color: '#1d4ed8',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        +{course.skills.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <Link
-                  to="/nextgen/enroll"
-                  className="btn-primary"
-                  style={{ width: '100%', textAlign: 'center', display: 'block', textDecoration: 'none' }}
-                >
-                  Enroll in This Course
-                </Link>
-              </div>
+              <CourseCard key={index} course={course} />
             ))}
           </div>
         )}
