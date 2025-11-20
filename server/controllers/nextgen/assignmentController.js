@@ -1,4 +1,5 @@
 import NGAssignmentWithQuestions from '../../models/nextgen/education/NGAssignmentWithQuestions.js';
+import NGSubmissionAssignment from '../../models/nextgen/education/NGSubmissionAssignment.js';
 
 // Create a new assignment with all questions
 export const createAssignment = async (req, res) => {
@@ -435,6 +436,176 @@ export const deleteAssignment = async (req, res) => {
   }
 };
 
+// Get submissions for a specific assignment
+export const getSubmissionsForAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verify assignment exists
+    const assignment = await NGAssignmentWithQuestions.findById(id);
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Assignment not found'
+      });
+    }
+
+    const submissions = await NGSubmissionAssignment.find({ assignment_id: id })
+      .populate('student_id', 'full_name email')
+      .sort({ submitted_at: -1 });
+
+    res.json({
+      success: true,
+      data: {
+        assignment: {
+          id: assignment._id,
+          assignmentName: assignment.assignmentName,
+          courseName: assignment.courseName
+        },
+        submissions: submissions.map(sub => ({
+          id: sub._id,
+          student: sub.student_id ? {
+            id: sub.student_id._id,
+            fullName: sub.student_id.full_name,
+            email: sub.student_id.email
+          } : null,
+          submission_data: sub.submission_data,
+          submitted_at: sub.submitted_at,
+          status: sub.status,
+          grade: sub.grade,
+          feedback: sub.feedback
+        }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching submissions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch submissions',
+      error: error.message
+    });
+  }
+};
+
+// Submit an assignment
+export const submitAssignment = async (req, res) => {
+  try {
+    const { assignment_id, student_id, submission_data } = req.body;
+
+    // Validate required fields
+    if (!assignment_id || !student_id || !submission_data) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: assignment_id, student_id, and submission_data are required'
+      });
+    }
+
+    // Verify assignment exists
+    const assignment = await NGAssignmentWithQuestions.findById(assignment_id);
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Assignment not found'
+      });
+    }
+
+    // Check if student already submitted
+    const existingSubmission = await NGSubmissionAssignment.findOne({
+      assignment_id,
+      student_id
+    });
+
+    if (existingSubmission) {
+      return res.status(409).json({
+        success: false,
+        message: 'Student has already submitted this assignment'
+      });
+    }
+
+    // Create submission
+    const submission = new NGSubmissionAssignment({
+      student_id,
+      assignment_id,
+      submission_data
+    });
+
+    await submission.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Assignment submitted successfully',
+      data: {
+        id: submission._id,
+        submitted_at: submission.submitted_at
+      }
+    });
+
+  } catch (error) {
+    console.error('Error submitting assignment:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit assignment',
+      error: error.message
+    });
+  }
+};
+
+// Grade a submission
+export const gradeSubmission = async (req, res) => {
+  try {
+    const { submissionId } = req.params;
+    const { grade, feedback } = req.body;
+
+    // Validate grade
+    if (grade !== null && grade !== undefined && (grade < 0 || grade > 100)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Grade must be between 0 and 100'
+      });
+    }
+
+    const submission = await NGSubmissionAssignment.findById(submissionId);
+
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: 'Submission not found'
+      });
+    }
+
+    // Update grade and feedback
+    if (grade !== null && grade !== undefined) {
+      submission.grade = grade;
+    }
+    if (feedback !== undefined) {
+      submission.feedback = feedback;
+    }
+    submission.status = 'graded';
+
+    await submission.save();
+
+    res.json({
+      success: true,
+      message: 'Submission graded successfully',
+      data: {
+        id: submission._id,
+        grade: submission.grade,
+        feedback: submission.feedback,
+        status: submission.status
+      }
+    });
+
+  } catch (error) {
+    console.error('Error grading submission:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to grade submission',
+      error: error.message
+    });
+  }
+};
+
 export default {
   createAssignment,
   getAllAssignments,
@@ -442,5 +613,8 @@ export default {
   getAssignmentByName,
   updateAssignmentStatus,
   updateAssignment,
-  deleteAssignment
+  deleteAssignment,
+  getSubmissionsForAssignment,
+  submitAssignment,
+  gradeSubmission
 };

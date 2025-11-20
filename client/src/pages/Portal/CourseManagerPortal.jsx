@@ -411,6 +411,12 @@ export default function CourseManagerPortal() {
         if (action === "Manage Assignments") {
         navigate("/portal/coursemanager/manageassignments");
         }
+        if (action === "Grade Assignments") {
+        navigate("/portal/coursemanager/gradeassignments");
+        }
+        if (action === "Grade Exams") {
+        navigate("/portal/coursemanager/gradeexams");
+        }
 
     };
 

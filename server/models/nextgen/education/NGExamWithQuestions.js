@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 // Create a separate connection for the 'test' database
-const testDBURI = process.env.MONGODB_URI.replace(/\/[^\/]*$/, '/test');
+const testDBURI = process.env.MONGODB_URI ? process.env.MONGODB_URI.replace(/\/[^\/]*$/, '/test') : 'mongodb+srv://bhanuprakashsyagamreddy:oxfordV2Cluster@cluster0.f1p7jgs.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
 const testConnection = mongoose.createConnection(testDBURI);
 
 testConnection.on('connected', () => {
@@ -108,7 +108,7 @@ ngExamWithQuestionsSchema.statics.createFromFrontend = async function(examName, 
   return await exam.save();
 };
 
-const NGExamWithQuestions = testConnection.models.NG_ExamWithQuestions ||
-  testConnection.model('NG_ExamWithQuestions', ngExamWithQuestionsSchema);
+const NGExamWithQuestions = mongoose.models.NG_ExamWithQuestions ||
+  mongoose.model('NG_ExamWithQuestions', ngExamWithQuestionsSchema);
 
 export default NGExamWithQuestions;

@@ -33,6 +33,8 @@ import ManageExams from "./pages/NextGenFreeEdu/ManageExams";
 import ManageAssignments from "./pages/NextGenFreeEdu/ManageAssignments";
 import CreateCodingExam from "./pages/NextGenFreeEdu/CreateCodingExam";
 import ManageCodingExams from "./pages/NextGenFreeEdu/ManageCodingExams";
+import GradeAssignments from "./pages/NextGenFreeEdu/GradeAssignments";
+import GradeExams from "./pages/NextGenFreeEdu/GradeExams";
 function MainLayout() {
   return (
     <div
@@ -174,6 +176,8 @@ export default function App() {
             <Route path="/portal/coursemanager/createcodingexam" element={<CreateCodingExam/>}/>
             <Route path="/portal/coursemanager/managecodingexams" element={<ManageCodingExams/>}/>
             <Route path="/portal/coursemanager/manageassignments" element={<ManageAssignments/>}/>
+            <Route path="/portal/coursemanager/gradeassignments" element={<GradeAssignments/>}/>
+            <Route path="/portal/coursemanager/gradeexams" element={<GradeExams/>}/>
             <Route path="test" element={<TestConnection />} />
           </Routes>
         </AuthProvider>

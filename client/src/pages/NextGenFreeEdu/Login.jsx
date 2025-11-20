@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { apiClient } from '../../utils/api'
 
 export default function StudentLogin() {
   const [loginData, setLoginData] = useState({
@@ -12,6 +13,10 @@ export default function StudentLogin() {
   const [loginError, setLoginError] = useState('')
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [assignments, setAssignments] = useState([])
+  const [showAssignments, setShowAssignments] = useState(false)
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false)
+  const [assignmentsError, setAssignmentsError] = useState('')
 
   // Get student data from localStorage
   const getStudentData = () => {
@@ -73,6 +78,35 @@ export default function StudentLogin() {
       setShowForgotPassword(false)
       alert('Password reset link sent to your email!')
     }, 1000)
+  }
+
+  const handleViewAssignments = async () => {
+    try {
+      setAssignmentsLoading(true)
+      setAssignmentsError('')
+      const studentData = getStudentData()
+      if (!studentData || !studentData.course || !studentData.course.title) {
+        setAssignmentsError('Unable to determine your course. Please refresh the page.')
+        return
+      }
+
+      const response = await apiClient.getAllNextGenAssignments({
+        status: 'published',
+        courseName: studentData.course.title
+      })
+
+      if (response.success) {
+        setAssignments(response.data.assignments || [])
+        setShowAssignments(true)
+      } else {
+        throw new Error(response.message || 'Failed to fetch assignments')
+      }
+    } catch (err) {
+      console.error('Error fetching assignments:', err)
+      setAssignmentsError(err.message)
+    } finally {
+      setAssignmentsLoading(false)
+    }
   }
 
   if (isLoggedIn) {
@@ -144,8 +178,12 @@ export default function StudentLogin() {
                 <button className="btn-outline">
                   Continue Learning
                 </button>
-                <button className="btn-outline">
-                  View Assignments
+                <button
+                  className="btn-outline"
+                  onClick={handleViewAssignments}
+                  disabled={assignmentsLoading}
+                >
+                  {assignmentsLoading ? 'Loading...' : 'View Assignments'}
                 </button>
               </div>
             </div>

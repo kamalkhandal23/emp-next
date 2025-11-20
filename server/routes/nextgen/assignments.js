@@ -6,7 +6,10 @@ import {
   getAssignmentByName,
   updateAssignmentStatus,
   updateAssignment,
-  deleteAssignment
+  deleteAssignment,
+  getSubmissionsForAssignment,
+  submitAssignment,
+  gradeSubmission
 } from '../../controllers/nextgen/assignmentController.js';
 
 const router = express.Router();
@@ -31,5 +34,14 @@ router.put('/:id', updateAssignment);
 
 // Delete assignment
 router.delete('/:id', deleteAssignment);
+
+// Get submissions for an assignment
+router.get('/:id/submissions', getSubmissionsForAssignment);
+
+// Submit an assignment
+router.post('/submit', submitAssignment);
+
+// Grade a submission
+router.put('/:submissionId/grade', gradeSubmission);
 
 export default router;
