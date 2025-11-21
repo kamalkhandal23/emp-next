@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from "../../utils/api";
 
 function CreateExam() {
+  const navigate = useNavigate();
   const [totalQuestions, setTotalQuestions] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [examName , setExamName] = useState("")
@@ -12,6 +14,25 @@ function CreateExam() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [exams, setExams] = useState([]);
+  const [loadingExams, setLoadingExams] = useState(false);
+
+  useEffect(() => {
+    const fetchExams = async () => {
+      setLoadingExams(true);
+      try {
+        const response = await apiClient.getAllNextGenExams();
+        if (response.success && response.data) {
+          setExams(response.data.exams || []);
+        }
+      } catch (error) {
+        console.error('Error fetching exams:', error);
+      } finally {
+        setLoadingExams(false);
+      }
+    };
+    fetchExams();
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -130,7 +151,13 @@ function CreateExam() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 md:p-10">
       <div className="max-w-5xl mx-auto bg-white shadow-2xl rounded-xl p-6 md:p-10">
-        <header className="text-center mb-10 border-b pb-4">
+        <header className="text-center mb-10 border-b pb-4 relative">
+          <button
+            onClick={() => navigate('/portal/coursemanager')}
+            className="absolute left-0 top-0 bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+          >
+            ← Back
+          </button>
           <h1 className="text-4xl md:text-5xl font-extrabold text-black tracking-tight" style={{color: "black" }}>
             ✍️ Exam Creator 
           </h1>
@@ -142,24 +169,37 @@ function CreateExam() {
         {/* Step 1: Enter number of questions */}
         {!submitted ? (
           <div className="max-w-md mx-auto p-8 bg-blue-50 border border-blue-200 rounded-lg shadow-lg">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-900 bg-green-500 rounded">
-                Define Exam
-            </h2>
+           
             
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
                 <label className="text-lg text-gray-700 font-medium text-left">
-                    Course Name
+                    Exam
                 </label>
 
-                <input
-                    type="text"
+                <select
                     value={courseName}
                     onChange={(e) => setCourseName(e.target.value)}
                     className="border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm"
-                    placeholder="e.g, React Development"
+                    style={{
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 1rem center',
+                      backgroundSize: '1.5rem',
+                      paddingRight: '3rem'
+                    }}
                     required
-                />
+                >
+                    <option value="" disabled>
+                        {loadingExams ? 'Loading exams...' : 'Select an exam'}
+                    </option>
+                    {exams.map((exam, index) => (
+                        <option key={index} value={exam.examName}>
+                            {exam.examName}
+                        </option>
+                    ))}
+                </select>
 
                 <label className="text-lg text-gray-700 font-medium text-left">
                     Name of your Exam
@@ -190,13 +230,22 @@ function CreateExam() {
                 required
               />
 
-              <button
-                type="submit"
-                disabled={totalQuestions < 1 || !examName.trim() || !courseName.trim()}
-                className="w-full bg-blue-400 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 shadow-md"
-              >
-                Start Designing
-              </button>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => navigate('/portal/coursemanager')}
+                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200 shadow-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={totalQuestions < 1 || !examName.trim() || !courseName.trim()}
+                  className="flex-1 bg-blue-400 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 shadow-md"
+                >
+                  Start Designing
+                </button>
+              </div>
             </form>
           </div>
         ) : (
@@ -401,27 +450,43 @@ function CreateExam() {
                   </div>
                 )}
 
-                <button
-                  onClick={handleFinalizeExam}
-                  disabled={isSubmitting || submitSuccess}
-                  className={`bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 px-10 rounded-xl transition duration-200 text-lg shadow-xl ${
-                    isSubmitting || submitSuccess ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Creating Exam...
-                    </span>
-                  ) : submitSuccess ? (
-                    '✅ Exam Created!'
-                  ) : (
-                    'Finalize & Submit Exam'
-                  )}
-                </button>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to cancel? All unsaved progress will be lost.')) {
+                        navigate('/portal/coursemanager');
+                      }
+                    }}
+                    disabled={isSubmitting || submitSuccess}
+                    className={`bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-8 rounded-xl transition duration-200 text-lg shadow-xl ${
+                      isSubmitting || submitSuccess ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleFinalizeExam}
+                    disabled={isSubmitting || submitSuccess}
+                    className={`bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 px-10 rounded-xl transition duration-200 text-lg shadow-xl ${
+                      isSubmitting || submitSuccess ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Creating Exam...
+                      </span>
+                    ) : submitSuccess ? (
+                      '✅ Exam Created!'
+                    ) : (
+                      'Finalize & Submit Exam'
+                    )}
+                  </button>
+                </div>
                 
                 <p className="mt-3 text-sm text-gray-600">
                   This will save your exam to the database
