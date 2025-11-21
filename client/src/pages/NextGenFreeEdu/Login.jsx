@@ -23,6 +23,7 @@ export default function StudentLogin() {
     const studentInfo = localStorage.getItem('studentInfo')
     return studentInfo ? JSON.parse(studentInfo) : null
   }
+  
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -259,9 +260,9 @@ export default function StudentLogin() {
                 <button className="btn-outline" style={{ justifyContent: 'flex-start' }}>
                   🎥 Video Lectures
                 </button>
-                <button className="btn-outline" style={{ justifyContent: 'flex-start' }}>
-                  💻 Code Examples
-                </button>
+                <Link to="/nextgen/coding-exams" className="btn-outline" style={{ justifyContent: 'flex-start' }}>
+                  💻 Coding Exams
+                </Link>
                 <Link to="/nextgen/results" className="btn-outline" style={{ justifyContent: 'flex-start' }}>
                   📊 View All Results
                 </Link>

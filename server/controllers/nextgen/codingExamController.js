@@ -448,6 +448,176 @@ export const deleteCodingExam = async (req, res) => {
   }
 };
 
+// Run code on sample inputs
+export const runCode = async (req, res) => {
+  try {
+    const { examId, questionId, code, language } = req.body;
+
+    // Validate required fields
+    if (!examId || !questionId || !code || !language) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: examId, questionId, code, and language are required'
+      });
+    }
+
+    // Validate language
+    const validLanguages = ['c', 'cpp', 'java', 'python', 'javascript'];
+    if (!validLanguages.includes(language)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid language. Must be one of: c, cpp, java, python, javascript'
+      });
+    }
+
+    // Get exam
+    const exam = await NGCodingExamWithQuestions.findById(examId);
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: 'Coding exam not found'
+      });
+    }
+
+    // Get question
+    const question = exam.questions.get(questionId);
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: 'Question not found'
+      });
+    }
+
+    // Execute code on sample inputs
+    const result = await executeCode(
+      code,
+      language,
+      question.sampleInputs,
+      question.sampleOutputs,
+      false // not hidden
+    );
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Error running code:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to run code',
+      error: error.message
+    });
+  }
+};
+
+// Submit coding exam
+export const submitCodingExam = async (req, res) => {
+  try {
+    const { examId, submissions } = req.body;
+    const studentId = req.user?.id; // Assuming auth middleware sets req.user
+
+    // Validate required fields
+    if (!examId || !submissions || !Array.isArray(submissions)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: examId and submissions array are required'
+      });
+    }
+
+    // Get exam
+    const exam = await NGCodingExamWithQuestions.findById(examId);
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: 'Coding exam not found'
+      });
+    }
+
+    const results = [];
+    let totalMarks = 0;
+    const maxMarksPerQuestion = 100 / exam.totalQuestions;
+
+    // Process each submission
+    for (const submission of submissions) {
+      const { questionId, code, language } = submission;
+
+      // Validate submission
+      if (!questionId || !code || !language) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid submission for question ${questionId}: missing questionId, code, or language`
+        });
+      }
+
+      // Get question
+      const question = exam.questions.get(questionId);
+      if (!question) {
+        return res.status(404).json({
+          success: false,
+          message: `Question ${questionId} not found`
+        });
+      }
+
+      // Execute code on hidden test cases
+      const result = await executeCode(
+        code,
+        language,
+        question.hiddenInputs,
+        question.hiddenOutputs,
+        true // hidden
+      );
+
+      // Calculate marks for this question
+      const marks = result.verdict === 'Accepted' ? maxMarksPerQuestion : 0;
+      totalMarks += marks;
+
+      // Save submission
+      const submissionRecord = new NGSubmissionCodingExams({
+        student_id: studentId,
+        exam_id: examId,
+        question_id: questionId,
+        code,
+        language,
+        verdict: result.verdict,
+        marks,
+        executionTime: result.executionTime,
+        memory: result.memory,
+        output: result.output,
+        error: result.error
+      });
+
+      await submissionRecord.save();
+
+      results.push({
+        questionId,
+        verdict: result.verdict,
+        marks,
+        executionTime: result.executionTime,
+        memory: result.memory
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Coding exam submitted successfully',
+      data: {
+        totalMarks: Math.round(totalMarks),
+        results
+      }
+    });
+
+  } catch (error) {
+    console.error('Error submitting coding exam:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit coding exam',
+      error: error.message
+    });
+  }
+};
+
 export default {
   createCodingExam,
   getAllCodingExams,
@@ -455,5 +625,7 @@ export default {
   getCodingExamByName,
   updateCodingExamStatus,
   updateCodingExam,
-  deleteCodingExam
+  deleteCodingExam,
+  runCode,
+  submitCodingExam
 };

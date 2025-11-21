@@ -3,10 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Set the MongoDB URI for the test database before importing models
-process.env.MONGODB_URI = 'mongodb+srv://bhanuprakashsyagamreddy:oxfordV2Cluster@cluster0.f1p7jgs.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
-
-// Import models after setting env
+// Import models
 import NG_ApprovedStudents from '../models/nextgen/core/NG_ApprovedStudents.js';
 import NG_Registration from '../models/nextgen/core/Registration.js';
 import NGExamWithQuestions from '../models/nextgen/education/NGExamWithQuestions.js';
@@ -14,8 +11,8 @@ import NGSubmissionExams from '../models/nextgen/education/NGSubmissionExams.js'
 
 const seedNGExamSubmissions = async () => {
   try {
-    // Connect to database - using the provided MongoDB Atlas URI for test database
-    const mongoUri = 'mongodb+srv://bhanuprakashsyagamreddy:oxfordV2Cluster@cluster0.f1p7jgs.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
+    // Connect to database using the main MongoDB URI
+    const mongoUri = process.env.MONGODB_URI;
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB');
 

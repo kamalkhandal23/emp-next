@@ -35,6 +35,9 @@ import CreateCodingExam from "./pages/NextGenFreeEdu/CreateCodingExam";
 import ManageCodingExams from "./pages/NextGenFreeEdu/ManageCodingExams";
 import GradeAssignments from "./pages/NextGenFreeEdu/GradeAssignments";
 import GradeExams from "./pages/NextGenFreeEdu/GradeExams";
+import CodingExamsList from "./pages/NextGenFreeEdu/CodingExamsList";
+import CodingExam from "./pages/NextGenFreeEdu/CodingExam";
+
 function MainLayout() {
   return (
     <div
@@ -120,7 +123,9 @@ function AppContent() {
         <Route path="profile" element={<StudentProfile />} />
         <Route path="exam" element={<Exam />} />
         <Route path="results" element={<Results />} />
-        <Route path="privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="coding-exams" element={<CodingExamsList />} />
+              <Route path="coding-exam/:id" element={<CodingExam />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
       </Route>
       <Route path="portal/admin" element={<AdminPortal />} />
       <Route path="portal/hr" element={<HRPortal />} />
@@ -159,6 +164,8 @@ export default function App() {
               <Route path="profile" element={<StudentProfile />} />
               <Route path="exam" element={<Exam />} />
               <Route path="results" element={<Results />} />
+              <Route path="coding-exams" element={<CodingExamsList />} />
+              <Route path="coding-exam/:id" element={<CodingExam />} />
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
             </Route>
             <Route path="portal/admin" element={<AdminPortal />} />
@@ -166,6 +173,7 @@ export default function App() {
             <Route path="portal/team-lead" element={<TeamLeadPortal />} />
             <Route path="portal/manager" element={<ManagerPortal />} />
             <Route path="portal/employee" element={<EmployeePortal />} />
+            
             <Route
               path="portal/coursemanager"
               element={<CourseManagerPortal />}

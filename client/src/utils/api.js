@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 class ApiClient {
   constructor() {
@@ -523,6 +523,22 @@ class ApiClient {
   async deleteNextGenCodingExam(id) {
     return this.request(`/nextgen/codingExams/${id}`, {
       method: 'DELETE',
+    })
+  }
+
+  // Run coding exam code on sample inputs
+  async runCodingExamCode(data) {
+    return this.request('/nextgen/codingExams/run-code', {
+      method: 'POST',
+      body: data,
+    })
+  }
+
+  // Submit coding exam
+  async submitCodingExam(data) {
+    return this.request('/nextgen/codingExams/submit', {
+      method: 'POST',
+      body: data,
     })
   }
 
