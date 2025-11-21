@@ -17,6 +17,7 @@ export default function StudentAssignments() {
 
   const studentData = getStudentData();
   const studentCourse = studentData?.course?.title || '';
+  const studentId = studentData?._id || studentData?.id || null;
 
   useEffect(() => {
     fetchAssignments();
@@ -26,14 +27,33 @@ export default function StudentAssignments() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.getAllNextGenAssignments();
+      
+      // If no studentId, fall back to regular assignment fetch
+      let response;
+      if (studentId) {
+        response = await apiClient.getAssignmentsWithLockStatus(studentId);
+      } else {
+        console.warn('No student ID found, fetching all assignments without lock status');
+        response = await apiClient.getAllNextGenAssignments();
+        if (response.success) {
+          // Transform data to match expected format
+          const publishedAssignments = (response.data.assignments || [])
+            .filter(a => a.status === 'published')
+            .map(a => ({
+              ...a,
+              isLocked: false,
+              isCompleted: false,
+              submission: null
+            }));
+          response = {
+            success: true,
+            data: { assignments: publishedAssignments }
+          };
+        }
+      }
 
       if (response.success) {
-        // Filter to show only published assignments
-        const publishedAssignments = (response.data.assignments || []).filter(
-          (assignment) => assignment.status === 'published'
-        );
-        setAssignments(publishedAssignments);
+        setAssignments(response.data.assignments || []);
       } else {
         throw new Error(response.message || 'Failed to fetch assignments');
       }
@@ -255,6 +275,8 @@ export default function StudentAssignments() {
             }}>
             {filteredAssignments.map((assignment) => {
               const isStudentCourse = assignment.courseName === studentCourse;
+              const isLocked = assignment.isLocked || false;
+              const isCompleted = assignment.isCompleted || false;
 
               return (
                 <div
@@ -264,12 +286,21 @@ export default function StudentAssignments() {
                     border: isStudentCourse
                       ? '2px solid #3b82f6'
                       : '1px solid #e5e7eb',
-                    background: isStudentCourse
+                    background: isLocked
+                      ? 'linear-gradient(135deg, #f3f4f6, #ffffff)'
+                      : isStudentCourse
                       ? 'linear-gradient(135deg, #f0f9ff, #ffffff)'
                       : '#ffffff',
+                    opacity: isLocked ? 0.7 : 1,
                   }}>
-                  {/* Course Badge */}
-                  <div style={{ marginBottom: '1rem' }}>
+                  {/* Lock/Complete Badge */}
+                  <div
+                    style={{
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      gap: '0.5rem',
+                      flexWrap: 'wrap',
+                    }}>
                     <span
                       style={{
                         display: 'inline-block',
@@ -283,6 +314,34 @@ export default function StudentAssignments() {
                       {assignment.courseName}
                       {isStudentCourse && ' ⭐'}
                     </span>
+                    {isLocked && (
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          background: '#fef3c7',
+                          color: '#92400e',
+                        }}>
+                        🔒 Locked
+                      </span>
+                    )}
+                    {isCompleted && (
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          background: '#d1fae5',
+                          color: '#065f46',
+                        }}>
+                        ✓ Completed
+                      </span>
+                    )}
                   </div>
 
                   {/* Assignment Title */}
@@ -290,8 +349,13 @@ export default function StudentAssignments() {
                     className='service-title'
                     style={{
                       marginBottom: '0.75rem',
-                      color: isStudentCourse ? '#1e40af' : '#111827',
+                      color: isLocked
+                        ? '#6b7280'
+                        : isStudentCourse
+                        ? '#1e40af'
+                        : '#111827',
                     }}>
+                    {isLocked && '🔒 '}
                     {assignment.assignmentName}
                   </h3>
 
@@ -322,25 +386,51 @@ export default function StudentAssignments() {
                         gap: '0.5rem',
                         marginBottom: '0.5rem',
                       }}>
-                      <span>📅</span>
-                      <span>Created: {formatDate(assignment.createdAt)}</span>
+                      <span>🎯</span>
+                      <span>Assignment {assignment.order || 1}</span>
                     </div>
+                    {isCompleted && assignment.submission && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          marginBottom: '0.5rem',
+                        }}>
+                        <span>⭐</span>
+                        <span style={{ color: '#22c55e', fontWeight: '600' }}>
+                          Score: {assignment.submission.score || 'N/A'}%
+                        </span>
+                      </div>
+                    )}
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
+                        marginBottom: '0.5rem',
                       }}>
-                      <span>✅</span>
-                      <span
-                        style={{
-                          color: '#22c55e',
-                          fontWeight: '600',
-                        }}>
-                        Published
-                      </span>
+                      <span>📅</span>
+                      <span>Created: {formatDate(assignment.createdAt)}</span>
                     </div>
                   </div>
+
+                  {/* Lock Message */}
+                  {isLocked && (
+                    <div
+                      style={{
+                        background: '#fef3c7',
+                        border: '1px solid #fcd34d',
+                        borderRadius: '0.5rem',
+                        padding: '0.75rem',
+                        marginBottom: '1rem',
+                        fontSize: '0.875rem',
+                        color: '#92400e',
+                      }}>
+                      <strong>🔒 Locked:</strong> Complete previous assignments
+                      to unlock this one.
+                    </div>
+                  )}
 
                   {/* Action Buttons */}
                   <div
@@ -351,14 +441,21 @@ export default function StudentAssignments() {
                     }}>
                     <button
                       className='btn-primary'
-                      style={{ width: '100%' }}
+                      style={{
+                        width: '100%',
+                        opacity: isLocked ? 0.5 : 1,
+                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                      }}
+                      disabled={isLocked}
                       onClick={() => {
-                        // TODO: Navigate to assignment taking page
-                        alert(
-                          `Starting assignment: ${assignment.assignmentName}`
-                        );
+                        if (!isLocked) {
+                          // TODO: Navigate to assignment taking page
+                          alert(
+                            `Starting assignment: ${assignment.assignmentName}`
+                          );
+                        }
                       }}>
-                      Start Assignment
+                      {isCompleted ? 'Retake Assignment' : 'Start Assignment'}
                     </button>
                     <button
                       className='btn-outline'
@@ -419,14 +516,30 @@ export default function StudentAssignments() {
               paddingLeft: '1.5rem',
               margin: 0,
             }}>
-            <li>Complete assignments to track your learning progress</li>
-            <li>Assignments marked with ⭐ are for your enrolled course</li>
             <li>
-              You can view all published assignments from different courses
+              <strong>🔒 Progressive Learning:</strong> Assignments must be
+              completed in order. You can only access the next assignment after
+              completing the previous one.
             </li>
-            <li>Make sure to submit your work before the deadline</li>
             <li>
-              Contact support if you have any questions about an assignment
+              <strong>⭐ Your Course:</strong> Assignments marked with ⭐ are
+              for your enrolled course
+            </li>
+            <li>
+              <strong>✓ Track Progress:</strong> Completed assignments show your
+              score and completion status
+            </li>
+            <li>
+              <strong>🔄 Retake Option:</strong> You can retake completed
+              assignments to improve your score
+            </li>
+            <li>
+              <strong>📚 Multiple Courses:</strong> You can view all published
+              assignments from different courses
+            </li>
+            <li>
+              <strong>❓ Need Help?</strong> Contact support if you have any
+              questions about an assignment
             </li>
           </ul>
         </div>
