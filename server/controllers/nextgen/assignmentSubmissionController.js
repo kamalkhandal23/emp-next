@@ -2,6 +2,7 @@ import AssignmentSubmission from '../../models/nextgen/education/AssignmentSubmi
 import NGAssignmentWithQuestions from '../../models/nextgen/education/NGAssignmentWithQuestions.js';
 import Student from '../../models/nextgen/student-management/Student.js';
 import { sendGradedAssignmentEmail } from '../../services/emailService.js';
+import { uploadMultipleFiles } from '../../services/uploadService.js';
 
 // Create or update submission
 export const submitAssignment = async (req, res) => {
@@ -26,15 +27,31 @@ export const submitAssignment = async (req, res) => {
       });
     }
 
-    // Prepare file submissions data
-    const fileSubmissions = files.map((file) => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      path: file.path,
-      mimetype: file.mimetype,
-      size: file.size,
-      uploadedAt: new Date(),
-    }));
+    // Upload files to Supabase Storage if any
+    let fileSubmissions = [];
+    if (files.length > 0) {
+      const folder = `student-${studentId}/assignment-${assignmentId}`;
+      const uploadResults = await uploadMultipleFiles(files, folder);
+
+      // Filter successful uploads and format for database
+      fileSubmissions = uploadResults
+        .filter((result) => result.success)
+        .map((result) => ({
+          filename: result.filename,
+          originalName: result.originalName,
+          path: result.path,
+          url: result.url,
+          mimetype: result.mimetype,
+          size: result.size,
+          uploadedAt: new Date(),
+        }));
+
+      // Log any failed uploads
+      const failedUploads = uploadResults.filter((result) => !result.success);
+      if (failedUploads.length > 0) {
+        console.error('Some file uploads failed:', failedUploads);
+      }
+    }
 
     // Find existing submission or create new one
     let submission = await AssignmentSubmission.findOne({

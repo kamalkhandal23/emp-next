@@ -44,6 +44,7 @@ const assignmentSubmissionSchema = new mongoose.Schema(
         filename: String,
         originalName: String,
         path: String,
+        url: String, // Supabase Storage URL
         mimetype: String,
         size: Number,
         uploadedAt: {
