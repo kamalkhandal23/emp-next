@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function HRPortal() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!authToken || !userRole) {
+      navigate('/login', { replace: true });
+    }
+  }, []);
 
   // Mock data
   const hrStats = {
@@ -116,37 +124,12 @@ export default function HRPortal() {
     },
   ];
 
-  // Check authentication on mount
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('userRole');
-
-    if (!token || (userRole !== 'hr' && userRole !== 'admin')) {
-      navigate('/login', { replace: true });
-    } else {
-      setLoading(false);
-    }
-  }, [navigate]);
-
-  if (loading) {
-    return (
-      <div className='portal-layout'>
-        <div
-          className='portal-content'
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '80vh',
-          }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-            <p>Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className='portal-layout'>
@@ -165,7 +148,7 @@ export default function HRPortal() {
             </p>
           </div>
           <button
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
             className='btn-secondary'
             style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
             Logout

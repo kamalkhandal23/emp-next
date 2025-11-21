@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function TeamLeadPortal() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!authToken || !userRole) {
+      navigate('/login', { replace: true });
+    }
+  }, []);
 
   // Mock data
   const teamStats = {
@@ -119,17 +127,12 @@ export default function TeamLeadPortal() {
     ],
   };
 
-  // Check authentication on mount
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('userRole');
-
-    if (!token || (userRole !== 'team_lead' && userRole !== 'admin')) {
-      navigate('/login', { replace: true });
-    } else {
-      setLoading(false);
-    }
-  }, [navigate]);
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
+  };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -143,67 +146,6 @@ export default function TeamLeadPortal() {
         return '#6b7280';
     }
   };
-
-  if (loading) {
-    return (
-      <div className='portal-layout'>
-        <div
-          className='portal-content'
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '80vh',
-          }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-            <p>Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Removed dummy login form - authentication handled by main login page
-  // The following code was removed (loginData.password
-  /*               onChange={(e) =>
-                      setLoginData({ ...loginData, password: e.target.value })
-                    }
-                    className="form-input"
-                    placeholder="Enter password"
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  style={{ width: "100%" }}
-                >
-                  Login to Team Dashboard
-                </button>
-              </form>
-
-              <div
-                style={{
-                  marginTop: "1rem",
-                  padding: "1rem",
-                  background: "#f0f9ff",
-                  borderRadius: "0.5rem",
-                }}
-              >
-                <p
-                  style={{ fontSize: "0.875rem", color: "#0369a1", margin: 0 }}
-                >
-                  Demo: username: teamlead, password: lead123
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }*/
 
   return (
     <div className='portal-layout'>
@@ -224,7 +166,7 @@ export default function TeamLeadPortal() {
             </p>
           </div>
           <button
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
             className='btn-secondary'
             style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
             Logout

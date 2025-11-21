@@ -4,9 +4,20 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AdminPortal() {
-  const navigate = useNavigate();
+  //const { token } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!authToken || !userRole) {
+      navigate('/login', { replace: true });
+    }
+  }, []);
+
+  const [loading, setLoading] = useState(false);
   const [studentRegistrations, setStudentRegistrations] = useState([]);
   const [selectedRegistration, setSelectedRegistration] = useState([]);
   const [editingStudent, setEditingStudent] = useState(null);
@@ -80,25 +91,12 @@ export default function AdminPortal() {
     }
   };
 
-  // Check authentication on mount
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('userRole');
-
-    if (!token || (userRole !== 'admin' && userRole !== 'super_admin')) {
-      navigate('/login', { replace: true });
-    } else {
-      setLoading(false);
-      fetchRegistrations();
-    }
-  }, [navigate]);
-
   // Initialize registrations on component mount
-  useEffect(() => {
-    if (!loading) {
+  /* useEffect(() => {
+    if (isLoggedIn) {
       fetchRegistrations();
     }
-  }, [loading]);
+  }, [isLoggedIn]); */
 
   // Handle registration approval
   const handleApproveRegistration = async (id) => {
@@ -250,37 +248,12 @@ export default function AdminPortal() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className='portal-layout'>
-        <div
-          className='portal-content'
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '80vh',
-          }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-            <p>Loading Admin Portal...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Removed dummy admin login form - authentication handled by main login page
-  /*style}={{ fontSize: '0.875rem', color: '#0369a1', margin: 0 }}>
-                  Demo: username: admin, password: admin123
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }*/
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className='portal-layout'>
@@ -299,7 +272,7 @@ export default function AdminPortal() {
             </p>
           </div>
           <button
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
             className='btn-secondary'
             style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
             Logout

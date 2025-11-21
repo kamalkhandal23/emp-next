@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import apiClient from '../../utils/api';
 
 /**
  * Course Manager Portal (stable build)
@@ -15,15 +16,24 @@ export default function CourseManagerPortal() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!authToken || !userRole) {
+      navigate('/login', { replace: true });
+    }
+  }, []);
+
   // UI state
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
 
   // Data state
   const [studentRegistrations, setStudentRegistrations] = useState([]);
   const [courses, setCourses] = useState([]);
 
   // Misc
+  const [loading, setLoading] = useState(false);
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showEditCourse, setShowEditCourse] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -49,18 +59,6 @@ export default function CourseManagerPortal() {
     icon: '🎓',
     visibility: 'draft',
   });
-
-  // Check authentication on mount
-  useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('userRole');
-
-    if (!authToken || (userRole !== 'course_manager' && userRole !== 'admin')) {
-      navigate('/login', { replace: true });
-    } else {
-      setLoading(false);
-    }
-  }, [navigate]);
 
   // Mock data fallbacks
   const mockRegistrations = useMemo(
@@ -179,7 +177,9 @@ export default function CourseManagerPortal() {
         const response = await axios.get(
           'http://localhost:5002/api/nextgen/registrations',
           {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -196,13 +196,6 @@ export default function CourseManagerPortal() {
     fetchRegistrations();
     fetchCourses();
   }, []);
-
-  // Initialize registrations on component mount
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetchRegistrations();
-    }
-  }, [isLoggedIn]);
 
   // Fetch registrations from API
   const fetchRegistrations = async () => {
@@ -228,24 +221,16 @@ export default function CourseManagerPortal() {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/nextgen/courses`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await apiClient.getNextGenCourses();
+      console.log('fetched courses : ', response);
 
-      if (res.ok) {
-        const data = await res.json();
-        setCourses(data?.data?.courses ?? []);
+      if (response.success && response.data) {
+        setCourses(response.data.courses || []);
       } else {
         setCourses([]);
       }
     } catch (e) {
+      console.error('Error fetching courses:', e);
       setCourses([]);
     } finally {
       setLoading(false);
@@ -346,6 +331,13 @@ export default function CourseManagerPortal() {
         registration?.status || 'N/A'
       }`
     );
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('user');
+    navigate('/login', { replace: true });
   };
 
   const handleEditCourse = (course) => {
@@ -489,19 +481,6 @@ export default function CourseManagerPortal() {
 
   /* ---------------- UI Sections ---------------- */
 
-  if (loading) {
-    return (
-      <div className='portal-layout'>
-        <div className='portal-content' style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-            <p>Loading Course Manager Portal...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const safeRender = (val) => {
     if (val === null || val === undefined) return 'N/A';
     if (typeof val === 'object') {
@@ -535,7 +514,7 @@ export default function CourseManagerPortal() {
             </p>
           </div>
           <button
-            onClick={() => setIsLoggedIn(false)}
+            onClick={handleLogout}
             className='btn-secondary'
             style={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}>
             Logout
@@ -600,12 +579,10 @@ export default function CourseManagerPortal() {
                   gap: '2rem',
                 }}>
                 <div className='portal-card'>
-                  <div className='portal-card-header'>
-                    <h3
-                      className='portal-card-title'
-                      style={{ color: 'black' }}>
-                      Recent Activities
-                    </h3>
+                  <div
+                    className='portal-card-header'
+                    style={{ padding: '1rem 1.5rem' }}>
+                    <h3 className='portal-card-title'>Recent Activities</h3>
                   </div>
                   <div>
                     {recentActivities.map((a) => (
@@ -639,10 +616,10 @@ export default function CourseManagerPortal() {
                 </div>
 
                 <div className='portal-card'>
-                  <div className='portal-card-header'>
-                    <h3
-                      className='portal-card-title'
-                      style={{ color: 'black' }}>
+                  <div
+                    className='portal-card-header'
+                    style={{ padding: '1rem' }}>
+                    <h3 className='portal-card-title' style={{}}>
                       System Health
                     </h3>
                   </div>
@@ -1632,7 +1609,12 @@ function StatCard({ value, label }) {
 function Card({ title, children }) {
   return (
     <div className='portal-card'>
-      <h3 className='portal-card-title' style={{ color: 'black' }}>
+      <h3
+        className='portal-card-title'
+        style={{
+          textAlign: 'center',
+          paddingBottom: '1rem',
+        }}>
         {title}
       </h3>
       {children}

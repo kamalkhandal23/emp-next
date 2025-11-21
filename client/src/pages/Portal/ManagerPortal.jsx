@@ -2,9 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function ManagerPortal() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!authToken || !userRole) {
+      navigate('/login', { replace: true });
+    }
+  }, []);
 
   // Mock data
   const managerStats = {
@@ -100,18 +108,6 @@ export default function ManagerPortal() {
     { month: 'Mar', target: 3200000, actual: 0 },
   ];
 
-  // Check authentication on mount
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('userRole');
-
-    if (!token || (userRole !== 'manager' && userRole !== 'admin')) {
-      navigate('/login', { replace: true });
-    } else {
-      setLoading(false);
-    }
-  }, [navigate]);
-
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed':
@@ -126,26 +122,6 @@ export default function ManagerPortal() {
         return '#6b7280';
     }
   };
-
-  if (loading) {
-    return (
-      <div className='portal-layout'>
-        <div
-          className='portal-content'
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '80vh',
-          }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-            <p>Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className='portal-layout'>
