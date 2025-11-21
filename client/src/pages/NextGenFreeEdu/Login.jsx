@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function StudentLogin() {
@@ -12,6 +12,15 @@ export default function StudentLogin() {
   const [loginError, setLoginError] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if user is already logged in on component mount
+  useEffect(() => {
+    const authToken = localStorage.getItem('authToken');
+    const studentInfo = localStorage.getItem('studentInfo');
+    if (authToken && studentInfo) {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   // Get student data from localStorage
   const getStudentData = () => {
@@ -365,7 +374,12 @@ export default function StudentLogin() {
           {/* Logout */}
           <div style={{ textAlign: 'center', marginTop: '2rem' }}>
             <button
-              onClick={() => setIsLoggedIn(false)}
+              onClick={() => {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('studentInfo');
+                localStorage.removeItem('userRole');
+                setIsLoggedIn(false);
+              }}
               className='btn-secondary'>
               Logout
             </button>
