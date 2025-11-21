@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 
 export default function StudentAssignments() {
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,27 +28,53 @@ export default function StudentAssignments() {
     try {
       setLoading(true);
       setError(null);
-      
-      // If no studentId, fall back to regular assignment fetch
+
       let response;
+
+      // Try to fetch with lock status if studentId exists
       if (studentId) {
-        response = await apiClient.getAssignmentsWithLockStatus(studentId);
+        try {
+          response = await apiClient.getAssignmentsWithLockStatus(studentId);
+        } catch (lockStatusError) {
+          console.warn(
+            'Lock status endpoint failed, falling back to regular fetch:',
+            lockStatusError
+          );
+          // Fallback to regular fetch if lock status endpoint fails
+          response = await apiClient.getAllNextGenAssignments();
+          if (response.success) {
+            const publishedAssignments = (response.data.assignments || [])
+              .filter((a) => a.status === 'published')
+              .map((a) => ({
+                ...a,
+                isLocked: false,
+                isCompleted: false,
+                submission: null,
+              }));
+            response = {
+              success: true,
+              data: { assignments: publishedAssignments },
+            };
+          }
+        }
       } else {
-        console.warn('No student ID found, fetching all assignments without lock status');
+        console.warn(
+          'No student ID found, fetching all assignments without lock status'
+        );
         response = await apiClient.getAllNextGenAssignments();
         if (response.success) {
           // Transform data to match expected format
           const publishedAssignments = (response.data.assignments || [])
-            .filter(a => a.status === 'published')
-            .map(a => ({
+            .filter((a) => a.status === 'published')
+            .map((a) => ({
               ...a,
               isLocked: false,
               isCompleted: false,
-              submission: null
+              submission: null,
             }));
           response = {
             success: true,
-            data: { assignments: publishedAssignments }
+            data: { assignments: publishedAssignments },
           };
         }
       }
@@ -449,9 +476,8 @@ export default function StudentAssignments() {
                       disabled={isLocked}
                       onClick={() => {
                         if (!isLocked) {
-                          // TODO: Navigate to assignment taking page
-                          alert(
-                            `Starting assignment: ${assignment.assignmentName}`
+                          navigate(
+                            `/nextgen/assignments/${assignment._id}/submit`
                           );
                         }
                       }}>
@@ -461,9 +487,8 @@ export default function StudentAssignments() {
                       className='btn-outline'
                       style={{ width: '100%' }}
                       onClick={() => {
-                        // TODO: View assignment details
-                        alert(
-                          `Viewing details for: ${assignment.assignmentName}`
+                        navigate(
+                          `/nextgen/assignments/${assignment._id}/submit`
                         );
                       }}>
                       View Details

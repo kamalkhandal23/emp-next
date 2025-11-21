@@ -588,6 +588,78 @@ class ApiClient {
       `/nextgen/assignments/student/${studentId}${queryString}`
     );
   }
+
+  // Assignment Submission endpoints
+  async submitAssignment(formData) {
+    // FormData requires special handling
+    const url = `${this.baseURL}/nextgen/assignment-submissions/submit`;
+    this.token = localStorage.getItem('authToken');
+
+    const config = {
+      method: 'POST',
+      headers: {},
+      body: formData,
+    };
+
+    if (this.token) {
+      config.headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, config);
+      if (!response.ok) {
+        const error = await response
+          .json()
+          .catch(() => ({ message: 'Network error' }));
+        throw new Error(
+          error.message || `HTTP error! status: ${response.status}`
+        );
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('API request failed:', error);
+      throw error;
+    }
+  }
+
+  async getSubmission(assignmentId, studentId) {
+    return this.request(
+      `/nextgen/assignment-submissions/${assignmentId}/student/${studentId}`
+    );
+  }
+
+  async getAssignmentSubmissions(assignmentId, status = null) {
+    const queryString = status ? `?status=${status}` : '';
+    return this.request(
+      `/nextgen/assignment-submissions/${assignmentId}/submissions${queryString}`
+    );
+  }
+
+  async gradeSubmission(submissionId, gradeData) {
+    return this.request(
+      `/nextgen/assignment-submissions/${submissionId}/grade`,
+      {
+        method: 'POST',
+        body: gradeData,
+      }
+    );
+  }
+
+  async getStudentSubmissionHistory(
+    studentId,
+    status = null,
+    courseName = null
+  ) {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (courseName) params.append('courseName', courseName);
+    const queryString = params.toString();
+    return this.request(
+      `/nextgen/assignment-submissions/student/${studentId}/history${
+        queryString ? `?${queryString}` : ''
+      }`
+    );
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -1,5 +1,7 @@
 import NGAssignmentWithQuestions from '../../models/nextgen/education/NGAssignmentWithQuestions.js';
 import AssignmentSubmission from '../../models/nextgen/education/AssignmentSubmission.js';
+import Student from '../../models/nextgen/student-management/Student.js';
+import { sendNewAssignmentEmail } from '../../services/emailService.js';
 
 // Create a new assignment with all questions
 export const createAssignment = async (req, res) => {
@@ -105,6 +107,34 @@ export const createAssignment = async (req, res) => {
     });
 
     await assignment.save();
+
+    // Send email notifications to all students enrolled in this course
+    try {
+      const students = await Student.find({
+        'course.title': courseName.trim(),
+        email: { $exists: true, $ne: '' },
+      }).select('fullName email');
+
+      if (students && students.length > 0) {
+        // Send emails in parallel
+        const emailPromises = students.map((student) =>
+          sendNewAssignmentEmail(
+            student.email,
+            student.fullName,
+            assignmentName.trim(),
+            courseName.trim()
+          )
+        );
+
+        await Promise.allSettled(emailPromises);
+        console.log(
+          `Sent assignment notifications to ${students.length} students`
+        );
+      }
+    } catch (emailError) {
+      console.error('Error sending assignment notifications:', emailError);
+      // Don't fail the assignment creation if emails fail
+    }
 
     // Return success response
     res.status(201).json({
