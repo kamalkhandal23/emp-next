@@ -178,7 +178,9 @@ export default function StudentLogin() {
                   View Profile
                 </Link>
                 <button className='btn-outline'>Continue Learning</button>
-                <button className='btn-outline'>View Assignments</button>
+                <Link to='/nextgen/assignments' className='btn-outline'>
+                  View Assignments
+                </Link>
               </div>
             </div>
 

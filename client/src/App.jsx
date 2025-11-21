@@ -33,6 +33,8 @@ import ManageExams from "./pages/NextGenFreeEdu/ManageExams";
 import ManageAssignments from "./pages/NextGenFreeEdu/ManageAssignments";
 import CreateCodingExam from "./pages/NextGenFreeEdu/CreateCodingExam";
 import ManageCodingExams from "./pages/NextGenFreeEdu/ManageCodingExams";
+import StudentAssignments from "./pages/NextGenFreeEdu/StudentAssignments";
+
 function MainLayout() {
   return (
     <div
@@ -157,6 +159,7 @@ export default function App() {
               <Route path="profile" element={<StudentProfile />} />
               <Route path="exam" element={<Exam />} />
               <Route path="results" element={<Results />} />
+              <Route path="assignments" element={<StudentAssignments />} />
               <Route path="privacy-policy" element={<PrivacyPolicy />} />
             </Route>
             <Route path="portal/admin" element={<AdminPortal />} />
