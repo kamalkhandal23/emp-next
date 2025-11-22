@@ -205,6 +205,38 @@ export default function AdminPortal() {
     }
   };
 
+  // Handle registration deletion
+  const handleDeleteRegistration = async (registrationId) => {
+    if (!confirm("Are you sure you want to delete this registration? This action cannot be undone.")) return;
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL || "http://localhost:5002/api"}/nextgen/admin/registrations/${registrationId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "Registration deleted successfully");
+        await fetchRegistrations();
+      } else {
+        alert(data.message || "Failed to delete registration");
+      }
+    } catch (err) {
+      console.error("Error deleting registration:", err);
+      alert("Something went wrong while deleting the registration.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
 
   // Handle view registration details
@@ -1048,6 +1080,19 @@ export default function AdminPortal() {
                           }}
                         >
                           Details
+                        </button>
+                        <button
+                          className="action-button"
+                          onClick={() => handleDeleteRegistration(registration._id || registration.id)}
+                          style={{
+                            fontSize: "0.75rem",
+                            padding: "0.25rem 0.5rem",
+                            background: "#ef4444",
+                            color: "white",
+                            border: "1px solid rgba(0,0,0,0.08)",
+                          }}
+                        >
+                          Delete
                         </button>
                       </div>
 
