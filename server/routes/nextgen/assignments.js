@@ -7,12 +7,16 @@ import {
   updateAssignmentStatus,
   updateAssignment,
   deleteAssignment,
+  getAssignmentsWithLockStatus,
   getSubmissionsForAssignment,
   submitAssignment,
   gradeSubmission
 } from '../../controllers/nextgen/assignmentController.js';
 
 const router = express.Router();
+
+// Get assignments with lock status for a student
+router.get('/student/:studentId', getAssignmentsWithLockStatus);
 
 // Create a new assignment
 router.post('/create', createAssignment);

@@ -1,16 +1,21 @@
 import NGAssignmentWithQuestions from '../../models/nextgen/education/NGAssignmentWithQuestions.js';
+import AssignmentSubmission from '../../models/nextgen/education/AssignmentSubmission.js';
+import Student from '../../models/nextgen/student-management/Student.js';
+import { sendNewAssignmentEmail } from '../../services/emailService.js';
 import NGSubmissionAssignment from '../../models/nextgen/education/NGSubmissionAssignment.js';
 
 // Create a new assignment with all questions
 export const createAssignment = async (req, res) => {
   try {
-    const { assignmentName, courseName, totalQuestions, questionData } = req.body;
+    const { assignmentName, courseName, totalQuestions, questionData, order } =
+      req.body;
 
     // Validate required fields
     if (!assignmentName || !courseName || !totalQuestions || !questionData) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: assignmentName, courseName, totalQuestions, and questionData are required'
+        message:
+          'Missing required fields: assignmentName, courseName, totalQuestions, and questionData are required',
       });
     }
 
@@ -18,7 +23,7 @@ export const createAssignment = async (req, res) => {
     if (assignmentName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Assignment name cannot be empty'
+        message: 'Assignment name cannot be empty',
       });
     }
 
@@ -26,19 +31,20 @@ export const createAssignment = async (req, res) => {
     if (courseName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Course name cannot be empty'
+        message: 'Course name cannot be empty',
       });
     }
 
     // Check if assignment with same name already exists
     const existingAssignment = await NGAssignmentWithQuestions.findOne({
-      assignmentName: assignmentName.trim()
+      assignmentName: assignmentName.trim(),
     });
 
     if (existingAssignment) {
       return res.status(409).json({
         success: false,
-        message: 'An assignment with this name already exists. Please choose a different name.'
+        message:
+          'An assignment with this name already exists. Please choose a different name.',
       });
     }
 
@@ -47,7 +53,7 @@ export const createAssignment = async (req, res) => {
     if (questionCount !== parseInt(totalQuestions)) {
       return res.status(400).json({
         success: false,
-        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`
+        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`,
       });
     }
 
@@ -56,26 +62,80 @@ export const createAssignment = async (req, res) => {
       if (!qData.type || !qData.question) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is missing required fields (type or question)`
+          message: `Question ${qNum} is missing required fields (type or question)`,
         });
       }
 
       // Validate MCQ questions have options
-      if (qData.type === 'MCQ' && (!qData.options || qData.options.length === 0)) {
+      if (
+        qData.type === 'MCQ' &&
+        (!qData.options || qData.options.length === 0)
+      ) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is MCQ type but has no options`
+          message: `Question ${qNum} is MCQ type but has no options`,
         });
       }
     }
 
-    // Create the assignment using the static method
-    const assignment = await NGAssignmentWithQuestions.createFromFrontend(
-      assignmentName.trim(),
-      courseName.trim(),
-      parseInt(totalQuestions),
-      questionData
-    );
+    // Determine order if not provided
+    let assignmentOrder = order || 1;
+    if (!order) {
+      // Get the highest order number for this course
+      const lastAssignment = await NGAssignmentWithQuestions.findOne({
+        courseName: courseName.trim(),
+      })
+        .sort({ order: -1 })
+        .select('order');
+
+      if (lastAssignment && lastAssignment.order) {
+        assignmentOrder = lastAssignment.order + 1;
+      }
+    }
+
+    // Create the assignment with order
+    const questionsMap = new Map();
+    Object.keys(questionData).forEach((key) => {
+      questionsMap.set(key, questionData[key]);
+    });
+
+    const assignment = new NGAssignmentWithQuestions({
+      assignmentName: assignmentName.trim(),
+      courseName: courseName.trim(),
+      totalQuestions: parseInt(totalQuestions),
+      questions: questionsMap,
+      order: assignmentOrder,
+    });
+
+    await assignment.save();
+
+    // Send email notifications to all students enrolled in this course
+    try {
+      const students = await Student.find({
+        'course.title': courseName.trim(),
+        email: { $exists: true, $ne: '' },
+      }).select('fullName email');
+
+      if (students && students.length > 0) {
+        // Send emails in parallel
+        const emailPromises = students.map((student) =>
+          sendNewAssignmentEmail(
+            student.email,
+            student.fullName,
+            assignmentName.trim(),
+            courseName.trim()
+          )
+        );
+
+        await Promise.allSettled(emailPromises);
+        console.log(
+          `Sent assignment notifications to ${students.length} students`
+        );
+      }
+    } catch (emailError) {
+      console.error('Error sending assignment notifications:', emailError);
+      // Don't fail the assignment creation if emails fail
+    }
 
     // Return success response
     res.status(201).json({
@@ -86,11 +146,11 @@ export const createAssignment = async (req, res) => {
         assignmentName: assignment.assignmentName,
         courseName: assignment.courseName,
         totalQuestions: assignment.totalQuestions,
+        order: assignment.order,
         status: assignment.status,
-        createdAt: assignment.createdAt
-      }
+        createdAt: assignment.createdAt,
+      },
     });
-
   } catch (error) {
     console.error('Error creating assignment:', error);
 
@@ -98,14 +158,14 @@ export const createAssignment = async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: 'An assignment with this name already exists'
+        message: 'An assignment with this name already exists',
       });
     }
 
     res.status(500).json({
       success: false,
       message: 'Failed to create assignment',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -130,7 +190,9 @@ export const getAllAssignments = async (req, res) => {
     }
 
     const assignments = await NGAssignmentWithQuestions.find(query)
-      .select('assignmentName courseName totalQuestions status createdAt updatedAt')
+      .select(
+        'assignmentName courseName totalQuestions status createdAt updatedAt'
+      )
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit));
@@ -145,17 +207,16 @@ export const getAllAssignments = async (req, res) => {
           total,
           page: parseInt(page),
           limit: parseInt(limit),
-          totalPages: Math.ceil(total / parseInt(limit))
-        }
-      }
+          totalPages: Math.ceil(total / parseInt(limit)),
+        },
+      },
     });
-
   } catch (error) {
     console.error('Error fetching assignments:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch assignments',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -170,21 +231,20 @@ export const getAssignmentById = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Assignment not found'
+        message: 'Assignment not found',
       });
     }
 
     res.json({
       success: true,
-      data: assignment.getAssignmentData()
+      data: assignment.getAssignmentData(),
     });
-
   } catch (error) {
     console.error('Error fetching assignment:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch assignment',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -195,27 +255,26 @@ export const getAssignmentByName = async (req, res) => {
     const { assignmentName } = req.params;
 
     const assignment = await NGAssignmentWithQuestions.findOne({
-      assignmentName: assignmentName.trim()
+      assignmentName: assignmentName.trim(),
     });
 
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Assignment not found'
+        message: 'Assignment not found',
       });
     }
 
     res.json({
       success: true,
-      data: assignment.getAssignmentData()
+      data: assignment.getAssignmentData(),
     });
-
   } catch (error) {
     console.error('Error fetching assignment:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch assignment',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -229,7 +288,7 @@ export const updateAssignmentStatus = async (req, res) => {
     if (!['draft', 'published', 'archived'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be one of: draft, published, archived'
+        message: 'Invalid status. Must be one of: draft, published, archived',
       });
     }
 
@@ -242,7 +301,7 @@ export const updateAssignmentStatus = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Assignment not found'
+        message: 'Assignment not found',
       });
     }
 
@@ -252,16 +311,15 @@ export const updateAssignmentStatus = async (req, res) => {
       data: {
         id: assignment._id,
         assignmentName: assignment.assignmentName,
-        status: assignment.status
-      }
+        status: assignment.status,
+      },
     });
-
   } catch (error) {
     console.error('Error updating assignment status:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update assignment status',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -270,13 +328,15 @@ export const updateAssignmentStatus = async (req, res) => {
 export const updateAssignment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { assignmentName, courseName, totalQuestions, questionData, status } = req.body;
+    const { assignmentName, courseName, totalQuestions, questionData, status } =
+      req.body;
 
     // Validate required fields
     if (!assignmentName || !courseName || !totalQuestions || !questionData) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: assignmentName, courseName, totalQuestions, and questionData are required'
+        message:
+          'Missing required fields: assignmentName, courseName, totalQuestions, and questionData are required',
       });
     }
 
@@ -284,7 +344,7 @@ export const updateAssignment = async (req, res) => {
     if (assignmentName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Assignment name cannot be empty'
+        message: 'Assignment name cannot be empty',
       });
     }
 
@@ -292,20 +352,21 @@ export const updateAssignment = async (req, res) => {
     if (courseName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Course name cannot be empty'
+        message: 'Course name cannot be empty',
       });
     }
 
     // Check if another assignment with same name exists (excluding current)
     const existingAssignment = await NGAssignmentWithQuestions.findOne({
       assignmentName: assignmentName.trim(),
-      _id: { $ne: id }
+      _id: { $ne: id },
     });
 
     if (existingAssignment) {
       return res.status(409).json({
         success: false,
-        message: 'An assignment with this name already exists. Please choose a different name.'
+        message:
+          'An assignment with this name already exists. Please choose a different name.',
       });
     }
 
@@ -314,7 +375,7 @@ export const updateAssignment = async (req, res) => {
     if (questionCount !== parseInt(totalQuestions)) {
       return res.status(400).json({
         success: false,
-        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`
+        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`,
       });
     }
 
@@ -323,14 +384,17 @@ export const updateAssignment = async (req, res) => {
       if (!qData.type || !qData.question) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is missing required fields (type or question)`
+          message: `Question ${qNum} is missing required fields (type or question)`,
         });
       }
 
-      if (qData.type === 'MCQ' && (!qData.options || qData.options.length === 0)) {
+      if (
+        qData.type === 'MCQ' &&
+        (!qData.options || qData.options.length === 0)
+      ) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is MCQ type but has no options`
+          message: `Question ${qNum} is MCQ type but has no options`,
         });
       }
     }
@@ -339,7 +403,7 @@ export const updateAssignment = async (req, res) => {
     if (status && !['draft', 'published', 'archived'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be one of: draft, published, archived'
+        message: 'Invalid status. Must be one of: draft, published, archived',
       });
     }
 
@@ -349,13 +413,13 @@ export const updateAssignment = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Assignment not found'
+        message: 'Assignment not found',
       });
     }
 
     // Convert questionData to Map
     const questionsMap = new Map();
-    Object.keys(questionData).forEach(key => {
+    Object.keys(questionData).forEach((key) => {
       questionsMap.set(key, questionData[key]);
     });
 
@@ -384,22 +448,21 @@ export const updateAssignment = async (req, res) => {
         courseName: assignment.courseName,
         totalQuestions: assignment.totalQuestions,
         status: assignment.status,
-        updatedAt: assignment.updatedAt
-      }
+        updatedAt: assignment.updatedAt,
+      },
     });
-
   } catch (error) {
     console.error('Error updating assignment:', error);
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: 'An assignment with this name already exists'
+        message: 'An assignment with this name already exists',
       });
     }
     res.status(500).json({
       success: false,
       message: 'Failed to update assignment',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -414,7 +477,7 @@ export const deleteAssignment = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Assignment not found'
+        message: 'Assignment not found',
       });
     }
 
@@ -422,16 +485,120 @@ export const deleteAssignment = async (req, res) => {
       success: true,
       message: 'Assignment deleted successfully',
       data: {
-        assignmentName: assignment.assignmentName
-      }
+        assignmentName: assignment.assignmentName,
+      },
     });
-
   } catch (error) {
     console.error('Error deleting assignment:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete assignment',
-      error: error.message
+      error: error.message,
+    });
+  }
+};
+
+// Get assignments with lock status for a student
+export const getAssignmentsWithLockStatus = async (req, res) => {
+  try {
+    const { studentId } = req.params;
+    const { courseName } = req.query;
+
+    if (!studentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Student ID is required',
+      });
+    }
+
+    // Build query for assignments
+    const query = { status: 'published' };
+    if (courseName && courseName !== 'all') {
+      query.courseName = courseName;
+    }
+
+    // Get all published assignments sorted by course and order
+    const assignments = await NGAssignmentWithQuestions.find(query)
+      .sort({ courseName: 1, order: 1 })
+      .lean();
+
+    // Get all submissions for this student
+    const submissions = await AssignmentSubmission.find({
+      student_id: studentId,
+      status: { $in: ['submitted', 'graded'] },
+    }).lean();
+
+    // Create a map of completed assignments
+    const completedAssignments = new Set(
+      submissions.map((sub) => sub.assignment_id.toString())
+    );
+
+    // Group assignments by course
+    const assignmentsByCourse = {};
+    assignments.forEach((assignment) => {
+      if (!assignmentsByCourse[assignment.courseName]) {
+        assignmentsByCourse[assignment.courseName] = [];
+      }
+      assignmentsByCourse[assignment.courseName].push(assignment);
+    });
+
+    // Determine lock status for each assignment
+    const assignmentsWithLockStatus = assignments.map((assignment) => {
+      const courseAssignments = assignmentsByCourse[assignment.courseName];
+      const assignmentOrder = assignment.order || 1;
+
+      // Check if this is the first assignment or if previous assignments are completed
+      let isLocked = false;
+
+      if (assignmentOrder > 1) {
+        // Find all previous assignments in the same course
+        const previousAssignments = courseAssignments.filter(
+          (a) => (a.order || 1) < assignmentOrder
+        );
+
+        // Check if all previous assignments are completed
+        const allPreviousCompleted = previousAssignments.every(
+          (prevAssignment) =>
+            completedAssignments.has(prevAssignment._id.toString())
+        );
+
+        isLocked = !allPreviousCompleted;
+      }
+
+      // Get submission info if exists
+      const submission = submissions.find(
+        (sub) => sub.assignment_id.toString() === assignment._id.toString()
+      );
+
+      return {
+        ...assignment,
+        isLocked,
+        isCompleted: completedAssignments.has(assignment._id.toString()),
+        submission: submission
+          ? {
+              submitted_at: submission.submitted_at,
+              score: submission.score,
+              status: submission.status,
+            }
+          : null,
+        questions: undefined, // Don't send questions in list view
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        assignments: assignmentsWithLockStatus,
+        totalAssignments: assignmentsWithLockStatus.length,
+        completedCount: completedAssignments.size,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching assignments with lock status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch assignments',
+      error: error.message,
     });
   }
 };
@@ -613,8 +780,5 @@ export default {
   getAssignmentByName,
   updateAssignmentStatus,
   updateAssignment,
-  deleteAssignment,
-  getSubmissionsForAssignment,
-  submitAssignment,
-  gradeSubmission
+  deleteAssignment
 };

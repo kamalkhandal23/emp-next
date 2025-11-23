@@ -10,8 +10,8 @@ export default function CodingExam() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [currentQuestion, setCurrentQuestion] = useState(0)
-  const [code, setCode] = useState('')
-  const [language, setLanguage] = useState('javascript')
+  const [codes, setCodes] = useState({})
+  const [questionLanguages, setQuestionLanguages] = useState({})
   const [running, setRunning] = useState(false)
   const [runResult, setRunResult] = useState(null)
   const [submitting, setSubmitting] = useState(false)
@@ -52,12 +52,24 @@ int main() {
 
   useEffect(() => {
     if (exam && exam.questions) {
-      const questionKey = Object.keys(exam.questions)[currentQuestion]
-      const question = exam.questions[questionKey]
-      setCode(defaultCode[language] || '')
+      const questionKeys = Object.keys(exam.questions)
+      const newCodes = { ...codes }
+      const newLanguages = { ...questionLanguages }
+
+      questionKeys.forEach(key => {
+        if (!newCodes[key]) {
+          newCodes[key] = defaultCode['javascript'] || ''
+        }
+        if (!newLanguages[key]) {
+          newLanguages[key] = 'javascript'
+        }
+      })
+
+      setCodes(newCodes)
+      setQuestionLanguages(newLanguages)
       setRunResult(null)
     }
-  }, [currentQuestion, language, exam])
+  }, [exam])
 
   const fetchExam = async () => {
     try {
@@ -119,13 +131,26 @@ int main() {
   const submitExam = async () => {
     setSubmitting(true)
     try {
-      // Mock submission - in real implementation, send all code to backend
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const submissions = Object.keys(exam.questions).map(key => ({
+        questionId: key,
+        code: codes[key] || '',
+        language: questionLanguages[key] || 'javascript'
+      }))
 
-      // Navigate to results page
-      navigate('/nextgen/results')
+      const response = await apiClient.submitCodingExam({
+        examId: id,
+        submissions
+      })
+
+      if (response.success) {
+        // Navigate to results page
+        navigate('/nextgen/results')
+      } else {
+        throw new Error(response.message || 'Failed to submit exam')
+      }
     } catch (err) {
       console.error('Error submitting exam:', err)
+      alert('Failed to submit exam: ' + err.message)
     } finally {
       setSubmitting(false)
     }
@@ -239,8 +264,8 @@ int main() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <label style={{ fontWeight: '600', color: '#374151' }}>Language:</label>
               <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
+                value={questionLanguages[currentQuestionKey] || 'javascript'}
+                onChange={(e) => setQuestionLanguages(prev => ({...prev, [currentQuestionKey]: e.target.value}))}
                 style={{
                   padding: '0.5rem',
                   border: '1px solid #d1d5db',
@@ -260,9 +285,9 @@ int main() {
             <div style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: '0.5rem', overflow: 'hidden' }}>
               <Editor
                 height="400px"
-                language={language}
-                value={code}
-                onChange={setCode}
+                language={questionLanguages[currentQuestionKey] || 'javascript'}
+                value={codes[currentQuestionKey] || ''}
+                onChange={(value) => setCodes(prev => ({...prev, [currentQuestionKey]: value}))}
                 theme="vs-light"
                 options={{
                   minimap: { enabled: false },

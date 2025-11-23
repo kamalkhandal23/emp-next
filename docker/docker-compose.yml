@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # Base service for building language-specific images
+  base:
+    build:
+      context: .
+      dockerfile: Dockerfile.base
+    image: code-exec-base:latest
+
+  # Python execution service
+  python-exec:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    image: code-exec-python:latest
+    container_name: python-exec
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # JavaScript execution service
+  javascript-exec:
+    build:
+      context: .
+      dockerfile: Dockerfile.javascript
+    image: code-exec-javascript:latest
+    container_name: javascript-exec
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # C/C++ execution service
+  c-cpp-exec:
+    build:
+      context: .
+      dockerfile: Dockerfile.c
+    image: code-exec-c:latest
+    container_name: c-cpp-exec
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # Java execution service
+  java-exec:
+    build:
+      context: .
+      dockerfile: Dockerfile.java
+    image: code-exec-java:latest
+    container_name: java-exec
+    network_mode: none
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=100m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

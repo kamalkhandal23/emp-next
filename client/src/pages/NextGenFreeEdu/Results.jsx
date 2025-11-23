@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 export default function Results() {
   const [selectedResult, setSelectedResult] = useState(null)
@@ -15,6 +15,14 @@ export default function Results() {
     overallGrade: 'A',
     overallPercentage: 87.5
   }
+
+  // Check for coding exam result from navigation state
+  useEffect(() => {
+    if (location.state?.codingExamResult) {
+      setCodingExamResult(location.state.codingExamResult)
+      setSelectedResult('coding-exam')
+    }
+  }, [location.state])
 
   const results = [
     {
@@ -200,6 +208,243 @@ export default function Results() {
     if (percentage >= 80) return '#3b82f6'
     if (percentage >= 70) return '#f59e0b'
     return '#ef4444'
+  }
+
+  if (selectedResult === 'coding-exam' && codingExamResult) {
+    const result = {
+      examTitle: location.state?.examName || 'Coding Exam',
+      module: 'Coding Challenge',
+      date: new Date().toISOString().split('T')[0],
+      score: codingExamResult.totalMarks,
+      maxScore: 100,
+      percentage: codingExamResult.totalMarks,
+      status: codingExamResult.totalMarks >= 50 ? 'passed' : 'failed',
+      timeSpent: 'N/A',
+      attempts: 1,
+      feedback: `You passed ${codingExamResult.results.filter(r => r.verdict === 'Accepted').length} out of ${codingExamResult.results.length} questions.`,
+      questions: {
+        total: codingExamResult.results.length,
+        correct: codingExamResult.results.filter(r => r.verdict === 'Accepted').length,
+        incorrect: codingExamResult.results.filter(r => r.verdict !== 'Accepted').length,
+        skipped: 0
+      },
+      topicWise: codingExamResult.results.map((r, index) => ({
+        topic: `Question ${index + 1}`,
+        score: r.marks
+      }))
+    }
+    const statusStyle = getStatusColor(result.status)
+
+    return (
+      <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '2rem'
+          }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '2rem', color: '#374151' }}>
+                {result.examTitle}
+              </h1>
+              <p style={{ margin: '0.5rem 0 0 0', color: '#6b7280' }}>
+                {result.module} • {new Date(result.date).toLocaleDateString()}
+              </p>
+            </div>
+            <button
+              onClick={() => setSelectedResult(null)}
+              className="btn-secondary"
+            >
+              ← Back to Results
+            </button>
+          </div>
+
+          {/* Score Overview */}
+          <div className="services-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '2rem' }}>
+            <div className="service-card" style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '3rem',
+                fontWeight: '700',
+                color: getGradeColor(result.percentage),
+                marginBottom: '0.5rem'
+              }}>
+                {result.percentage}%
+              </div>
+              <div style={{ color: '#6b7280' }}>Final Score</div>
+            </div>
+            <div className="service-card" style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '3rem',
+                fontWeight: '700',
+                color: '#3b82f6',
+                marginBottom: '0.5rem'
+              }}>
+                {result.questions.correct}/{result.questions.total}
+              </div>
+              <div style={{ color: '#6b7280' }}>Questions Passed</div>
+            </div>
+            <div className="service-card" style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '3rem',
+                fontWeight: '700',
+                color: '#8b5cf6',
+                marginBottom: '0.5rem'
+              }}>
+                {Math.round((result.questions.correct / result.questions.total) * 100)}%
+              </div>
+              <div style={{ color: '#6b7280' }}>Success Rate</div>
+            </div>
+            <div className="service-card" style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '3rem',
+                fontWeight: '700',
+                color: '#f59e0b',
+                marginBottom: '0.5rem'
+              }}>
+                {result.attempts}
+              </div>
+              <div style={{ color: '#6b7280' }}>Attempts</div>
+            </div>
+          </div>
+
+          <div className="services-grid" style={{ gridTemplateColumns: '2fr 1fr' }}>
+            {/* Detailed Analysis */}
+            <div>
+              {/* Question Breakdown */}
+              <div className="service-card" style={{ marginBottom: '2rem' }}>
+                <h3 className="service-title">Question Analysis</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                  <div style={{ textAlign: 'center', padding: '1rem', background: '#f0fdf4', borderRadius: '0.5rem' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#22c55e' }}>
+                      {result.questions.correct}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#15803d' }}>Passed</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '1rem', background: '#fef2f2', borderRadius: '0.5rem' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#ef4444' }}>
+                      {result.questions.incorrect}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#dc2626' }}>Failed</div>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '1rem', background: '#fef3c7', borderRadius: '0.5rem' }}>
+                    <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f59e0b' }}>
+                      {result.questions.skipped}
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#92400e' }}>Skipped</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Question-wise Performance */}
+              <div className="service-card" style={{ marginBottom: '2rem' }}>
+                <h3 className="service-title">Question-wise Performance</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {codingExamResult.results.map((questionResult, index) => (
+                    <div key={index} style={{
+                      padding: '1rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.5rem',
+                      background: questionResult.verdict === 'Accepted' ? '#f0fdf4' : '#fef2f2'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '0.5rem'
+                      }}>
+                        <span style={{ fontWeight: '500', color: '#374151' }}>
+                          Question {index + 1}
+                        </span>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                          <span style={{
+                            fontWeight: '600',
+                            color: questionResult.verdict === 'Accepted' ? '#22c55e' : '#ef4444'
+                          }}>
+                            {questionResult.verdict}
+                          </span>
+                          <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            {questionResult.passedTests}/{questionResult.totalTests} tests passed
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                        Execution Time: {questionResult.executionTime} | Memory: {questionResult.memory}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Instructor Feedback */}
+              <div className="service-card">
+                <h3 className="service-title">Feedback</h3>
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '0.5rem',
+                  padding: '1rem',
+                  fontStyle: 'italic',
+                  color: '#374151',
+                  lineHeight: '1.6'
+                }}>
+                  "{result.feedback}"
+                </div>
+              </div>
+            </div>
+
+            {/* Sidebar */}
+            <div>
+              {/* Status */}
+              <div className="service-card" style={{ marginBottom: '2rem' }}>
+                <h3 className="service-title">Exam Status</h3>
+                <div style={{
+                  background: statusStyle.bg,
+                  border: `2px solid ${statusStyle.border}`,
+                  borderRadius: '0.5rem',
+                  padding: '1rem',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: '2rem',
+                    marginBottom: '0.5rem'
+                  }}>
+                    {result.status === 'passed' ? '✅' : '❌'}
+                  </div>
+                  <div style={{
+                    fontWeight: '600',
+                    color: statusStyle.color,
+                    textTransform: 'capitalize'
+                  }}>
+                    {result.status}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="service-card">
+                <h3 className="service-title">Actions</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <Link to="/nextgen/coding-exams" className="btn-primary">
+                    Take Another Coding Exam
+                  </Link>
+                  <button className="btn-secondary">
+                    Download Certificate
+                  </button>
+                  <button className="btn-outline">
+                    View Code Submissions
+                  </button>
+                  <button className="btn-outline">
+                    Share Result
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (selectedResult) {

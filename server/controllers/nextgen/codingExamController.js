@@ -1,4 +1,6 @@
 import NGCodingExamWithQuestions from '../../models/nextgen/education/NGCodingExamWithQuestions.js';
+import NGSubmissionCodingExams from '../../models/nextgen/education/NGSubmissionCodingExams.js';
+import { executeCodeMultipleTests } from '../../services/codeExecutionService.js';
 
 // Create a new coding exam with all questions
 export const createCodingExam = async (req, res) => {
@@ -580,22 +582,25 @@ export const submitCodingExam = async (req, res) => {
         question_id: questionId,
         code,
         language,
-        verdict: result.verdict,
+        verdict: result.overallVerdict,
         marks,
-        executionTime: result.executionTime,
-        memory: result.memory,
-        output: result.output,
-        error: result.error
+        executionTime: result.results.length > 0 ? result.results[0].executionTime : '0.00s',
+        memory: result.results.length > 0 ? result.results[0].memory : '0MB',
+        output: result.results.length > 0 ? result.results[0].output : '',
+        error: result.results.length > 0 ? result.results[0].error : ''
       });
 
       await submissionRecord.save();
 
       results.push({
         questionId,
-        verdict: result.verdict,
-        marks,
-        executionTime: result.executionTime,
-        memory: result.memory
+        verdict: result.overallVerdict,
+        marks: Math.round(marks),
+        passedTests: result.passedCount,
+        totalTests: result.totalTests,
+        successRate: result.successRate,
+        executionTime: result.results.length > 0 ? result.results[0].executionTime : '0.00s',
+        memory: result.results.length > 0 ? result.results[0].memory : '0MB'
       });
     }
 
