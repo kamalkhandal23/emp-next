@@ -44,8 +44,7 @@ export default function StudentLogin() {
 
     try {
       const response = await fetch(
-        `${
-          import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
         }/nextgen/student/login`,
         {
           method: 'POST',
@@ -180,13 +179,22 @@ export default function StudentLogin() {
                   style={{ textAlign: 'center' }}>
                   Take Pending Exam
                 </Link>
+
                 <Link
                   to='/nextgen/profile'
                   className='btn-secondary'
                   style={{ textAlign: 'center' }}>
                   View Profile
                 </Link>
-                <button className='btn-outline'>Continue Learning</button>
+
+          
+                <Link
+                  to='/nextgen/exams'
+                  className='btn-outline'
+                  style={{ textAlign: 'center' }}>
+                  View Exams
+                </Link>
+
                 <Link to='/nextgen/assignments' className='btn-outline'>
                   View Assignments
                 </Link>
