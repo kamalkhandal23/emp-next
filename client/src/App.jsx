@@ -50,6 +50,13 @@ import ManageExams from './pages/NextGenFreeEdu/ManageExams';
 import ManageAssignments from './pages/NextGenFreeEdu/ManageAssignments';
 import CreateCodingExam from './pages/NextGenFreeEdu/CreateCodingExam';
 import ManageCodingExams from './pages/NextGenFreeEdu/ManageCodingExams';
+import StudentAssignments from './pages/NextGenFreeEdu/StudentAssignments';
+import SubmitAssignment from './pages/NextGenFreeEdu/SubmitAssignment';
+
+import GradeAssignments from "./pages/NextGenFreeEdu/GradeAssignments";
+import GradeExams from "./pages/NextGenFreeEdu/GradeExams";
+import CodingExamsList from "./pages/NextGenFreeEdu/CodingExamsList";
+import CodingExam from "./pages/NextGenFreeEdu/CodingExam";
 
 function MainLayout() {
   return (
@@ -150,6 +157,8 @@ function AppRoutes() {
         <Route path="exam" element={<Exam />} />
         <Route path="exams" element={<StudentExams />} />{/* ✅ yahi important */}
         <Route path="results" element={<Results />} />
+        <Route path="coding-exams" element={<CodingExamsList />} />
+        <Route path="coding-exam/:id" element={<CodingExam />} />
         <Route path="assignments" element={<StudentAssignments />} />
         <Route
           path="assignments/:assignmentId/submit"
@@ -202,7 +211,46 @@ export default function App() {
         }}
       >
         <AuthProvider>
-          <AppRoutes />
+          <Routes>
+            <Route element={<MainLayout />}>
+              <Route index element={<Home />} />
+              <Route path='about' element={<About />} />
+              <Route path='services' element={<Services />} />
+              <Route path='careers' element={<Careers />} />
+              <Route path='contact' element={<Contact />} />
+            </Route>
+            <Route path='login' element={<Login />} />
+            <Route path='nextgen' element={<NextGenLayout />}>
+              <Route index element={<NextGenLanding />} />
+              <Route path='enroll' element={<Enrollment />} />
+              <Route path='payment/checkout' element={<PaymentCheckout />} />
+              <Route path='login' element={<StudentLogin />} />
+              <Route path='set-password' element={<SetPassword />} />
+              <Route path='profile' element={<StudentProfile />} />
+              <Route path='exam' element={<Exam />} />
+              <Route path='results' element={<Results />} />
+              <Route path="coding-exams" element={<CodingExamsList />} />
+              <Route path="coding-exam/:id" element={<CodingExam />} />
+              <Route path='assignments' element={<StudentAssignments />} />
+              <Route path='assignments/:assignmentId/submit'element={<SubmitAssignment />} />
+              <Route path='privacy-policy' element={<PrivacyPolicy />} />
+            </Route>
+            <Route path='portal/admin' element={<AdminPortal />} />
+            <Route path='portal/hr' element={<HRPortal />} />
+            <Route path='portal/team-lead' element={<TeamLeadPortal />} />
+            <Route path='portal/manager' element={<ManagerPortal />} />
+            <Route path='portal/employee' element={<EmployeePortal />} />
+            <Route path='portal/coursemanager'element={<CourseManagerPortal />}/>
+            <Route path='/portal/coursemanager/createexam' element={<CreateExam />} />
+            <Route path='/portal/coursemanager/createassignment' element={<CreateAssignment />}/>
+            <Route path='/portal/coursemanager/manageexams'element={<ManageExams />}/>
+            <Route path='/portal/coursemanager/createcodingexam'ErrorBoundarylement={<CreateCodingExam />}/>
+            <Route path='/portal/coursemanager/managecodingexams'element={<ManageCodingExams />} />
+            <Route path='/portal/coursemanager/manageassignments' element={<ManageAssignments />} />
+            <Route path="/portal/coursemanager/gradeassignments" element={<GradeAssignments/>}/>
+            <Route path="/portal/coursemanager/gradeexams" element={<GradeExams/>}/>
+            <Route path='test' element={<TestConnection />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiClient } from '../../utils/api';
 
 export default function StudentLogin() {
   const [loginData, setLoginData] = useState({
@@ -21,6 +22,10 @@ export default function StudentLogin() {
       setIsLoggedIn(true);
     }
   }, []);
+  const [assignments, setAssignments] = useState([]);
+  const [showAssignments, setShowAssignments] = useState(false);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  const [assignmentsError, setAssignmentsError] = useState('');
 
   // Get student data from localStorage
   const getStudentData = () => {
@@ -59,21 +64,16 @@ export default function StudentLogin() {
       );
       console.log(response);
 
-      if (response.ok) {
-        const data = await response.json();
-        // Store auth token and user info
-        console.log(data);
-        localStorage.setItem('authToken', data.data.token);
-        localStorage.setItem('userRole', 'student');
-        localStorage.setItem('studentInfo', JSON.stringify(data.data.student));
+      if (response.data && response.data.token) {
+        console.log('Token saved to localStorage:', response.data.token);
         setIsLoggedIn(true);
       } else {
-        const errorData = await response.json();
-        setLoginError(errorData.message || 'Invalid credentials');
+        console.error('No token in response:', response);
+        setLoginError('Login response missing token');
       }
     } catch (error) {
       console.error('Login error:', error);
-      setLoginError('Network error. Please try again.');
+      setLoginError(error.message || 'Invalid credentials. Please try again.');
     } finally {
       setIsLoggingIn(false);
     }
@@ -86,6 +86,37 @@ export default function StudentLogin() {
       setShowForgotPassword(false);
       alert('Password reset link sent to your email!');
     }, 1000);
+  };
+
+  const handleViewAssignments = async () => {
+    try {
+      setAssignmentsLoading(true);
+      setAssignmentsError('');
+      const studentData = getStudentData();
+      if (!studentData || !studentData.course || !studentData.course.title) {
+        setAssignmentsError(
+          'Unable to determine your course. Please refresh the page.'
+        );
+        return;
+      }
+
+      const response = await apiClient.getAllNextGenAssignments({
+        status: 'published',
+        courseName: studentData.course.title,
+      });
+
+      if (response.success) {
+        setAssignments(response.data.assignments || []);
+        setShowAssignments(true);
+      } else {
+        throw new Error(response.message || 'Failed to fetch assignments');
+      }
+    } catch (err) {
+      console.error('Error fetching assignments:', err);
+      setAssignmentsError(err.message);
+    } finally {
+      setAssignmentsLoading(false);
+    }
   };
 
   if (isLoggedIn) {
@@ -364,11 +395,12 @@ export default function StudentLogin() {
                   style={{ justifyContent: 'flex-start' }}>
                   🎥 Video Lectures
                 </button>
-                <button
+                <Link
+                  to='/nextgen/coding-exams'
                   className='btn-outline'
                   style={{ justifyContent: 'flex-start' }}>
-                  💻 Code Examples
-                </button>
+                  💻 Coding Exams
+                </Link>
                 <Link
                   to='/nextgen/results'
                   className='btn-outline'

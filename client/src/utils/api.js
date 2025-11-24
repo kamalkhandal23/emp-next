@@ -543,6 +543,22 @@ class ApiClient {
     });
   }
 
+  // Run coding exam code on sample inputs
+  async runCodingExamCode(data) {
+    return this.request('/nextgen/codingExams/run-code', {
+      method: 'POST',
+      body: data,
+    });
+  }
+
+  // Submit coding exam
+  async submitCodingExam(data) {
+    return this.request('/nextgen/codingExams/submit', {
+      method: 'POST',
+      body: data,
+    });
+  }
+
   // NextGen Assignment endpoints
   async createNextGenAssignment(assignmentData) {
     return this.request('/nextgen/assignments/create', {
@@ -659,6 +675,24 @@ class ApiClient {
         queryString ? `?${queryString}` : ''
       }`
     );
+  }
+
+  // NextGen Student Authentication
+  async nextGenStudentLogin(credentials) {
+    const response = await this.request('/nextgen/student/login', {
+      method: 'POST',
+      body: credentials,
+    });
+    if (response.data && response.data.token) {
+      this.setAuthToken(response.data.token);
+      // Store student info
+      localStorage.setItem('userRole', 'student');
+      localStorage.setItem(
+        'studentInfo',
+        JSON.stringify(response.data.student)
+      );
+    }
+    return response;
   }
 }
 

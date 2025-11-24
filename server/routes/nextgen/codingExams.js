@@ -6,7 +6,9 @@ import {
   getCodingExamByName,
   updateCodingExamStatus,
   updateCodingExam,
-  deleteCodingExam
+  deleteCodingExam,
+  runCode,
+  submitCodingExam
 } from '../../controllers/nextgen/codingExamController.js';
 
 const router = express.Router();
@@ -31,5 +33,11 @@ router.put('/:id', updateCodingExam);
 
 // Delete coding exam
 router.delete('/:id', deleteCodingExam);
+
+// Run code on sample inputs
+router.post('/run-code', runCode);
+
+// Submit coding exam
+router.post('/submit', submitCodingExam);
 
 export default router;

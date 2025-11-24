@@ -397,27 +397,34 @@ export default function CourseManagerPortal() {
     }
   };
 
-  const handleActionClick = (action) => {
-    console.log(action);
-    if (action === 'Create exams') {
-      navigate('/portal/coursemanager/createexam');
-    }
-    if (action === 'Create Assignments') {
-      navigate('/portal/coursemanager/createassignment');
-    }
-    if (action === 'Manage Exams') {
-      navigate('/portal/coursemanager/manageexams');
-    }
-    if (action === 'Create Coding exams') {
-      navigate('/portal/coursemanager/createcodingexam');
-    }
-    if (action === 'Manage Coding Exams') {
-      navigate('/portal/coursemanager/managecodingexams');
-    }
-    if (action === 'Manage Assignments') {
-      navigate('/portal/coursemanager/manageassignments');
-    }
-  };
+    const handleActionClick = (action) => {
+        console.log(action)
+        if (action === "Create exams") {
+        navigate("/portal/coursemanager/createexam");
+        }
+        if (action === "Create Assignments") {
+        navigate("/portal/coursemanager/createassignment");
+        }
+        if (action === "Manage Exams") {
+        navigate("/portal/coursemanager/manageexams");
+        }
+        if (action === "Create Coding exams") {
+        navigate("/portal/coursemanager/createcodingexam"); 
+        }
+        if (action === "Manage Coding Exams") {
+        navigate("/portal/coursemanager/managecodingexams");
+        }
+        if (action === "Manage Assignments") {
+        navigate("/portal/coursemanager/manageassignments");
+        }
+        if (action === "Grade Assignments") {
+        navigate("/portal/coursemanager/gradeassignments");
+        }
+        if (action === "Grade Exams") {
+        navigate("/portal/coursemanager/gradeexams");
+        }
+
+    };
 
   const handleDeleteCourse = async (course) => {
     try {

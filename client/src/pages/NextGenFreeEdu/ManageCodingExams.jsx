@@ -288,7 +288,7 @@ export default function ManageCodingExams() {
             <div
               className="table-row"
               style={{
-                gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto",
+                gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr auto",
                 fontWeight: 600,
                 background: "#f8fafc",
               }}
@@ -307,7 +307,7 @@ export default function ManageCodingExams() {
                 <div
                   key={exam._id}
                   className="table-row"
-                  style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr auto" }}
+                  style={{ gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr 1fr auto" }}
                 >
                   <div style={{ fontWeight: 500 }}>
                     {exam.examName}

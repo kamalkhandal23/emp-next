@@ -8,8 +8,8 @@ dotenv.config();
 
 const seedNGCourses = async () => {
   try {
-    // Connect to database - using the provided MongoDB Atlas URI for test database
-    const mongoUri = 'mongodb+srv://bhanuprakashsyagamreddy:oxfordV2Cluster@cluster0.f1p7jgs.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0';
+    // Connect to database using the main MongoDB URI
+    const mongoUri = process.env.MONGODB_URI;
     await mongoose.connect(mongoUri);
     console.log('Connected to MongoDB');
 

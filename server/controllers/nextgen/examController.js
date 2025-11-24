@@ -1,4 +1,5 @@
 import NGExamWithQuestions from '../../models/nextgen/education/NGExamWithQuestions.js';
+import NGSubmissionExams from '../../models/nextgen/education/NGSubmissionExams.js';
 
 // Create a new exam with all questions
 export const createExam = async (req, res) => {
@@ -411,6 +412,175 @@ export const deleteExam = async (req, res) => {
   }
 };
 
+// Get submissions for a specific exam
+export const getSubmissionsForExam = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verify exam exists
+    const exam = await NGExamWithQuestions.findById(id);
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: 'Exam not found'
+      });
+    }
+
+    const submissions = await NGSubmissionExams.find({ exam_id: id })
+      .populate('student_id', 'full_name email')
+      .sort({ submitted_at: -1 });
+
+    res.json({
+      success: true,
+      data: {
+        exam: {
+          id: exam._id,
+          examName: exam.examName,
+        },
+        submissions: submissions.map(sub => ({
+          id: sub._id,
+          student: sub.student_id ? {
+            id: sub.student_id._id,
+            fullName: sub.student_id.full_name,
+            email: sub.student_id.email
+          } : null,
+          submission_data: sub.submission_data,
+          submitted_at: sub.submitted_at,
+          status: sub.status,
+          grade: sub.grade,
+          feedback: sub.feedback
+        }))
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching submissions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch submissions',
+      error: error.message
+    });
+  }
+};
+
+// Submit an exam
+export const submitExam = async (req, res) => {
+  try {
+    const { exam_id, student_id, submission_data } = req.body;
+
+    // Validate required fields
+    if (!exam_id || !student_id || !submission_data) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields: exam_id, student_id, and submission_data are required'
+      });
+    }
+
+    // Verify exam exists
+    const exam = await NGExamWithQuestions.findById(exam_id);
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: 'Exam not found'
+      });
+    }
+
+    // Check if student already submitted
+    const existingSubmission = await NGSubmissionExams.findOne({
+      exam_id,
+      student_id
+    });
+
+    if (existingSubmission) {
+      return res.status(409).json({
+        success: false,
+        message: 'Student has already submitted this exam'
+      });
+    }
+
+    // Create submission
+    const submission = new NGSubmissionExams({
+      student_id,
+      exam_id,
+      submission_data
+    });
+
+    await submission.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Exam submitted successfully',
+      data: {
+        id: submission._id,
+        submitted_at: submission.submitted_at
+      }
+    });
+
+  } catch (error) {
+    console.error('Error submitting exam:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to submit exam',
+      error: error.message
+    });
+  }
+};
+
+// Grade a submission
+export const gradeSubmission = async (req, res) => {
+  try {
+    const { submissionId } = req.params;
+    const { grade, feedback } = req.body;
+
+    // Validate grade
+    if (grade !== null && grade !== undefined && (grade < 0 || grade > 100)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Grade must be between 0 and 100'
+      });
+    }
+
+    const submission = await NGSubmissionExams.findById(submissionId);
+
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: 'Submission not found'
+      });
+    }
+
+    // Update grade and feedback
+    if (grade !== null && grade !== undefined) {
+      submission.grade = grade;
+    }
+    if (feedback !== undefined) {
+      submission.feedback = feedback;
+    }
+    submission.status = 'graded';
+
+    await submission.save();
+
+    res.json({
+      success: true,
+      message: 'Submission graded successfully',
+      data: {
+        id: submission._id,
+        grade: submission.grade,
+        feedback: submission.feedback,
+        status: submission.status
+      }
+    });
+
+  } catch (error) {
+    console.error('Error grading submission:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to grade submission',
+      error: error.message
+    });
+  }
+};
+
 export default {
   createExam,
   getAllExams,
@@ -418,5 +588,8 @@ export default {
   getExamByName,
   updateExamStatus,
   updateExam,
-  deleteExam
+  deleteExam,
+  getSubmissionsForExam,
+  submitExam,
+  gradeSubmission
 };

@@ -1,17 +1,5 @@
 import mongoose from 'mongoose';
 
-// Create a separate connection for the 'test' database
-const testDBURI = process.env.MONGODB_URI.replace(/\/[^\/]*$/, '/test');
-const testConnection = mongoose.createConnection(testDBURI);
-
-testConnection.on('connected', () => {
-  console.log('Connected to test database for NGCodingExamWithQuestions');
-});
-
-testConnection.on('error', (err) => {
-  console.error('Test database connection error for NGCodingExamWithQuestions:', err);
-});
-
 // Schema for storing complete coding exam with all questions in one document
 const ngCodingExamWithQuestionsSchema = new mongoose.Schema({
   examName: {
@@ -54,6 +42,22 @@ const ngCodingExamWithQuestionsSchema = new mongoose.Schema({
       testCase: {
         type: String,
         default: ''
+      },
+      sampleInputs: {
+        type: [String],
+        default: []
+      },
+      sampleOutputs: {
+        type: [String],
+        default: []
+      },
+      hiddenInputs: {
+        type: [String],
+        default: []
+      },
+      hiddenOutputs: {
+        type: [String],
+        default: []
       }
     },
     required: true
@@ -116,7 +120,6 @@ ngCodingExamWithQuestionsSchema.statics.createFromFrontend = async function(exam
   return await exam.save();
 };
 
-const NGCodingExamWithQuestions = testConnection.models.NG_CodingExamWithQuestions ||
-  testConnection.model('NG_CodingExamWithQuestions', ngCodingExamWithQuestionsSchema);
+const NGCodingExamWithQuestions = mongoose.model('NG_CodingExamWithQuestions', ngCodingExamWithQuestionsSchema);
 
 export default NGCodingExamWithQuestions;
