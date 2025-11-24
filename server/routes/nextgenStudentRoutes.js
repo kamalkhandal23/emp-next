@@ -13,7 +13,7 @@ import {
 } from "../controllers/nextgenStudentController.js";
 
 import NgExam from "../models/nextgen/education/ng_exams.js";
-import NgExamSubmission from "../models/nextgen/education/ng_submission_exams.js";
+import NgExamSubmission from "../models/nextgen/education/NGSubmissionExams.js";
 import Student from "../models/nextgen/core/NG_ApprovedStudents.js";
 const router = express.Router();
 
@@ -62,7 +62,7 @@ router.get("/student/exams", async (req, res) => {
 router.post("/student/exams/:examId/submit", async (req, res) => {
   try {
     const { examId } = req.params;
-    const { studentId, answers, score, startedAt } = req.body;
+    const { studentId, answers, score, feedback } = req.body;
 
     if (!studentId || !answers) {
       return res.status(400).json({
@@ -80,45 +80,45 @@ router.post("/student/exams/:examId/submit", async (req, res) => {
       });
     }
 
-    // ✅ Optional: prevent duplicate submissions (one per student per exam)
-    const existing = await NgExamSubmission.findOne({ examId, studentId });
+    // ✅ Model ke field names ke hisaab se payload banao
+    const submissionPayload = {
+      student_id: studentId,       // model me student_id hai
+      exam_id: examId,             // model me exam_id hai
+      submission_data: answers,    // answers ko submission_data me daal rahe hain
+      status: "submitted",
+    };
 
-    let submission;
-    if (existing) {
-      existing.answers = answers;
-      if (typeof score === "number") {
-        existing.score = score;
-      }
-      if (startedAt) {
-        existing.startedAt = startedAt;
-      }
-      existing.completedAt = new Date();
-      existing.status = "submitted";
-      submission = await existing.save();
-    } else {
-      submission = await NgExamSubmission.create({
-        examId,
-        studentId,
-        answers,
-        score: typeof score === "number" ? score : 0,
-        startedAt,
-        completedAt: new Date(),
-        status: "submitted",
-      });
+    // Score ko grade me save karte hain agar diya ho
+    if (typeof score === "number") {
+      submissionPayload.grade = score;
     }
+
+    if (feedback) {
+      submissionPayload.feedback = feedback;
+    }
+
+    // ✅ Unique index (exam_id + student_id) ke hisaab se upsert
+    const submission = await NgExamSubmission.findOneAndUpdate(
+      { exam_id: examId, student_id: studentId },
+      submissionPayload,
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      }
+    );
 
     return res.status(201).json({
       success: true,
       message: "Exam submitted successfully",
-      data: {
-        submission,
-      },
+      data: { submission },
     });
   } catch (error) {
     console.error("Error submitting exam:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to submit exam",
+      error: error.message,
     });
   }
 });

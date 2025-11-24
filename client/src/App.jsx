@@ -33,7 +33,7 @@ import Results from './pages/NextGenFreeEdu/Results';
 import PrivacyPolicy from './pages/NextGenFreeEdu/PrivacyPolicy';
 
 import StudentAssignments from './pages/NextGenFreeEdu/StudentAssignments';
-import SubmitAssignment from './pages/NextGenFreeEdu/SubmitAssignment';
+
 import StudentExams from './pages/NextGenFreeEdu/StudentExams';
 
 import AdminPortal from './pages/Portal/AdminPortal';
@@ -50,7 +50,7 @@ import ManageExams from './pages/NextGenFreeEdu/ManageExams';
 import ManageAssignments from './pages/NextGenFreeEdu/ManageAssignments';
 import CreateCodingExam from './pages/NextGenFreeEdu/CreateCodingExam';
 import ManageCodingExams from './pages/NextGenFreeEdu/ManageCodingExams';
-import StudentAssignments from './pages/NextGenFreeEdu/StudentAssignments';
+
 import SubmitAssignment from './pages/NextGenFreeEdu/SubmitAssignment';
 
 import GradeAssignments from "./pages/NextGenFreeEdu/GradeAssignments";
@@ -228,6 +228,7 @@ export default function App() {
               <Route path='set-password' element={<SetPassword />} />
               <Route path='profile' element={<StudentProfile />} />
               <Route path='exam' element={<Exam />} />
+              <Route path='exams' element={<StudentExams />} />
               <Route path='results' element={<Results />} />
               <Route path="coding-exams" element={<CodingExamsList />} />
               <Route path="coding-exam/:id" element={<CodingExam />} />
