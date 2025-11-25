@@ -7,6 +7,7 @@ import {
   getAssignmentSubmissions,
   gradeSubmission,
   getStudentSubmissions,
+  saveQuestionAnswer,
 } from '../../controllers/nextgen/assignmentSubmissionController.js';
 
 const router = express.Router();
@@ -44,6 +45,9 @@ const upload = multer({
 
 // Submit assignment (with file uploads)
 router.post('/submit', upload.array('files', 5), submitAssignment);
+
+// Save individual question answer
+router.post('/save-answer', saveQuestionAnswer);
 
 // Get student's submission for an assignment
 router.get('/:assignmentId/student/:studentId', getSubmission);

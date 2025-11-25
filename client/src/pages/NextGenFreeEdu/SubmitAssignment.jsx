@@ -21,6 +21,10 @@ export default function SubmitAssignment() {
   const [files, setFiles] = useState([]);
   const [existingSubmission, setExistingSubmission] = useState(null);
 
+  // Answers for each question
+  const [answers, setAnswers] = useState({});
+  const [submittedQuestions, setSubmittedQuestions] = useState({});
+
   // Get student data
   const getStudentData = () => {
     const studentInfo = localStorage.getItem('studentInfo');
@@ -42,6 +46,14 @@ export default function SubmitAssignment() {
       const response = await apiClient.getNextGenAssignmentById(assignmentId);
       if (response.success) {
         setAssignment(response.data);
+        // Initialize answers object for all questions
+        const initialAnswers = {};
+        if (response.data.questions) {
+          Object.keys(response.data.questions).forEach((qKey) => {
+            initialAnswers[qKey] = '';
+          });
+        }
+        setAnswers(initialAnswers);
       }
     } catch (err) {
       console.error('Error fetching assignment:', err);
@@ -60,6 +72,24 @@ export default function SubmitAssignment() {
         setCodeSubmission(
           response.data.codeSubmission || { language: 'javascript', code: '' }
         );
+
+        // Load existing answers
+        if (response.data.answers) {
+          const existingAnswers =
+            response.data.answers instanceof Map
+              ? Object.fromEntries(response.data.answers)
+              : response.data.answers;
+          setAnswers(existingAnswers);
+
+          // Mark questions as submitted if they have answers
+          const submitted = {};
+          Object.keys(existingAnswers).forEach((key) => {
+            if (existingAnswers[key] && existingAnswers[key].trim() !== '') {
+              submitted[key] = true;
+            }
+          });
+          setSubmittedQuestions(submitted);
+        }
       }
     } catch (err) {
       // No existing submission is fine
@@ -72,6 +102,41 @@ export default function SubmitAssignment() {
     setFiles(selectedFiles);
   };
 
+  const handleQuestionSubmit = async (qKey) => {
+    if (!answers[qKey] || answers[qKey].trim() === '') {
+      setError('Please provide an answer before submitting');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    try {
+      // Save answer to backend
+      const response = await apiClient.saveQuestionAnswer(
+        assignmentId,
+        studentId,
+        qKey,
+        answers[qKey]
+      );
+
+      if (response.success) {
+        // Mark question as submitted
+        setSubmittedQuestions({ ...submittedQuestions, [qKey]: true });
+
+        // Show success message
+        const successMsg = document.getElementById(`success-${qKey}`);
+        if (successMsg) {
+          successMsg.style.display = 'block';
+          setTimeout(() => {
+            successMsg.style.display = 'none';
+          }, 2000);
+        }
+      }
+    } catch (err) {
+      console.error('Error submitting question:', err);
+      setError('Failed to save answer. Please try again.');
+      setTimeout(() => setError(null), 3000);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -87,6 +152,9 @@ export default function SubmitAssignment() {
       const formData = new FormData();
       formData.append('assignmentId', assignmentId);
       formData.append('studentId', studentId);
+
+      // Add answers to formData
+      formData.append('answers', JSON.stringify(answers));
 
       if (submissionType === 'text') {
         formData.append('textSubmission', textSubmission);
@@ -289,9 +357,234 @@ export default function SubmitAssignment() {
 
         {/* Submission Form */}
         <form onSubmit={handleSubmit} className='contact-form'>
-          {/* Submission Type Selector */}
-          <div className='form-group'>
-            <label className='form-label'>Submission Type</label>
+          {/* Questions Section */}
+          {assignment.questions &&
+            Object.keys(assignment.questions).length > 0 && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h3
+                  style={{
+                    color: '#111827',
+                    marginBottom: '1.5rem',
+                    fontSize: '1.5rem',
+                  }}>
+                  📋 Assignment Questions
+                </h3>
+                {Object.entries(assignment.questions).map(
+                  ([qKey, question], index) => (
+                    <div
+                      key={qKey}
+                      className='service-card'
+                      style={{
+                        marginBottom: '1.5rem',
+                        border: '2px solid #e5e7eb',
+                      }}>
+                      {/* Question Header */}
+                      <div style={{ marginBottom: '1rem' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            marginBottom: '0.5rem',
+                          }}>
+                          <span
+                            style={{
+                              background: '#3b82f6',
+                              color: 'white',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                            }}>
+                            Q{index + 1}
+                          </span>
+                          <span
+                            style={{
+                              background: '#dbeafe',
+                              color: '#1e40af',
+                              padding: '0.25rem 0.75rem',
+                              borderRadius: '9999px',
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                            }}>
+                            {question.type || 'Question'}
+                          </span>
+                        </div>
+                        <p
+                          style={{
+                            color: '#111827',
+                            fontSize: '1.125rem',
+                            lineHeight: '1.75',
+                            margin: '0.75rem 0',
+                            fontWeight: '500',
+                          }}>
+                          {question.question}
+                        </p>
+                      </div>
+
+                      {/* MCQ Options */}
+                      {question.type === 'MCQ' && question.options && (
+                        <div style={{ marginBottom: '1rem' }}>
+                          {question.options.map((option, optIndex) => (
+                            <label
+                              key={optIndex}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.75rem',
+                                padding: '0.75rem',
+                                marginBottom: '0.5rem',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '0.5rem',
+                                cursor: 'pointer',
+                                background:
+                                  answers[qKey] === option
+                                    ? '#dbeafe'
+                                    : '#ffffff',
+                                transition: 'all 0.2s',
+                              }}>
+                              <input
+                                type='radio'
+                                name={qKey}
+                                value={option}
+                                checked={answers[qKey] === option}
+                                onChange={(e) =>
+                                  setAnswers({
+                                    ...answers,
+                                    [qKey]: e.target.value,
+                                  })
+                                }
+                                style={{ cursor: 'pointer' }}
+                              />
+                              <span
+                                style={{ color: '#374151', fontSize: '1rem' }}>
+                                {option}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Answer-based or Coding Questions */}
+                      {(question.type === 'Answer-based' ||
+                        question.type === 'Coding') && (
+                        <div className='form-group'>
+                          <label className='form-label'>Your Answer</label>
+                          <textarea
+                            className='form-input'
+                            rows={question.type === 'Coding' ? '12' : '6'}
+                            value={answers[qKey] || ''}
+                            onChange={(e) =>
+                              setAnswers({ ...answers, [qKey]: e.target.value })
+                            }
+                            placeholder={
+                              question.type === 'Coding'
+                                ? '// Write your code here...'
+                                : 'Enter your answer here...'
+                            }
+                            style={{
+                              resize: 'vertical',
+                              fontFamily:
+                                question.type === 'Coding'
+                                  ? 'monospace'
+                                  : 'inherit',
+                              fontSize:
+                                question.type === 'Coding'
+                                  ? '0.875rem'
+                                  : '1rem',
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Test Case Info for Coding Questions */}
+                      {question.type === 'Coding' && question.testCase && (
+                        <div
+                          style={{
+                            background: '#f0f9ff',
+                            border: '1px solid #bae6fd',
+                            borderRadius: '0.5rem',
+                            padding: '0.75rem',
+                            marginTop: '0.5rem',
+                          }}>
+                          <p
+                            style={{
+                              color: '#0369a1',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              margin: '0 0 0.25rem 0',
+                            }}>
+                            💡 Test Case:
+                          </p>
+                          <p
+                            style={{
+                              color: '#0c4a6e',
+                              fontSize: '0.875rem',
+                              margin: 0,
+                              fontFamily: 'monospace',
+                            }}>
+                            {question.testCase}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Submit Button for Individual Question */}
+                      <div style={{ marginTop: '1rem' }}>
+                        <button
+                          type='button'
+                          className='btn-primary'
+                          onClick={() => handleQuestionSubmit(qKey)}
+                          disabled={submittedQuestions[qKey]}
+                          style={{
+                            width: '100%',
+                            background: submittedQuestions[qKey]
+                              ? '#10b981'
+                              : '#3b82f6',
+                            opacity: submittedQuestions[qKey] ? 0.8 : 1,
+                            cursor: submittedQuestions[qKey]
+                              ? 'default'
+                              : 'pointer',
+                          }}>
+                          {submittedQuestions[qKey]
+                            ? '✓ Submitted'
+                            : 'Submit Answer'}
+                        </button>
+                        <div
+                          id={`success-${qKey}`}
+                          style={{
+                            display: 'none',
+                            marginTop: '0.5rem',
+                            padding: '0.5rem',
+                            background: '#d1fae5',
+                            border: '1px solid #6ee7b7',
+                            borderRadius: '0.5rem',
+                            fontSize: '0.875rem',
+                            color: '#065f46',
+                            textAlign: 'center',
+                          }}>
+                          ✓ Answer saved successfully!
+                        </div>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+
+          {/* Additional Submission Type Selector */}
+          <div className='form-group' style={{ marginTop: '2rem' }}>
+            <label className='form-label'>
+              Additional Submission (Optional)
+            </label>
+            <p
+              style={{
+                fontSize: '0.875rem',
+                color: '#6b7280',
+                marginBottom: '0.75rem',
+              }}>
+              You can optionally attach additional files, code, or notes with
+              your submission
+            </p>
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
               <label
                 style={{
@@ -307,7 +600,7 @@ export default function SubmitAssignment() {
                   checked={submissionType === 'text'}
                   onChange={(e) => setSubmissionType(e.target.value)}
                 />
-                <span>📝 Text Answer</span>
+                <span>📝 Text Notes</span>
               </label>
               <label
                 style={{
@@ -323,7 +616,7 @@ export default function SubmitAssignment() {
                   checked={submissionType === 'code'}
                   onChange={(e) => setSubmissionType(e.target.value)}
                 />
-                <span>💻 Code</span>
+                <span>💻 Additional Code</span>
               </label>
               <label
                 style={{
@@ -347,14 +640,13 @@ export default function SubmitAssignment() {
           {/* Text Submission */}
           {submissionType === 'text' && (
             <div className='form-group'>
-              <label className='form-label'>Your Answer</label>
+              <label className='form-label'>Additional Notes</label>
               <textarea
                 className='form-input'
-                rows='10'
+                rows='6'
                 value={textSubmission}
                 onChange={(e) => setTextSubmission(e.target.value)}
-                placeholder='Enter your answer here...'
-                required
+                placeholder='Add any additional notes or explanations...'
                 style={{ resize: 'vertical' }}
               />
             </div>
@@ -456,7 +748,7 @@ export default function SubmitAssignment() {
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* Final Submit Button */}
           <button
             type='submit'
             className='btn-primary'
@@ -467,10 +759,10 @@ export default function SubmitAssignment() {
               cursor: submitting ? 'not-allowed' : 'pointer',
             }}>
             {submitting
-              ? 'Submitting...'
+              ? 'Submitting Final Assignment...'
               : existingSubmission
-              ? 'Resubmit Assignment'
-              : 'Submit Assignment'}
+              ? 'Resubmit Final Assignment'
+              : 'Submit Final Assignment'}
           </button>
         </form>
 

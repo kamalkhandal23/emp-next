@@ -417,18 +417,36 @@ export default function StudentAssignments() {
                       <span>Assignment {assignment.order || 1}</span>
                     </div>
                     {isCompleted && assignment.submission && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          marginBottom: '0.5rem',
-                        }}>
-                        <span>⭐</span>
-                        <span style={{ color: '#22c55e', fontWeight: '600' }}>
-                          Score: {assignment.submission.score || 'N/A'}%
-                        </span>
-                      </div>
+                      <>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            marginBottom: '0.5rem',
+                          }}>
+                          <span>⭐</span>
+                          <span style={{ color: '#22c55e', fontWeight: '600' }}>
+                            Score: {assignment.submission.score || 'N/A'}%
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            marginBottom: '0.5rem',
+                          }}>
+                          <span>📄</span>
+                          <span
+                            style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                            ID:{' '}
+                            {assignment.submission._id ||
+                              assignment.submission.submissionId ||
+                              'N/A'}
+                          </span>
+                        </div>
+                      </>
                     )}
                     <div
                       style={{
@@ -487,9 +505,7 @@ export default function StudentAssignments() {
                       className='btn-outline'
                       style={{ width: '100%' }}
                       onClick={() => {
-                        navigate(
-                          `/nextgen/assignments/${assignment._id}/submit`
-                        );
+                        navigate(`/nextgen/assignments/${assignment._id}`);
                       }}>
                       View Details
                     </button>

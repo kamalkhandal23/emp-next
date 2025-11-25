@@ -644,6 +644,13 @@ class ApiClient {
     );
   }
 
+  async saveQuestionAnswer(assignmentId, studentId, questionKey, answer) {
+    return this.request('/nextgen/assignment-submissions/save-answer', {
+      method: 'POST',
+      body: { assignmentId, studentId, questionKey, answer },
+    });
+  }
+
   async getAssignmentSubmissions(assignmentId, status = null) {
     const queryString = status ? `?status=${status}` : '';
     return this.request(
