@@ -576,9 +576,12 @@ export const getAssignmentsWithLockStatus = async (req, res) => {
         isCompleted: completedAssignments.has(assignment._id.toString()),
         submission: submission
           ? {
+              _id: submission._id,
+              submissionId: submission._id,
               submitted_at: submission.submitted_at,
               score: submission.score,
               status: submission.status,
+              feedback: submission.feedback,
             }
           : null,
         questions: undefined, // Don't send questions in list view
@@ -613,7 +616,7 @@ export const getSubmissionsForAssignment = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Assignment not found'
+        message: 'Assignment not found',
       });
     }
 
@@ -627,30 +630,31 @@ export const getSubmissionsForAssignment = async (req, res) => {
         assignment: {
           id: assignment._id,
           assignmentName: assignment.assignmentName,
-          courseName: assignment.courseName
+          courseName: assignment.courseName,
         },
-        submissions: submissions.map(sub => ({
+        submissions: submissions.map((sub) => ({
           id: sub._id,
-          student: sub.student_id ? {
-            id: sub.student_id._id,
-            fullName: sub.student_id.full_name,
-            email: sub.student_id.email
-          } : null,
+          student: sub.student_id
+            ? {
+                id: sub.student_id._id,
+                fullName: sub.student_id.full_name,
+                email: sub.student_id.email,
+              }
+            : null,
           submission_data: sub.submission_data,
           submitted_at: sub.submitted_at,
           status: sub.status,
           grade: sub.grade,
-          feedback: sub.feedback
-        }))
-      }
+          feedback: sub.feedback,
+        })),
+      },
     });
-
   } catch (error) {
     console.error('Error fetching submissions:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch submissions',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -664,7 +668,8 @@ export const submitAssignment = async (req, res) => {
     if (!assignment_id || !student_id || !submission_data) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: assignment_id, student_id, and submission_data are required'
+        message:
+          'Missing required fields: assignment_id, student_id, and submission_data are required',
       });
     }
 
@@ -673,20 +678,20 @@ export const submitAssignment = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({
         success: false,
-        message: 'Assignment not found'
+        message: 'Assignment not found',
       });
     }
 
     // Check if student already submitted
     const existingSubmission = await NGSubmissionAssignment.findOne({
       assignment_id,
-      student_id
+      student_id,
     });
 
     if (existingSubmission) {
       return res.status(409).json({
         success: false,
-        message: 'Student has already submitted this assignment'
+        message: 'Student has already submitted this assignment',
       });
     }
 
@@ -694,7 +699,7 @@ export const submitAssignment = async (req, res) => {
     const submission = new NGSubmissionAssignment({
       student_id,
       assignment_id,
-      submission_data
+      submission_data,
     });
 
     await submission.save();
@@ -704,16 +709,15 @@ export const submitAssignment = async (req, res) => {
       message: 'Assignment submitted successfully',
       data: {
         id: submission._id,
-        submitted_at: submission.submitted_at
-      }
+        submitted_at: submission.submitted_at,
+      },
     });
-
   } catch (error) {
     console.error('Error submitting assignment:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to submit assignment',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -728,7 +732,7 @@ export const gradeSubmission = async (req, res) => {
     if (grade !== null && grade !== undefined && (grade < 0 || grade > 100)) {
       return res.status(400).json({
         success: false,
-        message: 'Grade must be between 0 and 100'
+        message: 'Grade must be between 0 and 100',
       });
     }
 
@@ -737,7 +741,7 @@ export const gradeSubmission = async (req, res) => {
     if (!submission) {
       return res.status(404).json({
         success: false,
-        message: 'Submission not found'
+        message: 'Submission not found',
       });
     }
 
@@ -759,16 +763,15 @@ export const gradeSubmission = async (req, res) => {
         id: submission._id,
         grade: submission.grade,
         feedback: submission.feedback,
-        status: submission.status
-      }
+        status: submission.status,
+      },
     });
-
   } catch (error) {
     console.error('Error grading submission:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to grade submission',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -780,5 +783,5 @@ export default {
   getAssignmentByName,
   updateAssignmentStatus,
   updateAssignment,
-  deleteAssignment
+  deleteAssignment,
 };

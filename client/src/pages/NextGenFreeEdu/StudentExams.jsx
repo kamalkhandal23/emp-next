@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
+// src/pages/NextGenFreeEdu/StudentExams.jsx
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { apiClient } from '../../utils/api';
 
-export default function StudentAssignments() {
+export default function StudentExams() {
   const navigate = useNavigate();
-  const [assignments, setAssignments] = useState([]);
+
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Get student data from localStorage
+  // ---- Student info (localStorage se) ----
   const getStudentData = () => {
     const studentInfo = localStorage.getItem('studentInfo');
     return studentInfo ? JSON.parse(studentInfo) : null;
@@ -18,101 +19,94 @@ export default function StudentAssignments() {
 
   const studentData = getStudentData();
   const studentCourse = studentData?.course?.title || '';
-  const studentId = studentData?._id || studentData?.id || null;
 
+  // ---- Exams fetch karna ----
   useEffect(() => {
-    fetchAssignments();
-  }, []);
+    const fetchExams = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const fetchAssignments = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+        const baseUrl =
+          import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
 
-      let response;
+        // ✅ Ab courseName ke hisaab se exams fetch kar rahe hain
+        const params =
+          studentCourse && studentCourse.trim()
+            ? `?courseName=${encodeURIComponent(studentCourse)}`
+            : '';
 
-      // Try to fetch with lock status if studentId exists
-      if (studentId) {
-        try {
-          response = await apiClient.getAssignmentsWithLockStatus(studentId);
-        } catch (lockStatusError) {
-          console.warn(
-            'Lock status endpoint failed, falling back to regular fetch:',
-            lockStatusError
-          );
-          // Fallback to regular fetch if lock status endpoint fails
-          response = await apiClient.getAllNextGenAssignments();
-          if (response.success) {
-            const publishedAssignments = (response.data.assignments || [])
-              .filter((a) => a.status === 'published')
-              .map((a) => ({
-                ...a,
-                isLocked: false,
-                isCompleted: false,
-                submission: null,
-              }));
-            response = {
-              success: true,
-              data: { assignments: publishedAssignments },
-            };
-          }
+        const url = `${baseUrl}/nextgen/student/exams${params}`;
+
+        const res = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to fetch exams');
         }
-      } else {
-        console.warn(
-          'No student ID found, fetching all assignments without lock status'
+
+        // Expect: data.data.exams = array from ng_exams
+        const rawExams = data.data?.exams || data.data || [];
+
+        // Thoda normalize kar lete hain
+        const normalized = rawExams.map((exam) => ({
+          _id: exam._id,
+          title: exam.title || exam.examName || 'Untitled Exam',
+          courseName:
+            exam.courseName ||
+            exam.course?.title ||
+            studentCourse ||
+            'Course',
+          totalQuestions: exam.totalQuestions || exam.questions?.length || 0,
+          duration: exam.duration || exam.durationMinutes || 0,
+          totalMarks: exam.totalMarks || exam.maxMarks || 0,
+          createdAt: exam.createdAt,
+          isLocked: exam.isLocked || false,
+          isCompleted: exam.isCompleted || false,
+          submission: exam.submission || null,
+        }));
+
+        setExams(normalized);
+      } catch (err) {
+        console.error('Error fetching exams:', err);
+        setError(
+          err.message || 'Failed to load exams. Please try again later.'
         );
-        response = await apiClient.getAllNextGenAssignments();
-        if (response.success) {
-          // Transform data to match expected format
-          const publishedAssignments = (response.data.assignments || [])
-            .filter((a) => a.status === 'published')
-            .map((a) => ({
-              ...a,
-              isLocked: false,
-              isCompleted: false,
-              submission: null,
-            }));
-          response = {
-            success: true,
-            data: { assignments: publishedAssignments },
-          };
-        }
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (response.success) {
-        setAssignments(response.data.assignments || []);
-      } else {
-        throw new Error(response.message || 'Failed to fetch assignments');
-      }
-    } catch (err) {
-      console.error('Error fetching assignments:', err);
-      setError(err.message || 'Failed to load assignments. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchExams();
+  }, [studentCourse]); // ✅ sirf course change hone par refetch
 
-  // Filter assignments based on selected course and search term
-  const filteredAssignments = assignments.filter((assignment) => {
+  // ---- Filter + Search ----
+  const filteredExams = exams.filter((exam) => {
     const matchesCourse =
-      selectedCourse === 'all' || assignment.courseName === selectedCourse;
+      selectedCourse === 'all' || exam.courseName === selectedCourse;
+
     const matchesSearch =
-      (assignment.assignmentName || '')
+      (exam.title || '')
         .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (assignment.courseName || '')
+        .includes(searchTerm.trim().toLowerCase()) ||
+      (exam.courseName || '')
         .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+        .includes(searchTerm.trim().toLowerCase());
+
     return matchesCourse && matchesSearch;
   });
 
-  // Get unique course names for filter
   const courseNames = [
     'all',
-    ...new Set(assignments.map((a) => a.courseName).filter(Boolean)),
+    ...new Set(exams.map((e) => e.courseName).filter(Boolean)),
   ];
 
-  // Helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -131,7 +125,7 @@ export default function StudentAssignments() {
         <div style={{ textAlign: 'center', padding: '3rem' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
           <p style={{ color: '#6b7280', fontSize: '1.125rem' }}>
-            Loading assignments...
+            Loading exams...
           </p>
         </div>
       </div>
@@ -160,10 +154,10 @@ export default function StudentAssignments() {
                   color: '#111827',
                   marginBottom: '0.5rem',
                 }}>
-                📚 Course Assignments
+                📘 Course Exams
               </h1>
               <p style={{ color: '#6b7280', fontSize: '1.125rem' }}>
-                View and complete your course assignments
+                View and attempt your upcoming and active exams
               </p>
             </div>
             <Link to='/nextgen/login' className='btn-outline'>
@@ -187,7 +181,7 @@ export default function StudentAssignments() {
           )}
         </div>
 
-        {/* Search and Filter */}
+        {/* Search + Filter */}
         <div
           style={{
             background: '#f8fafc',
@@ -203,10 +197,10 @@ export default function StudentAssignments() {
             }}>
             {/* Search */}
             <div>
-              <label className='form-label'>Search Assignments</label>
+              <label className='form-label'>Search Exams</label>
               <input
                 type='text'
-                placeholder='Search by name or course...'
+                placeholder='Search by exam or course...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className='form-input'
@@ -237,18 +231,16 @@ export default function StudentAssignments() {
               color: '#6b7280',
               fontSize: '0.875rem',
             }}>
-            Showing {filteredAssignments.length} of {assignments.length}{' '}
-            assignment(s)
+            Showing {filteredExams.length} of {exams.length} exam(s)
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error */}
         {error && (
           <div
             style={{
               background: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '0.75rem',
+              
               padding: '1rem',
               marginBottom: '2rem',
             }}>
@@ -270,7 +262,7 @@ export default function StudentAssignments() {
               </div>
             </div>
             <button
-              onClick={fetchAssignments}
+              onClick={() => window.location.reload()}
               className='btn-primary'
               style={{ marginTop: '1rem' }}>
               Retry
@@ -278,19 +270,19 @@ export default function StudentAssignments() {
           </div>
         )}
 
-        {/* Assignments Grid */}
-        {filteredAssignments.length === 0 ? (
+        {/* Exams Grid */}
+        {filteredExams.length === 0 ? (
           <div
             className='service-card'
             style={{ textAlign: 'center', padding: '3rem' }}>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>📝</div>
             <h3 style={{ color: '#374151', marginBottom: '0.5rem' }}>
-              No Assignments Found
+              No Exams Found
             </h3>
             <p style={{ color: '#6b7280' }}>
               {searchTerm || selectedCourse !== 'all'
                 ? 'Try adjusting your search or filter criteria.'
-                : 'There are no published assignments available at this time.'}
+                : 'There are no active exams available at this time.'}
             </p>
           </div>
         ) : (
@@ -300,14 +292,14 @@ export default function StudentAssignments() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
               gap: '1.5rem',
             }}>
-            {filteredAssignments.map((assignment) => {
-              const isStudentCourse = assignment.courseName === studentCourse;
-              const isLocked = assignment.isLocked || false;
-              const isCompleted = assignment.isCompleted || false;
+            {filteredExams.map((exam) => {
+              const isStudentCourse = exam.courseName === studentCourse;
+              const isLocked = exam.isLocked || false;
+              const isCompleted = exam.isCompleted || false;
 
               return (
                 <div
-                  key={assignment._id}
+                  key={exam._id}
                   className='service-card'
                   style={{
                     border: isStudentCourse
@@ -320,7 +312,7 @@ export default function StudentAssignments() {
                       : '#ffffff',
                     opacity: isLocked ? 0.7 : 1,
                   }}>
-                  {/* Lock/Complete Badge */}
+                  {/* Badges */}
                   <div
                     style={{
                       marginBottom: '1rem',
@@ -338,7 +330,7 @@ export default function StudentAssignments() {
                         background: isStudentCourse ? '#dbeafe' : '#f3f4f6',
                         color: isStudentCourse ? '#1e40af' : '#374151',
                       }}>
-                      {assignment.courseName}
+                      {exam.courseName}
                       {isStudentCourse && ' ⭐'}
                     </span>
                     {isLocked && (
@@ -371,7 +363,7 @@ export default function StudentAssignments() {
                     )}
                   </div>
 
-                  {/* Assignment Title */}
+                  {/* Title */}
                   <h3
                     className='service-title'
                     style={{
@@ -383,10 +375,10 @@ export default function StudentAssignments() {
                         : '#111827',
                     }}>
                     {isLocked && '🔒 '}
-                    {assignment.assignmentName}
+                    {exam.title}
                   </h3>
 
-                  {/* Assignment Details */}
+                  {/* Details */}
                   <div
                     style={{
                       fontSize: '0.875rem',
@@ -403,7 +395,19 @@ export default function StudentAssignments() {
                       }}>
                       <span>📊</span>
                       <span>
-                        <strong>{assignment.totalQuestions}</strong> Questions
+                        <strong>{exam.totalQuestions}</strong> Questions
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        marginBottom: '0.5rem',
+                      }}>
+                      <span>⏱</span>
+                      <span>
+                        Duration: <strong>{exam.duration}</strong> mins
                       </span>
                     </div>
                     <div
@@ -414,40 +418,8 @@ export default function StudentAssignments() {
                         marginBottom: '0.5rem',
                       }}>
                       <span>🎯</span>
-                      <span>Assignment {assignment.order || 1}</span>
+                      <span>Total Marks: {exam.totalMarks}</span>
                     </div>
-                    {isCompleted && assignment.submission && (
-                      <>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            marginBottom: '0.5rem',
-                          }}>
-                          <span>⭐</span>
-                          <span style={{ color: '#22c55e', fontWeight: '600' }}>
-                            Score: {assignment.submission.score || 'N/A'}%
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            marginBottom: '0.5rem',
-                          }}>
-                          <span>📄</span>
-                          <span
-                            style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                            ID:{' '}
-                            {assignment.submission._id ||
-                              assignment.submission.submissionId ||
-                              'N/A'}
-                          </span>
-                        </div>
-                      </>
-                    )}
                     <div
                       style={{
                         display: 'flex',
@@ -456,28 +428,25 @@ export default function StudentAssignments() {
                         marginBottom: '0.5rem',
                       }}>
                       <span>📅</span>
-                      <span>Created: {formatDate(assignment.createdAt)}</span>
+                      <span>Created: {formatDate(exam.createdAt)}</span>
                     </div>
+                    {isCompleted && exam.submission && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          marginTop: '0.5rem',
+                        }}>
+                        <span>⭐</span>
+                        <span style={{ color: '#22c55e', fontWeight: '600' }}>
+                          Score: {exam.submission.score || 'N/A'}%
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Lock Message */}
-                  {isLocked && (
-                    <div
-                      style={{
-                        background: '#fef3c7',
-                        border: '1px solid #fcd34d',
-                        borderRadius: '0.5rem',
-                        padding: '0.75rem',
-                        marginBottom: '1rem',
-                        fontSize: '0.875rem',
-                        color: '#92400e',
-                      }}>
-                      <strong>🔒 Locked:</strong> Complete previous assignments
-                      to unlock this one.
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
+                  {/* Actions */}
                   <div
                     style={{
                       display: 'flex',
@@ -494,18 +463,18 @@ export default function StudentAssignments() {
                       disabled={isLocked}
                       onClick={() => {
                         if (!isLocked) {
-                          navigate(
-                            `/nextgen/assignments/${assignment._id}/submit`
-                          );
+                          navigate(`/nextgen/exam?examId=${exam._id}`);
                         }
                       }}>
-                      {isCompleted ? 'Retake Assignment' : 'Start Assignment'}
+                      {isCompleted ? 'Retake Exam' : 'Start Exam'}
                     </button>
                     <button
                       className='btn-outline'
                       style={{ width: '100%' }}
                       onClick={() => {
-                        navigate(`/nextgen/assignments/${assignment._id}`);
+                        navigate(
+                          `/nextgen/exam?examId=${exam._id}&view=details`
+                        );
                       }}>
                       View Details
                     </button>
@@ -538,8 +507,7 @@ export default function StudentAssignments() {
             marginTop: '3rem',
             padding: '1.5rem',
             background: '#f0f9ff',
-            border: '1px solid #bae6fd',
-            borderRadius: '0.75rem',
+            
           }}>
           <h3
             style={{
@@ -547,7 +515,7 @@ export default function StudentAssignments() {
               marginBottom: '1rem',
               fontSize: '1.125rem',
             }}>
-            📌 Assignment Information
+            📌 Exam Information
           </h3>
           <ul
             style={{
@@ -558,29 +526,24 @@ export default function StudentAssignments() {
               margin: 0,
             }}>
             <li>
-              <strong>🔒 Progressive Learning:</strong> Assignments must be
-              completed in order. You can only access the next assignment after
-              completing the previous one.
+              <strong>🔒 Progressive Access:</strong> Some exams may unlock
+              only after completing previous ones.
             </li>
             <li>
-              <strong>⭐ Your Course:</strong> Assignments marked with ⭐ are
-              for your enrolled course
+              <strong>⭐ Your Course:</strong> Exams marked with ⭐ are for your
+              enrolled course.
             </li>
             <li>
-              <strong>✓ Track Progress:</strong> Completed assignments show your
-              score and completion status
+              <strong>✓ Track Progress:</strong> Completed exams show your
+              score and status.
             </li>
             <li>
-              <strong>🔄 Retake Option:</strong> You can retake completed
-              assignments to improve your score
+              <strong>🔄 Retake:</strong> If enabled, you can retake exams to
+              improve your score.
             </li>
             <li>
-              <strong>📚 Multiple Courses:</strong> You can view all published
-              assignments from different courses
-            </li>
-            <li>
-              <strong>❓ Need Help?</strong> Contact support if you have any
-              questions about an assignment
+              <strong>📚 Multiple Courses:</strong> You can browse exams from
+              different courses.
             </li>
           </ul>
         </div>

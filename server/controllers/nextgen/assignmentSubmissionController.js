@@ -7,9 +7,31 @@ import { uploadMultipleFiles } from '../../services/uploadService.js';
 // Create or update submission
 export const submitAssignment = async (req, res) => {
   try {
-    const { assignmentId, studentId, textSubmission, codeSubmission, answers } =
+    const { assignmentId, studentId, textSubmission, codeSubmission } =
       req.body;
     const files = req.files || [];
+
+    // Parse answers from JSON string if it exists
+    let answers = {};
+    if (req.body.answers) {
+      try {
+        answers = typeof req.body.answers === 'string' 
+          ? JSON.parse(req.body.answers) 
+          : req.body.answers;
+      } catch (err) {
+        console.error('Error parsing answers:', err);
+      }
+    }
+
+    // Parse codeSubmission if it's a string
+    let parsedCodeSubmission = codeSubmission;
+    if (typeof codeSubmission === 'string') {
+      try {
+        parsedCodeSubmission = JSON.parse(codeSubmission);
+      } catch (err) {
+        console.error('Error parsing codeSubmission:', err);
+      }
+    }
 
     if (!assignmentId || !studentId) {
       return res.status(400).json({
@@ -62,8 +84,20 @@ export const submitAssignment = async (req, res) => {
     if (submission) {
       // Update existing submission
       submission.textSubmission = textSubmission || submission.textSubmission;
-      submission.codeSubmission = codeSubmission || submission.codeSubmission;
-      submission.answers = answers || submission.answers;
+      submission.codeSubmission = parsedCodeSubmission || submission.codeSubmission;
+      
+      // Merge answers with existing ones
+      if (answers && Object.keys(answers).length > 0) {
+        const existingAnswers = submission.answers || new Map();
+        // Convert Map to object for easier manipulation
+        const answersObj = existingAnswers instanceof Map 
+          ? Object.fromEntries(existingAnswers) 
+          : existingAnswers;
+        
+        // Merge new answers with existing
+        submission.answers = { ...answersObj, ...answers };
+      }
+      
       submission.fileSubmissions = [
         ...submission.fileSubmissions,
         ...fileSubmissions,
@@ -77,7 +111,7 @@ export const submitAssignment = async (req, res) => {
         student_id: studentId,
         courseName: assignment.courseName,
         textSubmission: textSubmission || '',
-        codeSubmission: codeSubmission || {},
+        codeSubmission: parsedCodeSubmission || {},
         answers: answers || {},
         fileSubmissions,
         submitted_at: new Date(),
@@ -265,10 +299,83 @@ export const getStudentSubmissions = async (req, res) => {
   }
 };
 
+// Save individual question answer (for per-question submission)
+export const saveQuestionAnswer = async (req, res) => {
+  try {
+    const { assignmentId, studentId, questionKey, answer } = req.body;
+
+    if (!assignmentId || !studentId || !questionKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'Assignment ID, Student ID, and Question Key are required',
+      });
+    }
+
+    // Get assignment to validate it exists
+    const assignment = await NGAssignmentWithQuestions.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Assignment not found',
+      });
+    }
+
+    // Find or create submission
+    let submission = await AssignmentSubmission.findOne({
+      assignment_id: assignmentId,
+      student_id: studentId,
+    });
+
+    if (submission) {
+      // Update existing submission with the new answer
+      const existingAnswers = submission.answers || new Map();
+      const answersObj = existingAnswers instanceof Map 
+        ? Object.fromEntries(existingAnswers) 
+        : existingAnswers;
+      
+      answersObj[questionKey] = answer;
+      submission.answers = answersObj;
+      
+      // Don't mark as submitted yet - it's in-progress
+      if (submission.status === 'in-progress') {
+        submission.status = 'in-progress';
+      }
+    } else {
+      // Create new in-progress submission
+      submission = new AssignmentSubmission({
+        assignment_id: assignmentId,
+        student_id: studentId,
+        courseName: assignment.courseName,
+        answers: { [questionKey]: answer },
+        status: 'in-progress',
+      });
+    }
+
+    await submission.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Answer saved successfully',
+      data: {
+        questionKey,
+        saved: true,
+      },
+    });
+  } catch (error) {
+    console.error('Error saving question answer:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to save answer',
+      error: error.message,
+    });
+  }
+};
+
 export default {
   submitAssignment,
   getSubmission,
   getAssignmentSubmissions,
   gradeSubmission,
   getStudentSubmissions,
+  saveQuestionAnswer,
 };

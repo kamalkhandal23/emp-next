@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { apiClient } from '../../utils/api'
+import { Link, useNavigate } from 'react-router-dom';
+import { apiClient } from '../../utils/api';
 
 export default function StudentLogin() {
   const [loginData, setLoginData] = useState({
@@ -22,10 +22,11 @@ export default function StudentLogin() {
       setIsLoggedIn(true);
     }
   }, []);
-  const [assignments, setAssignments] = useState([])
-  const [showAssignments, setShowAssignments] = useState(false)
-  const [assignmentsLoading, setAssignmentsLoading] = useState(false)
-  const [assignmentsError, setAssignmentsError] = useState('')
+  const [assignments, setAssignments] = useState([]);
+  const [showAssignments, setShowAssignments] = useState(false);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+  const [assignmentsError, setAssignmentsError] = useState('');
+  const navigate = useNavigate();
 
   // Get student data from localStorage
   const getStudentData = () => {
@@ -58,25 +59,52 @@ export default function StudentLogin() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            identifier: loginData.identifier, // email or student_id
+            identifier: loginData.identifier,
             password: loginData.password,
           }),
         }
       );
-      console.log(response);
 
-      if (response.ok) {
-        const data = await response.json();
-        // Store auth token and user info
-        console.log(data);
-        localStorage.setItem('authToken', data.data.token);
-        localStorage.setItem('userRole', 'student');
-        localStorage.setItem('studentInfo', JSON.stringify(data.data.student));
-        setIsLoggedIn(true);
-      } else {
-        const errorData = await response.json();
-        setLoginError(errorData.message || 'Invalid credentials');
+      // Pehle JSON parse karo
+      const data = await response.json();
+      console.log('Login response data:', data);
+
+      if (!response.ok || data.success === false) {
+        setLoginError(data.message || 'Invalid credentials');
+        return;
       }
+
+      // ✅ Yaha multiple possible shapes handle kar rahe hain
+      const token =
+        data?.data?.token || // { data: { token, student } }
+        data?.token || // { token, student }
+        data?.accessToken; // { accessToken, user }
+
+      const student =
+        data?.data?.student || // { data: { student } }
+        data?.student || // { student }
+        data?.user; // { user }
+
+      if (!token) {
+        console.error('No token in response JSON:', data);
+        setLoginError(
+          'Login successful but no token received. Please contact support.'
+        );
+        return;
+      }
+
+      // ✅ Token & student info save
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userRole', 'student');
+
+      if (student) {
+        localStorage.setItem('studentInfo', JSON.stringify(student));
+        console.log('✅ Login successful - saved authToken and studentInfo');
+      } else {
+        console.warn('⚠️ Login successful but no student data to save');
+      }
+
+      setIsLoggedIn(true);
     } catch (error) {
       console.error('Login error:', error);
       setLoginError('Network error. Please try again.');
@@ -96,32 +124,34 @@ export default function StudentLogin() {
 
   const handleViewAssignments = async () => {
     try {
-      setAssignmentsLoading(true)
-      setAssignmentsError('')
-      const studentData = getStudentData()
+      setAssignmentsLoading(true);
+      setAssignmentsError('');
+      const studentData = getStudentData();
       if (!studentData || !studentData.course || !studentData.course.title) {
-        setAssignmentsError('Unable to determine your course. Please refresh the page.')
-        return
+        setAssignmentsError(
+          'Unable to determine your course. Please refresh the page.'
+        );
+        return;
       }
 
       const response = await apiClient.getAllNextGenAssignments({
         status: 'published',
-        courseName: studentData.course.title
-      })
+        courseName: studentData.course.title,
+      });
 
       if (response.success) {
-        setAssignments(response.data.assignments || [])
-        setShowAssignments(true)
+        setAssignments(response.data.assignments || []);
+        setShowAssignments(true);
       } else {
-        throw new Error(response.message || 'Failed to fetch assignments')
+        throw new Error(response.message || 'Failed to fetch assignments');
       }
     } catch (err) {
-      console.error('Error fetching assignments:', err)
-      setAssignmentsError(err.message)
+      console.error('Error fetching assignments:', err);
+      setAssignmentsError(err.message);
     } finally {
-      setAssignmentsLoading(false)
+      setAssignmentsLoading(false);
     }
-  }
+  };
 
   if (isLoggedIn) {
     return (
@@ -214,19 +244,30 @@ export default function StudentLogin() {
                   style={{ textAlign: 'center' }}>
                   Take Pending Exam
                 </Link>
+
                 <Link
                   to='/nextgen/profile'
                   className='btn-secondary'
-                  style={{ textAlign: 'center' }}>
+                  style={{ textAlign: 'center' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/nextgen/profile');
+                  }}>
                   View Profile
                 </Link>
-                <button className='btn-outline'>Continue Learning</button>
-                <Link to='/nextgen/assignments'
+
+                <Link
+                  to='/nextgen/exams'
                   className='btn-outline'
-                  onClick={handleViewAssignments}
-                  disabled={assignmentsLoading}
-                >
-                  {assignmentsLoading ? 'Loading...' : 'View Assignments'}
+                  style={{ textAlign: 'center' }}>
+                  View Exams
+                </Link>
+
+                <Link
+                  to='/nextgen/assignments'
+                  className='btn-outline'
+                  style={{ textAlign: 'center' }}>
+                  View Assignments
                 </Link>
               </div>
             </div>
@@ -394,10 +435,16 @@ export default function StudentLogin() {
                   style={{ justifyContent: 'flex-start' }}>
                   🎥 Video Lectures
                 </button>
-                <Link to="/nextgen/coding-exams" className="btn-outline" style={{ justifyContent: 'flex-start' }}>
+                <Link
+                  to='/nextgen/coding-exams'
+                  className='btn-outline'
+                  style={{ justifyContent: 'flex-start' }}>
                   💻 Coding Exams
                 </Link>
-                <Link to="/nextgen/results" className="btn-outline" style={{ justifyContent: 'flex-start' }}>
+                <Link
+                  to='/nextgen/results'
+                  className='btn-outline'
+                  style={{ justifyContent: 'flex-start' }}>
                   📊 View All Results
                 </Link>
               </div>

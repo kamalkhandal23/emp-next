@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
 
 class ApiClient {
   constructor() {
@@ -540,7 +540,7 @@ class ApiClient {
   async deleteNextGenCodingExam(id) {
     return this.request(`/nextgen/codingExams/${id}`, {
       method: 'DELETE',
-    })
+    });
   }
 
   // Run coding exam code on sample inputs
@@ -548,7 +548,7 @@ class ApiClient {
     return this.request('/nextgen/codingExams/run-code', {
       method: 'POST',
       body: data,
-    })
+    });
   }
 
   // Submit coding exam
@@ -556,7 +556,7 @@ class ApiClient {
     return this.request('/nextgen/codingExams/submit', {
       method: 'POST',
       body: data,
-    })
+    });
   }
 
   // NextGen Assignment endpoints
@@ -644,6 +644,13 @@ class ApiClient {
     );
   }
 
+  async saveQuestionAnswer(assignmentId, studentId, questionKey, answer) {
+    return this.request('/nextgen/assignment-submissions/save-answer', {
+      method: 'POST',
+      body: { assignmentId, studentId, questionKey, answer },
+    });
+  }
+
   async getAssignmentSubmissions(assignmentId, status = null) {
     const queryString = status ? `?status=${status}` : '';
     return this.request(
@@ -675,6 +682,24 @@ class ApiClient {
         queryString ? `?${queryString}` : ''
       }`
     );
+  }
+
+  // NextGen Student Authentication
+  async nextGenStudentLogin(credentials) {
+    const response = await this.request('/nextgen/student/login', {
+      method: 'POST',
+      body: credentials,
+    });
+    if (response.data && response.data.token) {
+      this.setAuthToken(response.data.token);
+      // Store student info
+      localStorage.setItem('userRole', 'student');
+      localStorage.setItem(
+        'studentInfo',
+        JSON.stringify(response.data.student)
+      );
+    }
+    return response;
   }
 }
 

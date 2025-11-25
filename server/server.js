@@ -60,6 +60,8 @@ app.use(
     origin: [
       process.env.CLIENT_URL || 'http://localhost:5173',
       'http://localhost:3000',
+      'http://localhost:5001',
+      'http://localhost:5002',
       'https://lifeboxnextgen.com',
       'https://www.lifeboxnextgen.com',
     ],
@@ -67,8 +69,15 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
     optionsSuccessStatus: 200,
+    preflightContinue: false,
   })
 );
+
+// Handle preflight requests explicitly
+app.options('*', cors());
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Helmet
 app.use(

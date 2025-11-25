@@ -131,30 +131,39 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
+  background-color: transparent;
+  color: #d97706;
+  border: 1px solid #d97706;
   padding: 0.875rem 2rem;
   border-radius: 0.5rem;
   font-weight: 600;
   text-decoration: none;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.39);
+  display: inline-block;
 }
 
 .btn-primary:hover {
+  color: #92400e;
+  border-color: #92400e;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(245, 158, 11, 0.5);
 }
 
 .btn-outline {
   color: #d97706;
   font-weight: 600;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: all 0.3s ease;
+  padding: 0.875rem 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d97706;
+  background-color: transparent;
+  display: inline-block;
 }
 
 .btn-outline:hover {
   color: #92400e;
+  border-color: #92400e;
+  transform: translateY(-2px);
 }
 
 .section {
@@ -293,11 +302,11 @@
   .navbar-menu {
     display: flex;
   }
-  
+
   .navbar-toggle {
     display: none;
   }
-  
+
   .hero-title {
     font-size: 3.5rem;
   }
@@ -307,24 +316,24 @@
   .hero-section {
     padding: 2rem 1rem;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .quick-links-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .services-grid {
     grid-template-columns: 1fr;
   }
@@ -429,11 +438,11 @@ select.form-input {
     grid-template-columns: 1fr;
     gap: 0;
   }
-  
+
   .contact-form {
     padding: 1.5rem;
   }
-  
+
   .services-grid {
     grid-template-columns: 1fr !important;
   }
@@ -483,7 +492,7 @@ select.form-input {
 .contact-method-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
-}/* N
+} /* N
 avbar Dropdown Styles */
 .navbar-dropdown {
   position: relative;
@@ -550,7 +559,7 @@ avbar Dropdown Styles */
   background: linear-gradient(135deg, #1f2937, #374151);
   color: white;
   padding: 1rem 0;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Ensure header titles are white (override global h1 color) */
@@ -565,11 +574,11 @@ avbar Dropdown Styles */
 .portal-header .btn-secondary {
   background: transparent;
   color: #ffffff;
-  border: 1px solid rgba(255,255,255,0.5);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .portal-header .btn-secondary:hover {
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   border-color: #ffffff;
 }
 
@@ -631,7 +640,7 @@ avbar Dropdown Styles */
   background: white;
   border-radius: 0.75rem;
   padding: 3rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #3b82f6;
 }
 
@@ -652,7 +661,7 @@ avbar Dropdown Styles */
   background: white;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .table-header {
@@ -718,7 +727,7 @@ avbar Dropdown Styles */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.action-button:hover{
+.action-button:hover {
   background: #2f59ad;
   border-color: #0d2c60;
 }
@@ -737,7 +746,7 @@ avbar Dropdown Styles */
   background: white;
   border-radius: 0.75rem;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1.5rem;
 }
 
@@ -762,11 +771,11 @@ avbar Dropdown Styles */
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .portal-content {
     padding: 1rem 0;
   }
@@ -817,16 +826,16 @@ irector Section Styles */
     gap: 2rem;
     text-align: center;
   }
-  
+
   .director-content {
     padding-right: 0;
     order: 2;
   }
-  
+
   .director-image {
     order: 1;
   }
-  
+
   .director-message {
     text-align: left;
   }
@@ -836,7 +845,7 @@ irector Section Styles */
   .director-message {
     padding: 1.5rem;
   }
-  
+
   .director-section {
     gap: 1.5rem;
   }
@@ -914,8 +923,12 @@ e Portal Specific Styles */
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-skeleton {
@@ -925,8 +938,12 @@ e Portal Specific Styles */
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Enhanced Cards */
@@ -1076,26 +1093,26 @@ e Portal Specific Styles */
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
-  .portal-content .container > div[style*="grid-template-columns: 2fr 1fr"] {
+
+  .portal-content .container > div[style*='grid-template-columns: 2fr 1fr'] {
     grid-template-columns: 1fr !important;
   }
-  
-  .portal-content .container > div[style*="grid-template-columns: 1fr 2fr"] {
+
+  .portal-content .container > div[style*='grid-template-columns: 1fr 2fr'] {
     grid-template-columns: 1fr !important;
   }
-  
+
   .table-row {
     grid-template-columns: 1fr !important;
     gap: 0.5rem;
   }
-  
+
   .table-row > div {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .table-row > div::before {
     content: attr(data-label);
     font-weight: 600;
@@ -1110,29 +1127,29 @@ e Portal Specific Styles */
     border-color: #374151;
     color: #f9fafb;
   }
-  
+
   .stat-card {
     background: #1f2937;
     border-color: #374151;
     color: #f9fafb;
   }
-  
+
   .data-table {
     background: #1f2937;
     border-color: #374151;
     color: #f9fafb;
   }
-  
+
   .table-row:hover {
     background: #374151;
   }
-  
+
   .action-button {
     background: #374151;
     border-color: #4b5563;
     color: #f9fafb;
   }
-  
+
   .action-button:hover {
     background: #4b5563;
   }
@@ -1144,8 +1161,14 @@ e Portal Specific Styles */
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .slide-in {
@@ -1153,8 +1176,12 @@ e Portal Specific Styles */
 }
 
 @keyframes slideIn {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 /* Accessibility Improvements */
@@ -1186,7 +1213,7 @@ textarea:focus {
   .data-table {
     border: 2px solid #000;
   }
-  
+
   .btn-primary,
   .btn-secondary,
   .btn-warning {
