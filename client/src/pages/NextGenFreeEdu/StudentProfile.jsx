@@ -1,215 +1,223 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+
+function normalizeStudent(raw) {
+  if (!raw) return null;
+
+  const course = raw.course_id || raw.course || {};
+  const progress = raw.progress || {};
+  const performance = raw.performance || {};
+  const address = raw.address || {};
+  const emergency = raw.emergency_contact || raw.emergencyContact || {};
+
+  return {
+    _id: raw._id,
+    student_id: raw.student_id || raw.studentId || raw.code || '',
+    full_name: raw.full_name || raw.fullName || raw.name || '',
+    email: raw.email || '',
+    phone: raw.phone || '',
+    date_of_birth: raw.date_of_birth || raw.dateOfBirth || '',
+    status: raw.status || 'active',
+    enrollment_date: raw.enrollment_date || raw.enrollmentDate || '',
+    course_id: {
+      title: course.title || course.name || '',
+      duration_weeks: course.duration_weeks || course.durationWeeks || '',
+      slug: course.slug || '',
+    },
+    progress: {
+      overall_percentage: progress.overall_percentage || progress.overallPercentage || 0,
+      completed_modules: progress.completed_modules || progress.completedModules || 0,
+      total_modules: progress.total_modules || progress.totalModules || 0,
+      current_module: progress.current_module || progress.currentModule || '',
+    },
+    performance: {
+      overall_gpa: performance.overall_gpa || performance.gpa || 0,
+      total_assignments: performance.total_assignments || performance.totalAssignments || 0,
+      completed_assignments:
+        performance.completed_assignments || performance.completedAssignments || 0,
+      average_score: performance.average_score || performance.averageScore || 0,
+    },
+    address: {
+      street: address.street || '',
+      city: address.city || '',
+      state: address.state || '',
+      postal_code: address.postal_code || address.postalCode || '',
+      country: address.country || '',
+    },
+    emergency_contact: {
+      name: emergency.name || '',
+      relationship: emergency.relationship || '',
+      phone: emergency.phone || '',
+    },
+  };
+}
 
 export default function StudentProfile() {
-  const navigate = useNavigate()
-  const [student, setStudent] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [editing, setEditing] = useState(false)
-  const [editData, setEditData] = useState({})
-  const [saving, setSaving] = useState(false)
+  const navigate = useNavigate();
+  const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchStudentProfile()
-  }, [])
+    fetchStudentProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchStudentProfile = async () => {
     try {
-      const token = localStorage.getItem('authToken')
-      if (!token) {
-        navigate('/nextgen/login')
-        return
+      const token = localStorage.getItem('authToken');
+      const storedInfo = localStorage.getItem('studentInfo');
+
+      // agar login hi nahi hai
+      if (!token || !storedInfo) {
+        navigate('/nextgen/login');
+        return;
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/student/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      // 🔹 pehle localStorage ka data dikha dete hain (instant load)
+      const localStudentRaw = JSON.parse(storedInfo);
+      const localStudent = normalizeStudent(localStudentRaw);
+      setStudent(localStudent);
+      setEditData(localStudent);
+
+      // 🔹 ab backend se fresh profile try karte hain (optional)
+      const baseUrl =
+        import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+
+      const response = await fetch(
+        `${baseUrl}/nextgen/student/profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         }
-      })
+      );
 
       if (response.ok) {
-        const data = await response.json()
-        setStudent(data.data.student)
-        setEditData(data.data.student)
-      } else if (response.status === 401) {
-        localStorage.removeItem('authToken')
-        navigate('/nextgen/login')
-      } else {
-        // Fallback to mock data for demo
-        const mockStudent = {
-          _id: 'demo123',
-          student_id: 'NGE2024001',
-          full_name: 'Priya Sharma',
-          email: 'priya.sharma@email.com',
-          phone: '+91-9876543210',
-          date_of_birth: '1998-05-15',
-          status: 'active',
-          enrollment_date: '2024-01-15',
-          course_id: {
-            title: 'Full Stack Development',
-            duration_weeks: 24,
-            slug: 'fullstack-dev'
-          },
-          progress: {
-            overall_percentage: 65,
-            completed_modules: 8,
-            total_modules: 12,
-            current_module: 'React State Management'
-          },
-          performance: {
-            overall_gpa: 3.8,
-            total_assignments: 15,
-            completed_assignments: 12,
-            average_score: 87.5
-          },
-          address: {
-            street: '123 Tech Street',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            postal_code: '400001',
-            country: 'India'
-          },
-          emergency_contact: {
-            name: 'Rajesh Sharma',
-            relationship: 'Father',
-            phone: '+91-9876543211'
-          }
+        const data = await response.json();
+        const apiStudent = normalizeStudent(data.data.student);
+        if (apiStudent) {
+          setStudent(apiStudent);
+          setEditData(apiStudent);
         }
-        setStudent(mockStudent)
-        setEditData(mockStudent)
+      } else if (response.status === 401) {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('studentInfo');
+        localStorage.removeItem('userRole');
+        navigate('/nextgen/login');
+      } else {
+        // API fail ho gayi to bhi localStorage wala data already dikha raha hai
+        console.warn('Profile API failed, using localStorage studentInfo');
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
-      // Fallback to mock data
-      const mockStudent = {
-        _id: 'demo123',
-        student_id: 'NGE2024001',
-        full_name: 'Priya Sharma',
-        email: 'priya.sharma@email.com',
-        phone: '+91-9876543210',
-        date_of_birth: '1998-05-15',
-        status: 'active',
-        enrollment_date: '2024-01-15',
-        course_id: {
-          title: 'Full Stack Development',
-          duration_weeks: 24,
-          slug: 'fullstack-dev'
-        },
-        progress: {
-          overall_percentage: 65,
-          completed_modules: 8,
-          total_modules: 12,
-          current_module: 'React State Management'
-        },
-        performance: {
-          overall_gpa: 3.8,
-          total_assignments: 15,
-          completed_assignments: 12,
-          average_score: 87.5
-        },
-        address: {
-          street: '123 Tech Street',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          postal_code: '400001',
-          country: 'India'
-        },
-        emergency_contact: {
-          name: 'Rajesh Sharma',
-          relationship: 'Father',
-          phone: '+91-9876543211'
-        }
-      }
-      setStudent(mockStudent)
-      setEditData(mockStudent)
+      console.error('Error fetching profile:', error);
+      // error pe bhi localStorage wala data already set ho chuka hoga
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     if (name.includes('.')) {
-      const [parent, child] = name.split('.')
-      setEditData(prev => ({
+      const [parent, child] = name.split('.');
+      setEditData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
-      }))
+          [child]: value,
+        },
+      }));
     } else {
-      setEditData(prev => ({
+      setEditData((prev) => ({
         ...prev,
-        [name]: value
-      }))
+        [name]: value,
+      }));
     }
-  }
+  };
 
   const handleSave = async () => {
-    setSaving(true)
+    setSaving(true);
     try {
-      const token = localStorage.getItem('authToken')
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/student/profile`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          phone: editData.phone,
-          address: editData.address,
-          emergency_contact: editData.emergency_contact
-        })
-      })
+      const token = localStorage.getItem('authToken');
+      const baseUrl =
+        import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+
+      const response = await fetch(
+        `${baseUrl}/nextgen/student/profile`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phone: editData.phone,
+            address: editData.address,
+            emergency_contact: editData.emergency_contact,
+          }),
+        }
+      );
 
       if (response.ok) {
-        const data = await response.json()
-        setStudent(data.data.student)
-        setEditing(false)
-        alert('Profile updated successfully!')
+        const data = await response.json();
+        const updated = normalizeStudent(data.data.student);
+        setStudent(updated);
+        setEditData(updated);
+
+        // optional: localStorage bhi update kar do
+        const raw = JSON.parse(localStorage.getItem('studentInfo') || '{}');
+        const merged = { ...raw, ...data.data.student };
+        localStorage.setItem('studentInfo', JSON.stringify(merged));
+
+        setEditing(false);
+        alert('Profile updated successfully!');
       } else {
-        // Simulate success for demo
-        setStudent(editData)
-        setEditing(false)
-        alert('Profile updated successfully!')
+        alert('Failed to update profile. Please try again later.');
       }
     } catch (error) {
-      console.error('Error updating profile:', error)
-      // Simulate success for demo
-      setStudent(editData)
-      setEditing(false)
-      alert('Profile updated successfully!')
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again later.');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken')
-    localStorage.removeItem('userRole')
-    navigate('/nextgen/login')
-  }
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('studentInfo');
+    navigate('/nextgen/login');
+  };
 
   if (loading) {
     return (
-      <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+      <div
+        className="container"
+        style={{ paddingTop: '2rem', paddingBottom: '2rem' }}
+      >
         <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
           <div className="service-card">
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
             <h2>Loading Profile...</h2>
-            <p style={{ color: '#6b7280' }}>Please wait while we fetch your information.</p>
+            <p style={{ color: '#6b7280' }}>
+              Please wait while we fetch your information.
+            </p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!student) {
     return (
-      <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+      <div
+        className="container"
+        style={{ paddingTop: '2rem', paddingBottom: '2rem' }}
+      >
         <div style={{ maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
           <div className="service-card" style={{ border: '2px solid #ef4444' }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
@@ -223,23 +231,36 @@ export default function StudentProfile() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
+  // ⬇️ niche ka UI block mostly tumhara hi hai, sirf logic upar change hua hai
   return (
-    <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+    <div
+      className="container"
+      style={{ paddingTop: '2rem', paddingBottom: '2rem' }}
+    >
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '2rem',
-          flexWrap: 'wrap',
-          gap: '1rem'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '2rem',
+            flexWrap: 'wrap',
+            gap: '1rem',
+          }}
+        >
           <div>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+            <h1
+              style={{
+                fontSize: '2.5rem',
+                fontWeight: '700',
+                color: '#111827',
+                margin: 0,
+              }}
+            >
               Student Profile
             </h1>
             <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0' }}>
@@ -257,53 +278,93 @@ export default function StudentProfile() {
         </div>
 
         {/* Profile Overview */}
-        <div className="service-card" style={{ 
-          background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-          border: '2px solid #3b82f6',
-          marginBottom: '2rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
-            <div style={{ 
-              width: '100px', 
-              height: '100px', 
-              borderRadius: '50%', 
-              background: '#3b82f6',
+        <div
+          className="service-card"
+          style={{
+            background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
+            border: '2px solid #3b82f6',
+            marginBottom: '2rem',
+          }}
+        >
+          <div
+            style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2.5rem',
-              color: 'white',
-              fontWeight: '700'
-            }}>
+              gap: '2rem',
+              flexWrap: 'wrap',
+            }}
+          >
+            <div
+              style={{
+                width: '100px',
+                height: '100px',
+                borderRadius: '50%',
+                background: '#3b82f6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2.5rem',
+                color: 'white',
+                fontWeight: '700',
+              }}
+            >
               {student.full_name?.charAt(0) || 'S'}
             </div>
             <div style={{ flex: 1 }}>
-              <h2 style={{ color: '#1e40af', margin: '0 0 0.5rem 0' }}>
+              <h2
+                style={{ color: '#1e40af', margin: '0 0 0.5rem 0' }}
+              >
                 {student.full_name}
               </h2>
-              <div style={{ color: '#1e3a8a', fontSize: '0.875rem', lineHeight: '1.6' }}>
-                <div><strong>Student ID:</strong> {student.student_id}</div>
-                <div><strong>Email:</strong> {student.email}</div>
-                <div><strong>Course:</strong> {student.course_id?.title}</div>
-                <div><strong>Status:</strong> 
-                  <span style={{ 
-                    background: student.status === 'active' ? '#22c55e' : '#f59e0b',
-                    color: 'white',
-                    padding: '0.125rem 0.5rem',
-                    borderRadius: '0.25rem',
-                    fontSize: '0.75rem',
-                    marginLeft: '0.5rem'
-                  }}>
+              <div
+                style={{
+                  color: '#1e3a8a',
+                  fontSize: '0.875rem',
+                  lineHeight: '1.6',
+                }}
+              >
+                <div>
+                  <strong>Student ID:</strong> {student.student_id}
+                </div>
+                <div>
+                  <strong>Email:</strong> {student.email}
+                </div>
+                <div>
+                  <strong>Course:</strong> {student.course_id?.title}
+                </div>
+                <div>
+                  <strong>Status:</strong>
+                  <span
+                    style={{
+                      background:
+                        student.status === 'active'
+                          ? '#22c55e'
+                          : '#f59e0b',
+                      color: 'white',
+                      padding: '0.125rem 0.5rem',
+                      borderRadius: '0.25rem',
+                      fontSize: '0.75rem',
+                      marginLeft: '0.5rem',
+                    }}
+                  >
                     {student.status}
                   </span>
                 </div>
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1e40af' }}>
+              <div
+                style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: '#1e40af',
+                }}
+              >
                 {student.progress?.overall_percentage || 0}%
               </div>
-              <div style={{ fontSize: '0.875rem', color: '#1e3a8a' }}>
+              <div
+                style={{ fontSize: '0.875rem', color: '#1e3a8a' }}
+              >
                 Overall Progress
               </div>
             </div>
