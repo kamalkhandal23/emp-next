@@ -46,7 +46,7 @@ export default function StudentLogin() {
     e.preventDefault();
     setIsLoggingIn(true);
     setLoginError('');
-  
+
     try {
       const response = await fetch(
         `${
@@ -63,27 +63,27 @@ export default function StudentLogin() {
           }),
         }
       );
-  
+
       // Pehle JSON parse karo
       const data = await response.json();
       console.log('Login response data:', data);
-  
+
       if (!response.ok || data.success === false) {
         setLoginError(data.message || 'Invalid credentials');
         return;
       }
-  
+
       // ✅ Yaha multiple possible shapes handle kar rahe hain
       const token =
-        data?.data?.token ||   // { data: { token, student } }
-        data?.token ||         // { token, student }
-        data?.accessToken;     // { accessToken, user }
-  
+        data?.data?.token || // { data: { token, student } }
+        data?.token || // { token, student }
+        data?.accessToken; // { accessToken, user }
+
       const student =
         data?.data?.student || // { data: { student } }
-        data?.student ||       // { student }
-        data?.user;            // { user }
-  
+        data?.student || // { student }
+        data?.user; // { user }
+
       if (!token) {
         console.error('No token in response JSON:', data);
         setLoginError(
@@ -91,15 +91,15 @@ export default function StudentLogin() {
         );
         return;
       }
-  
+
       // ✅ Token & student info save
       localStorage.setItem('authToken', token);
       localStorage.setItem('userRole', 'student');
-  
+
       if (student) {
         localStorage.setItem('studentInfo', JSON.stringify(student));
       }
-  
+
       setIsLoggedIn(true);
     } catch (error) {
       console.error('Login error:', error);
@@ -248,7 +248,6 @@ export default function StudentLogin() {
                   View Profile
                 </Link>
 
-          
                 <Link
                   to='/nextgen/exams'
                   className='btn-outline'
@@ -256,7 +255,10 @@ export default function StudentLogin() {
                   View Exams
                 </Link>
 
-                <Link to='/nextgen/assignments' className='btn-outline'>
+                <Link
+                  to='/nextgen/assignments'
+                  className='btn-outline'
+                  style={{ textAlign: 'center' }}>
                   View Assignments
                 </Link>
               </div>
