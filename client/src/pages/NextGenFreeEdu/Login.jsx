@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
 
 export default function StudentLogin() {
@@ -26,6 +26,7 @@ export default function StudentLogin() {
   const [showAssignments, setShowAssignments] = useState(false);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const [assignmentsError, setAssignmentsError] = useState('');
+  const navigate = useNavigate();
 
   // Get student data from localStorage
   const getStudentData = () => {
@@ -244,7 +245,12 @@ export default function StudentLogin() {
                 <Link
                   to='/nextgen/profile'
                   className='btn-secondary'
-                  style={{ textAlign: 'center' }}>
+                  style={{ textAlign: 'center' }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/nextgen/profile');
+                  }}
+                >
                   View Profile
                 </Link>
 
