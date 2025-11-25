@@ -99,6 +99,9 @@ export default function StudentLogin() {
 
       if (student) {
         localStorage.setItem('studentInfo', JSON.stringify(student));
+        console.log('✅ Login successful - saved authToken and studentInfo');
+      } else {
+        console.warn('⚠️ Login successful but no student data to save');
       }
 
       setIsLoggedIn(true);
@@ -249,8 +252,7 @@ export default function StudentLogin() {
                   onClick={(e) => {
                     e.preventDefault();
                     navigate('/nextgen/profile');
-                  }}
-                >
+                  }}>
                   View Profile
                 </Link>
 

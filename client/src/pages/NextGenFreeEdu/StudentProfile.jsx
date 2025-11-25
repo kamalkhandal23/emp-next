@@ -70,8 +70,13 @@ export default function StudentProfile() {
       const token = localStorage.getItem('authToken');
       const storedInfo = localStorage.getItem('studentInfo');
 
+      // Debug logging
+      console.log('🔍 StudentProfile - authToken:', token ? 'exists' : 'missing');
+      console.log('🔍 StudentProfile - studentInfo:', storedInfo ? 'exists' : 'missing');
+
       // agar login hi nahi hai
       if (!token || !storedInfo) {
+        console.warn('⚠️ Redirecting to login - missing token or studentInfo');
         navigate('/nextgen/login');
         return;
       }
