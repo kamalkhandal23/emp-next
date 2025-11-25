@@ -193,7 +193,7 @@ export default function App() {
             <Route path='/portal/coursemanager/createexam' element={<CreateExam />} />
             <Route path='/portal/coursemanager/createassignment' element={<CreateAssignment />}/>
             <Route path='/portal/coursemanager/manageexams'element={<ManageExams />}/>
-            <Route path='/portal/coursemanager/createcodingexam'ErrorBoundarylement={<CreateCodingExam />}/>
+            <Route path='/portal/coursemanager/createcodingexam' element={<CreateCodingExam />}/>
             <Route path='/portal/coursemanager/managecodingexams'element={<ManageCodingExams />} />
             <Route path='/portal/coursemanager/manageassignments' element={<ManageAssignments />} />
             <Route path="/portal/coursemanager/gradeassignments" element={<GradeAssignments/>}/>

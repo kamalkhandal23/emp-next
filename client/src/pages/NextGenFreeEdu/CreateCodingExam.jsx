@@ -14,24 +14,24 @@ function CreateCodingExam() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [codingExams, setCodingExams] = useState([]);
-  const [loadingCodingExams, setLoadingCodingExams] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
 
   useEffect(() => {
-    const fetchCodingExams = async () => {
-      setLoadingCodingExams(true);
+    const fetchCourses = async () => {
+      setLoadingCourses(true);
       try {
-        const response = await apiClient.getAllNextGenCodingExams();
+        const response = await apiClient.getNextGenCourses();
         if (response.success && response.data) {
-          setCodingExams(response.data.codingExams || []);
+          setCourses(response.data.courses || []);
         }
       } catch (error) {
-        console.error('Error fetching coding exams:', error);
+        console.error('Error fetching courses:', error);
       } finally {
-        setLoadingCodingExams(false);
+        setLoadingCourses(false);
       }
     };
-    fetchCodingExams();
+    fetchCourses();
   }, []);
 
   const handleSubmit = (e) => {
@@ -67,6 +67,56 @@ function CreateCodingExam() {
     }));
   };
 
+  const handleSampleInputChange = (qNum, index, value) => {
+    setQuestionData((prev) => {
+      const question = prev[qNum] || {};
+      const sampleInputs = [...(question.sampleInputs || [])];
+      sampleInputs[index] = value;
+      return {
+        ...prev,
+        [qNum]: { ...question, sampleInputs },
+      };
+    });
+  };
+
+  const handleSampleOutputChange = (qNum, index, value) => {
+    setQuestionData((prev) => {
+      const question = prev[qNum] || {};
+      const sampleOutputs = [...(question.sampleOutputs || [])];
+      sampleOutputs[index] = value;
+      return {
+        ...prev,
+        [qNum]: { ...question, sampleOutputs },
+      };
+    });
+  };
+
+  const addSampleTestCase = (qNum) => {
+    setQuestionData((prev) => {
+      const question = prev[qNum] || {};
+      const sampleInputs = [...(question.sampleInputs || []), ''];
+      const sampleOutputs = [...(question.sampleOutputs || []), ''];
+      return {
+        ...prev,
+        [qNum]: { ...question, sampleInputs, sampleOutputs },
+      };
+    });
+  };
+
+  const removeSampleTestCase = (qNum, index) => {
+    setQuestionData((prev) => {
+      const question = prev[qNum] || {};
+      const sampleInputs = [...(question.sampleInputs || [])];
+      const sampleOutputs = [...(question.sampleOutputs || [])];
+      sampleInputs.splice(index, 1);
+      sampleOutputs.splice(index, 1);
+      return {
+        ...prev,
+        [qNum]: { ...question, sampleInputs, sampleOutputs },
+      };
+    });
+  };
+
   const handleSaveQuestion = (qNum) => {
     alert(`Question ${qNum} saved ✅`);
     setSelectedQuestion(null);
@@ -83,14 +133,22 @@ function CreateCodingExam() {
 
       if (q.type !== 'Coding') return false;
 
-      if (!q.testCase || q.testCase.trim() === '') return false;
+      // Check for sample inputs and outputs
+      if (!q.sampleInputs || !Array.isArray(q.sampleInputs) || q.sampleInputs.length === 0) return false;
+      if (!q.sampleOutputs || !Array.isArray(q.sampleOutputs) || q.sampleOutputs.length === 0) return false;
+      if (q.sampleInputs.length !== q.sampleOutputs.length) return false;
+
+      // Check that at least one sample pair is not empty
+      const hasValidSample = q.sampleInputs.some(input => input && input.trim() !== '') &&
+                            q.sampleOutputs.some(output => output && output.trim() !== '');
+      if (!hasValidSample) return false;
 
       return true;
     });
 
     if (!allQuestionsFilled) {
       alert(
-        '⚠️ Please fill in all question details before finalizing the coding exam.'
+        '⚠️ Please fill in all question details including at least one sample input/output pair for each coding question before finalizing the coding exam.'
       );
       return;
     }
@@ -179,7 +237,7 @@ function CreateCodingExam() {
           <div className='max-w-md mx-auto p-8 bg-blue-50 border border-blue-200 rounded-lg shadow-lg'>
             <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
               <label className='text-lg text-gray-700 font-medium text-left'>
-                Coding Exam
+                Courses
               </label>
 
               <select
@@ -196,13 +254,13 @@ function CreateCodingExam() {
                 }}
                 required>
                 <option value='' disabled>
-                  {loadingCodingExams
-                    ? 'Loading coding exams...'
-                    : 'Select a coding exam'}
+                  {loadingCourses
+                    ? 'Loading courses...'
+                    : 'Select a course'}
                 </option>
-                {codingExams.map((exam, index) => (
-                  <option key={index} value={exam.examName}>
-                    {exam.examName}
+                {courses.map((course, index) => (
+                  <option key={index} value={course.title}>
+                    {course.title}
                   </option>
                 ))}
               </select>
@@ -333,8 +391,67 @@ function CreateCodingExam() {
                             }
                             className='border px-4 py-2 rounded'
                           />
+
+                          <div>
+                            <h4 className='font-semibold mb-2'>Sample Test Cases</h4>
+                            <p className='text-sm text-gray-600 mb-3'>
+                              Add sample inputs and expected outputs for students to test their code before submission.
+                            </p>
+
+                            {(questionData[selectedQuestion]?.sampleInputs || []).map((input, index) => (
+                              <div key={index} className='border rounded p-3 mb-3 bg-white'>
+                                <div className='flex justify-between items-center mb-2'>
+                                  <h5 className='font-medium'>Test Case {index + 1}</h5>
+                                  <button
+                                    type='button'
+                                    onClick={() => removeSampleTestCase(selectedQuestion, index)}
+                                    className='text-red-500 hover:text-red-700 text-sm'
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                                <div className='grid grid-cols-2 gap-3'>
+                                  <div>
+                                    <label className='block text-sm font-medium mb-1'>Input</label>
+                                    <textarea
+                                      placeholder='Enter sample input'
+                                      value={input}
+                                      onChange={(e) =>
+                                        handleSampleInputChange(selectedQuestion, index, e.target.value)
+                                      }
+                                      className='border px-3 py-2 rounded w-full text-sm'
+                                      rows={3}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className='block text-sm font-medium mb-1'>Expected Output</label>
+                                    <textarea
+                                      placeholder='Enter expected output'
+                                      value={
+                                        questionData[selectedQuestion]?.sampleOutputs?.[index] || ''
+                                      }
+                                      onChange={(e) =>
+                                        handleSampleOutputChange(selectedQuestion, index, e.target.value)
+                                      }
+                                      className='border px-3 py-2 rounded w-full text-sm'
+                                      rows={3}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+
+                            <button
+                              type='button'
+                              onClick={() => addSampleTestCase(selectedQuestion)}
+                              className='bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm'
+                            >
+                              + Add Sample Test Case
+                            </button>
+                          </div>
+
                           <textarea
-                            placeholder='Describe test case or expected logic'
+                            placeholder='Additional test case description or notes (optional)'
                             value={
                               questionData[selectedQuestion]?.testCase || ''
                             }
@@ -346,7 +463,7 @@ function CreateCodingExam() {
                               )
                             }
                             className='border px-4 py-2 rounded'
-                            rows={4}
+                            rows={3}
                           />
                         </div>
                       )}

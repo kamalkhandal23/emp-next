@@ -68,10 +68,35 @@ export const createCodingExam = async (req, res) => {
         });
       }
 
-      if (!qData.testCase || qData.testCase.trim() === '') {
+      // Validate sample inputs and outputs
+      if (!qData.sampleInputs || !Array.isArray(qData.sampleInputs) || qData.sampleInputs.length === 0) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is missing test case description`
+          message: `Question ${qNum} must have at least one sample input`
+        });
+      }
+
+      if (!qData.sampleOutputs || !Array.isArray(qData.sampleOutputs) || qData.sampleOutputs.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Question ${qNum} must have at least one sample output`
+        });
+      }
+
+      if (qData.sampleInputs.length !== qData.sampleOutputs.length) {
+        return res.status(400).json({
+          success: false,
+          message: `Question ${qNum} must have matching number of sample inputs and outputs`
+        });
+      }
+
+      // Check that at least one sample input/output pair is not empty
+      const hasValidSample = qData.sampleInputs.some(input => input && input.trim() !== '') &&
+                            qData.sampleOutputs.some(output => output && output.trim() !== '');
+      if (!hasValidSample) {
+        return res.status(400).json({
+          success: false,
+          message: `Question ${qNum} must have at least one valid sample input/output pair`
         });
       }
     }
@@ -341,10 +366,35 @@ export const updateCodingExam = async (req, res) => {
         });
       }
 
-      if (!qData.testCase || qData.testCase.trim() === '') {
+      // Validate sample inputs and outputs
+      if (!qData.sampleInputs || !Array.isArray(qData.sampleInputs) || qData.sampleInputs.length === 0) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is missing test case description`
+          message: `Question ${qNum} must have at least one sample input`
+        });
+      }
+
+      if (!qData.sampleOutputs || !Array.isArray(qData.sampleOutputs) || qData.sampleOutputs.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Question ${qNum} must have at least one sample output`
+        });
+      }
+
+      if (qData.sampleInputs.length !== qData.sampleOutputs.length) {
+        return res.status(400).json({
+          success: false,
+          message: `Question ${qNum} must have matching number of sample inputs and outputs`
+        });
+      }
+
+      // Check that at least one sample input/output pair is not empty
+      const hasValidSample = qData.sampleInputs.some(input => input && input.trim() !== '') &&
+                            qData.sampleOutputs.some(output => output && output.trim() !== '');
+      if (!hasValidSample) {
+        return res.status(400).json({
+          success: false,
+          message: `Question ${qNum} must have at least one valid sample input/output pair`
         });
       }
     }
@@ -490,8 +540,8 @@ export const runCode = async (req, res) => {
       });
     }
 
-    // Execute code on sample inputs
-    const result = await executeCode(
+    // Execute code on sample inputs (run on each test case separately)
+    const result = await executeCodeMultipleTests(
       code,
       language,
       question.sampleInputs,
@@ -563,7 +613,7 @@ export const submitCodingExam = async (req, res) => {
       }
 
       // Execute code on hidden test cases
-      const result = await executeCode(
+      const result = await executeCodeMultipleTests(
         code,
         language,
         question.hiddenInputs,
@@ -571,8 +621,8 @@ export const submitCodingExam = async (req, res) => {
         true // hidden
       );
 
-      // Calculate marks for this question
-      const marks = result.verdict === 'Accepted' ? maxMarksPerQuestion : 0;
+      // Calculate marks for this question based on passed test cases
+      const marks = (result.passedCount / result.totalTests) * maxMarksPerQuestion;
       totalMarks += marks;
 
       // Save submission
@@ -583,7 +633,7 @@ export const submitCodingExam = async (req, res) => {
         code,
         language,
         verdict: result.overallVerdict,
-        marks,
+        marks: Math.round(marks),
         executionTime: result.results.length > 0 ? result.results[0].executionTime : '0.00s',
         memory: result.results.length > 0 ? result.results[0].memory : '0MB',
         output: result.results.length > 0 ? result.results[0].output : '',

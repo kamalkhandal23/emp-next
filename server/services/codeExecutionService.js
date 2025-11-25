@@ -148,7 +148,7 @@ const executePythonCode = async (code, inputs, containerId, tempDir) => {
 
   try {
     // Build Docker image if not exists
-    await execAsync(`docker build -t code-exec-python -f docker/Dockerfile.python docker/`);
+    await execAsync(`docker build -t code-exec-python -f ../../docker/Dockerfile.python ../../docker/`);
 
     // Run code in container with resource limits
     const dockerCommand = `docker run --rm --name ${containerId} --network none --memory 256m --cpus 0.5 --tmpfs /tmp:rw,noexec,nosuid,size=100m -v ${codeFile}:/sandbox/code.py:ro -v ${inputFile}:/sandbox/input.txt:ro code-exec-python timeout 10 python3 /sandbox/code.py < /sandbox/input.txt`;
@@ -196,7 +196,7 @@ const executeJavaScriptCode = async (code, inputs, containerId, tempDir) => {
 
   try {
     // Build Docker image if not exists
-    await execAsync(`docker build -t code-exec-javascript -f docker/Dockerfile.javascript docker/`);
+    await execAsync(`docker build -t code-exec-javascript -f ../../docker/Dockerfile.javascript ../../docker/`);
 
     // Run code in container with resource limits
     const dockerCommand = `docker run --rm --name ${containerId} --network none --memory 256m --cpus 0.5 --tmpfs /tmp:rw,noexec,nosuid,size=100m -v ${codeFile}:/sandbox/code.js:ro -v ${inputFile}:/sandbox/input.txt:ro code-exec-javascript timeout 10 node /sandbox/code.js < /sandbox/input.txt`;
@@ -244,7 +244,7 @@ const executeCCode = async (code, inputs, containerId, tempDir) => {
 
   try {
     // Build Docker image if not exists
-    await execAsync(`docker build -t code-exec-c -f docker/Dockerfile.c docker/`);
+    await execAsync(`docker build -t code-exec-c -f ../../docker/Dockerfile.c ../../docker/`);
 
     // Compile and run code in container with resource limits
     const dockerCommand = `docker run --rm --name ${containerId} --network none --memory 256m --cpus 0.5 --tmpfs /tmp:rw,noexec,nosuid,size=100m -v ${codeFile}:/sandbox/code.c:ro -v ${inputFile}:/sandbox/input.txt:ro code-exec-c bash -c "gcc /sandbox/code.c -o /tmp/exec && timeout 10 /tmp/exec < /sandbox/input.txt"`;
@@ -292,7 +292,7 @@ const executeCppCode = async (code, inputs, containerId, tempDir) => {
 
   try {
     // Build Docker image if not exists
-    await execAsync(`docker build -t code-exec-cpp -f docker/Dockerfile.c docker/`); // Reuse C Dockerfile
+    await execAsync(`docker build -t code-exec-cpp -f ../../docker/Dockerfile.c ../../docker/`); // Reuse C Dockerfile
 
     // Compile and run code in container with resource limits
     const dockerCommand = `docker run --rm --name ${containerId} --network none --memory 256m --cpus 0.5 --tmpfs /tmp:rw,noexec,nosuid,size=100m -v ${codeFile}:/sandbox/code.cpp:ro -v ${inputFile}:/sandbox/input.txt:ro code-exec-cpp bash -c "g++ /sandbox/code.cpp -o /tmp/exec && timeout 10 /tmp/exec < /sandbox/input.txt"`;
@@ -340,7 +340,7 @@ const executeJavaCode = async (code, inputs, containerId, tempDir) => {
 
   try {
     // Build Docker image if not exists
-    await execAsync(`docker build -t code-exec-java -f docker/Dockerfile.java docker/`);
+    await execAsync(`docker build -t code-exec-java -f ../docker/Dockerfile.java ../docker/`);
 
     // Compile and run code in container with resource limits
     const dockerCommand = `docker run --rm --name ${containerId} --network none --memory 256m --cpus 0.5 --tmpfs /tmp:rw,noexec,nosuid,size=100m -v ${codeFile}:/sandbox/Main.java:ro -v ${inputFile}:/sandbox/input.txt:ro code-exec-java bash -c "javac /sandbox/Main.java && timeout 10 java -cp /sandbox Main < /sandbox/input.txt"`;

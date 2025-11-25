@@ -842,7 +842,7 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Assignments'>
+                <Card title='Assignments' style={{color : 'black'}}>
                   <ActionList
                     actions={[
                       'Create Assignments',

@@ -101,19 +101,20 @@ int main() {
       const response = await apiClient.runCodingExamCode({
         examId: id,
         questionId: questionKey,
-        code,
-        language
+        code: codes[questionKey] || '',
+        language: questionLanguages[questionKey] || 'javascript'
       })
 
       if (response.success) {
         const result = response.data
         setRunResult({
-          success: result.verdict === 'Accepted',
-          output: result.output,
-          error: result.error,
-          executionTime: result.executionTime,
-          memory: result.memory,
-          verdict: result.verdict
+          success: result.overallVerdict === 'Accepted',
+          overallVerdict: result.overallVerdict,
+          passedCount: result.passedCount,
+          totalTests: result.totalTests,
+          successRate: result.successRate,
+          testResults: result.results,
+          verdict: result.overallVerdict
         })
       } else {
         throw new Error(response.message || 'Failed to run code')
@@ -238,22 +239,61 @@ int main() {
               </p>
             </div>
 
-            {question.testCase && (
+            {(question.sampleInputs && question.sampleInputs.length > 0) && (
               <div>
                 <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#111827' }}>
                   Sample Test Cases
                 </h4>
-                <pre style={{
-                  background: '#ffffff',
-                  padding: '1rem',
-                  borderRadius: '0.25rem',
-                  border: '1px solid #d1d5db',
-                  fontSize: '0.875rem',
-                  color: '#374151',
-                  overflow: 'auto'
-                }}>
-                  {question.testCase}
-                </pre>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {question.sampleInputs.map((input, index) => (
+                    <div key={index} style={{
+                      background: '#ffffff',
+                      padding: '1rem',
+                      borderRadius: '0.25rem',
+                      border: '1px solid #d1d5db'
+                    }}>
+                      <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#111827' }}>
+                        Test Case {index + 1}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem', color: '#6b7280' }}>
+                            Input:
+                          </div>
+                          <pre style={{
+                            background: '#f9fafb',
+                            padding: '0.5rem',
+                            borderRadius: '0.25rem',
+                            border: '1px solid #e5e7eb',
+                            fontSize: '0.75rem',
+                            color: '#374151',
+                            overflow: 'auto',
+                            margin: 0
+                          }}>
+                            {input}
+                          </pre>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem', color: '#6b7280' }}>
+                            Expected Output:
+                          </div>
+                          <pre style={{
+                            background: '#f9fafb',
+                            padding: '0.5rem',
+                            borderRadius: '0.25rem',
+                            border: '1px solid #e5e7eb',
+                            fontSize: '0.75rem',
+                            color: '#374151',
+                            overflow: 'auto',
+                            margin: 0
+                          }}>
+                            {question.sampleOutputs?.[index] || ''}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -321,29 +361,87 @@ int main() {
                 border: `1px solid ${runResult.success ? '#10b981' : '#ef4444'}`
               }}>
                 <h4 style={{ fontWeight: '600', marginBottom: '0.5rem', color: runResult.success ? '#065f46' : '#991b1b' }}>
-                  {runResult.success ? 'Execution Successful' : 'Execution Failed'}
+                  {runResult.overallVerdict === 'Accepted' ? 'All Tests Passed' : 'Some Tests Failed'}
                 </h4>
-                {runResult.output && (
-                  <pre style={{
-                    fontSize: '0.875rem',
-                    color: '#374151',
-                    background: '#ffffff',
-                    padding: '0.5rem',
-                    borderRadius: '0.25rem',
-                    overflow: 'auto',
-                    marginBottom: '0.5rem'
-                  }}>
-                    {runResult.output}
-                  </pre>
+                <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+                  Passed: {runResult.passedCount}/{runResult.totalTests} tests ({runResult.successRate}%)
+                </p>
+
+                {/* Test Results */}
+                {runResult.testResults && runResult.testResults.length > 0 && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <h5 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+                      Test Results:
+                    </h5>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {runResult.testResults.map((test, index) => (
+                        <div key={index} style={{
+                          background: '#ffffff',
+                          padding: '0.75rem',
+                          borderRadius: '0.25rem',
+                          border: `1px solid ${test.passed ? '#10b981' : '#ef4444'}`
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#374151' }}>
+                              Test Case {test.testCase}
+                            </span>
+                            <span style={{
+                              fontSize: '0.75rem',
+                              fontWeight: '600',
+                              color: test.passed ? '#065f46' : '#991b1b',
+                              background: test.passed ? '#d1fae5' : '#fee2e2',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '0.25rem'
+                            }}>
+                              {test.verdict}
+                            </span>
+                          </div>
+
+                          {test.output && (
+                            <div style={{ marginBottom: '0.5rem' }}>
+                              <div style={{ fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem', color: '#6b7280' }}>
+                                Your Output:
+                              </div>
+                              <pre style={{
+                                fontSize: '0.75rem',
+                                color: '#374151',
+                                background: '#f9fafb',
+                                padding: '0.5rem',
+                                borderRadius: '0.25rem',
+                                border: '1px solid #e5e7eb',
+                                overflow: 'auto',
+                                margin: 0
+                              }}>
+                                {test.output}
+                              </pre>
+                            </div>
+                          )}
+
+                          {test.error && (
+                            <div style={{ marginBottom: '0.5rem' }}>
+                              <div style={{ fontSize: '0.75rem', fontWeight: '600', marginBottom: '0.25rem', color: '#dc2626' }}>
+                                Error:
+                              </div>
+                              <p style={{ fontSize: '0.75rem', color: '#dc2626', margin: 0 }}>
+                                {test.error}
+                              </p>
+                            </div>
+                          )}
+
+                          {(test.executionTime || test.memory) && (
+                            <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: 0 }}>
+                              Time: {test.executionTime} | Memory: {test.memory}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-                {runResult.error && (
+
+                {runResult.error && !runResult.testResults && (
                   <p style={{ color: '#dc2626', fontSize: '0.875rem' }}>
                     {runResult.error}
-                  </p>
-                )}
-                {runResult.executionTime && (
-                  <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                    Time: {runResult.executionTime} | Memory: {runResult.memory}
                   </p>
                 )}
               </div>
