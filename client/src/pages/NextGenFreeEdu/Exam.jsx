@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import TopBanner from "../../components/TopBanner";
-import WarningPopup from "../../components/WarningPopup";
+import TopBanner from '../../components/TopBanner';
+import WarningPopup from '../../components/WarningPopup';
 
 export default function Exam() {
   const [searchParams] = useSearchParams();
@@ -16,9 +16,15 @@ export default function Exam() {
   const [examStartTime, setExamStartTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-    const [showBanner, setShowBanner] = useState(false);
-    const [showPopup, setShowPopup] = useState(false);
-    const [warningCount, setWarningCount] = useState(0);
+  const [showBanner, setShowBanner] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [warningCount, setWarningCount] = useState(0);
+
+  // New states for time-based validation
+  const [examAvailability, setExamAvailability] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(true);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
 
   // ---- Student info (localStorage se) ----
   const getStudentData = () => {
@@ -119,7 +125,8 @@ export default function Exam() {
     {
       id: 8,
       type: 'multiple-choice',
-      question: 'Which lifecycle method is called after a component is mounted?',
+      question:
+        'Which lifecycle method is called after a component is mounted?',
       options: [
         'componentWillMount',
         'componentDidMount',
@@ -165,7 +172,71 @@ export default function Exam() {
   const handleStartExam = () => {
     setExamStarted(true);
     setExamStartTime(new Date().toISOString());
+
+    // Set timer based on exam availability data
+    if (examAvailability && examAvailability.timeRemaining) {
+      setTimeLeft(examAvailability.timeRemaining);
+    }
   };
+
+  // Check exam availability on component mount
+  useEffect(() => {
+    if (!examId) {
+      setCheckingAvailability(false);
+      return;
+    }
+
+    const checkAvailability = async () => {
+      try {
+        const baseUrl =
+          import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+        const response = await fetch(
+          `${baseUrl}/nextgen/exams/${examId}/availability`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          setExamAvailability(data.data);
+        }
+      } catch (error) {
+        console.error('Error checking exam availability:', error);
+      } finally {
+        setCheckingAvailability(false);
+      }
+    };
+
+    checkAvailability();
+  }, [examId]);
+
+  // Timer effect with auto-submit
+  useEffect(() => {
+    if (examStarted && !examSubmitted && timeLeft > 0) {
+      // Show warnings
+      if (timeLeft === 300 && !showTimeWarning) {
+        setWarningMessage('⏰ 5 minutes remaining!');
+        setShowTimeWarning(true);
+        setTimeout(() => setShowTimeWarning(false), 5000);
+      }
+
+      if (timeLeft === 60 && !showTimeWarning) {
+        setWarningMessage('⚠️ 1 minute remaining!');
+        setShowTimeWarning(true);
+        setTimeout(() => setShowTimeWarning(false), 5000);
+      }
+
+      const timer = setTimeout(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+
+    // Auto-submit when time expires
+    if (examStarted && !examSubmitted && timeLeft === 0) {
+      alert('⏰ Time is up! Your exam will be submitted automatically.');
+      handleSubmitExam();
+    }
+  }, [examStarted, examSubmitted, timeLeft, showTimeWarning]);
 
   const getAnsweredCount = () => {
     return Object.keys(answers).length;
@@ -187,23 +258,21 @@ export default function Exam() {
     });
     return Math.round((correct / questions.length) * 100);
   };
-    //Window change during the exam
-    useEffect(() => {
-        const handleVisibility = () => {
-            if (document.hidden && examStarted  && !examSubmitted && timeLeft > 0) {
-                setWarningCount((count) => count + 1);
-                setShowBanner(true);
-                setShowPopup(true);
+  //Window change during the exam
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden && examStarted && !examSubmitted && timeLeft > 0) {
+        setWarningCount((count) => count + 1);
+        setShowBanner(true);
+        setShowPopup(true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () =>
+      document.removeEventListener('visibilitychange', handleVisibility);
+  }, [document.hidden]);
 
-            }
-
-        };
-        document.addEventListener("visibilitychange", handleVisibility);
-        return () =>
-            document.removeEventListener("visibilitychange", handleVisibility);
-    }, [document.hidden]);
-
-    // ---- Exam submit: backend call to ng_submission_exams ----
+  // ---- Exam submit: backend call to ng_submission_exams ----
   async function handleSubmitExam() {
     try {
       if (isSubmitting || examSubmitted) return;
@@ -232,9 +301,7 @@ export default function Exam() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${
-              localStorage.getItem('authToken') || ''
-            }`,
+            Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
           },
           body: JSON.stringify({
             studentId,
@@ -262,19 +329,6 @@ export default function Exam() {
       setIsSubmitting(false);
     }
   }
-
-  // Timer effect
-  useEffect(() => {
-    if (examStarted && !examSubmitted && timeLeft > 0) {
-      const timer = setTimeout(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && !examSubmitted && examStarted) {
-      // Auto-submit when time is over
-      handleSubmitExam();
-    }
-  }, [timeLeft, examStarted, examSubmitted]);
 
   // ---- Result screen ----
   if (examSubmitted) {
@@ -386,8 +440,7 @@ export default function Exam() {
                     fontSize: '0.875rem',
                     color: '#6b7280',
                   }}>
-                  Passing score: {examData.passingScore}% • Your score:{' '}
-                  {score}%
+                  Passing score: {examData.passingScore}% • Your score: {score}%
                 </div>
               </div>
             </div>
@@ -429,6 +482,129 @@ export default function Exam() {
 
   // ---- Pre-exam instructions ----
   if (!examStarted) {
+    // Show loading while checking availability
+    if (checkingAvailability) {
+      return (
+        <div
+          className='container'
+          style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+          <div
+            style={{
+              maxWidth: '600px',
+              margin: '0 auto',
+              textAlign: 'center',
+            }}>
+            <div className='service-card'>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+              <h2>Checking Exam Availability...</h2>
+              <p style={{ color: '#6b7280' }}>
+                Please wait while we verify exam access.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show exam not started message
+    if (examAvailability && examAvailability.status === 'not-started') {
+      const startDate = new Date(examAvailability.startTime);
+      const hours = Math.floor(examAvailability.timeUntilStart / 3600);
+      const minutes = Math.floor((examAvailability.timeUntilStart % 3600) / 60);
+
+      return (
+        <div
+          className='container'
+          style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+          <div
+            style={{
+              maxWidth: '600px',
+              margin: '0 auto',
+              textAlign: 'center',
+            }}>
+            <div
+              className='service-card'
+              style={{ border: '2px solid #f59e0b' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏰</div>
+              <h2 style={{ color: '#d97706' }}>Exam Has Not Started Yet</h2>
+              <p style={{ color: '#6b7280', margin: '1.5rem 0' }}>
+                This exam will be available starting:
+              </p>
+              <div
+                style={{
+                  background: '#fef3c7',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
+                  color: '#92400e',
+                  fontWeight: '600',
+                }}>
+                {startDate.toLocaleString()}
+              </div>
+              <p style={{ color: '#6b7280' }}>
+                Time remaining: {hours > 0 && `${hours}h `}
+                {minutes}m
+              </p>
+              <Link
+                to='/nextgen/login'
+                className='btn-primary'
+                style={{ marginTop: '2rem' }}>
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show exam ended message
+    if (examAvailability && examAvailability.status === 'ended') {
+      const endDate = new Date(examAvailability.endTime);
+
+      return (
+        <div
+          className='container'
+          style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+          <div
+            style={{
+              maxWidth: '600px',
+              margin: '0 auto',
+              textAlign: 'center',
+            }}>
+            <div
+              className='service-card'
+              style={{ border: '2px solid #ef4444' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
+              <h2 style={{ color: '#dc2626' }}>Exam Has Ended</h2>
+              <p style={{ color: '#6b7280', margin: '1.5rem 0' }}>
+                This exam ended on:
+              </p>
+              <div
+                style={{
+                  background: '#fef2f2',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
+                  color: '#991b1b',
+                  fontWeight: '600',
+                }}>
+                {endDate.toLocaleString()}
+              </div>
+              <p style={{ color: '#6b7280' }}>
+                No more submissions are allowed for this exam.
+              </p>
+              <Link
+                to='/nextgen/login'
+                className='btn-primary'
+                style={{ marginTop: '2rem' }}>
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         className='container'
@@ -508,8 +684,7 @@ export default function Exam() {
             {/* Exam Details */}
             <div className='service-card'>
               <h3 className='service-title'>Exam Details</h3>
-              <div
-                style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>
+              <div style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>
                 <div
                   style={{
                     marginBottom: '0.75rem',
@@ -523,9 +698,7 @@ export default function Exam() {
                     }}>
                     Duration
                   </div>
-                  <div style={{ color: '#6b7280' }}>
-                    {examData.duration}
-                  </div>
+                  <div style={{ color: '#6b7280' }}>{examData.duration}</div>
                 </div>
                 <div
                   style={{
@@ -593,8 +766,7 @@ export default function Exam() {
               background: '#f8fafc',
               borderRadius: '0.75rem',
             }}>
-            <h3
-              style={{ color: '#374151', marginBottom: '1rem' }}>
+            <h3 style={{ color: '#374151', marginBottom: '1rem' }}>
               Need Help?
             </h3>
             <p
@@ -631,374 +803,376 @@ export default function Exam() {
   const currentQ = questions[currentQuestion];
 
   return (
-      <>
-          {showBanner && (
-              <div style={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 1100
-              }}>
-                  <TopBanner />
-              </div>
-          )}
-    <divs
-      className='container'
-      style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          {showPopup && (
-              <WarningPopup
-                  onClose={() => {
-                      setShowBanner(false);
-                      setShowPopup(false);
-                  }}
-              />
-          )}
-        {/* Exam Header */}
+    <>
+      {showBanner && (
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '2rem',
-            padding: '1rem',
-            background: 'white',
-            borderRadius: '0.75rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1100,
           }}>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: '1.5rem',
-                color: '#374151',
-              }}>
-              {examData.title}
-            </h1>
-            <p
-              style={{
-                margin: '0.25rem 0 0 0',
-                color: '#6b7280',
-                fontSize: '0.875rem',
-              }}>
-              Question {currentQuestion + 1} of {questions.length}
-            </p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: timeLeft < 600 ? '#ef4444' : '#374151',
-                marginBottom: '0.25rem',
-              }}>
-              {formatTime(timeLeft)}
-            </div>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                color: '#6b7280',
-              }}>
-              Time Remaining
-            </div>
-          </div>
+          <TopBanner />
         </div>
+      )}
+      <divs
+        className='container'
+        style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          {showPopup && (
+            <WarningPopup
+              onClose={() => {
+                setShowBanner(false);
+                setShowPopup(false);
+              }}
+            />
+          )}
+          {/* Time Warning Banner */}
+          {showTimeWarning && (
+            <div
+              style={{
+                position: 'fixed',
+                top: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 1000,
+                background: timeLeft <= 60 ? '#dc2626' : '#f59e0b',
+                color: 'white',
+                padding: '1rem 2rem',
+                borderRadius: '0.5rem',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                animation: 'pulse 1s ease-in-out infinite',
+              }}>
+              {warningMessage}
+            </div>
+          )}
 
-        {submitError && (
+          {/* Exam Header */}
           <div
             style={{
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem',
+              padding: '1rem',
+              background: 'white',
               borderRadius: '0.75rem',
-              padding: '0.75rem 1rem',
-              marginBottom: '1rem',
-              color: '#b91c1c',
-              fontSize: '0.875rem',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             }}>
-            {submitError}
+            <div>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: '1.5rem',
+                  color: '#374151',
+                }}>
+                {examData.title}
+              </h1>
+              <p
+                style={{
+                  margin: '0.25rem 0 0 0',
+                  color: '#6b7280',
+                  fontSize: '0.875rem',
+                }}>
+                Question {currentQuestion + 1} of {questions.length}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div
+                style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: timeLeft < 600 ? '#ef4444' : '#374151',
+                  marginBottom: '0.25rem',
+                }}>
+                {formatTime(timeLeft)}
+              </div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#6b7280',
+                }}>
+                Time Remaining
+              </div>
+            </div>
           </div>
-        )}
 
-        <div
-          className='services-grid'
-          style={{ gridTemplateColumns: '3fr 1fr' }}>
-          {/* Question Area */}
-          <div className='service-card' style={{ height: 'fit-content' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
+          {submitError && (
+            <div
+              style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '0.75rem',
+                padding: '0.75rem 1rem',
+                marginBottom: '1rem',
+                color: '#b91c1c',
+                fontSize: '0.875rem',
+              }}>
+              {submitError}
+            </div>
+          )}
+
+          <div
+            className='services-grid'
+            style={{ gridTemplateColumns: '3fr 1fr' }}>
+            {/* Question Area */}
+            <div className='service-card' style={{ height: 'fit-content' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div
+                  style={{
+                    fontSize: '0.875rem',
+                    color: '#6b7280',
+                    marginBottom: '0.5rem',
+                  }}>
+                  Question {currentQuestion + 1} of {questions.length}
+                </div>
+                <h2
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    lineHeight: '1.6',
+                    marginBottom: '1.5rem',
+                  }}>
+                  {currentQ.question}
+                </h2>
+              </div>
+
+              {/* Answer Options */}
+              {currentQ.type === 'multiple-choice' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                  }}>
+                  {currentQ.options.map((option, index) => (
+                    <label
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        padding: '1rem',
+                        border:
+                          answers[currentQ.id] === index
+                            ? '2px solid #3b82f6'
+                            : '2px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        background:
+                          answers[currentQ.id] === index ? '#f0f9ff' : 'white',
+                        transition: 'all 0.2s ease',
+                      }}>
+                      <input
+                        type='radio'
+                        name={`question-${currentQ.id}`}
+                        value={index}
+                        checked={answers[currentQ.id] === index}
+                        onChange={() => handleAnswerChange(currentQ.id, index)}
+                      />
+                      <span style={{ flex: 1 }}>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {(currentQ.type === 'text' || currentQ.type === 'code') && (
+                <textarea
+                  value={answers[currentQ.id] || ''}
+                  onChange={(e) =>
+                    handleAnswerChange(currentQ.id, e.target.value)
+                  }
+                  rows={currentQ.type === 'code' ? 8 : 4}
+                  className='form-input'
+                  placeholder={
+                    currentQ.type === 'code'
+                      ? 'Write your code here...'
+                      : 'Write your answer here...'
+                  }
+                  style={{
+                    fontFamily:
+                      currentQ.type === 'code' ? 'monospace' : 'inherit',
+                    fontSize: currentQ.type === 'code' ? '0.875rem' : '1rem',
+                  }}
+                />
+              )}
+
+              {/* Navigation Buttons */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: '2rem',
+                  paddingTop: '1.5rem',
+                  borderTop: '1px solid #e5e7eb',
+                }}>
+                <button
+                  onClick={() =>
+                    setCurrentQuestion(Math.max(0, currentQuestion - 1))
+                  }
+                  disabled={currentQuestion === 0}
+                  className='btn-secondary'
+                  style={{
+                    opacity: currentQuestion === 0 ? 0.5 : 1,
+                    cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+                  }}>
+                  Previous
+                </button>
+
+                {currentQuestion === questions.length - 1 ? (
+                  <button
+                    onClick={() => setShowConfirmSubmit(true)}
+                    className='btn-primary'
+                    style={{
+                      background: '#22c55e',
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : 'Submit Exam'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() =>
+                      setCurrentQuestion(
+                        Math.min(questions.length - 1, currentQuestion + 1)
+                      )
+                    }
+                    className='btn-primary'>
+                    Next
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Question Navigation */}
+            <div className='service-card' style={{ height: 'fit-content' }}>
+              <h3 className='service-title'>Question Navigation</h3>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
+                  gap: '0.5rem',
+                  marginBottom: '1.5rem',
+                }}>
+                {questions.map((q, index) => (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentQuestion(index)}
+                    style={{
+                      width: '2.5rem',
+                      height: '2.5rem',
+                      borderRadius: '0.375rem',
+                      border: '2px solid',
+                      borderColor:
+                        currentQuestion === index
+                          ? '#3b82f6'
+                          : answers[q.id] !== undefined
+                          ? '#22c55e'
+                          : '#e5e7eb',
+                      background:
+                        currentQuestion === index
+                          ? '#3b82f6'
+                          : answers[q.id] !== undefined
+                          ? '#22c55e'
+                          : 'white',
+                      color:
+                        currentQuestion === index || answers[q.id] !== undefined
+                          ? 'white'
+                          : '#6b7280',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}>
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+
               <div
                 style={{
                   fontSize: '0.875rem',
                   color: '#6b7280',
-                  marginBottom: '0.5rem',
-                }}>
-                Question {currentQuestion + 1} of {questions.length}
-              </div>
-              <h2
-                style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#374151',
                   lineHeight: '1.6',
-                  marginBottom: '1.5rem',
                 }}>
-                {currentQ.question}
-              </h2>
-            </div>
-
-            {/* Answer Options */}
-            {currentQ.type === 'multiple-choice' && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.75rem',
-                }}>
-                {currentQ.options.map((option, index) => (
-                  <label
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '1rem',
-                      border:
-                        answers[currentQ.id] === index
-                          ? '2px solid #3b82f6'
-                          : '2px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      background:
-                        answers[currentQ.id] === index
-                          ? '#f0f9ff'
-                          : 'white',
-                      transition: 'all 0.2s ease',
-                    }}>
-                    <input
-                      type='radio'
-                      name={`question-${currentQ.id}`}
-                      value={index}
-                      checked={answers[currentQ.id] === index}
-                      onChange={() =>
-                        handleAnswerChange(currentQ.id, index)
-                      }
-                    />
-                    <span style={{ flex: 1 }}>{option}</span>
-                  </label>
-                ))}
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <span style={{ color: '#22c55e' }}>●</span> Answered (
+                  {getAnsweredCount()})
+                </div>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <span style={{ color: '#6b7280' }}>●</span> Not Answered (
+                  {questions.length - getAnsweredCount()})
+                </div>
+                <div>
+                  <span style={{ color: '#3b82f6' }}>●</span> Current Question
+                </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {(currentQ.type === 'text' || currentQ.type === 'code') && (
-              <textarea
-                value={answers[currentQ.id] || ''}
-                onChange={(e) =>
-                  handleAnswerChange(currentQ.id, e.target.value)
-                }
-                rows={currentQ.type === 'code' ? 8 : 4}
-                className='form-input'
-                placeholder={
-                  currentQ.type === 'code'
-                    ? 'Write your code here...'
-                    : 'Write your answer here...'
-                }
-                style={{
-                  fontFamily:
-                    currentQ.type === 'code' ? 'monospace' : 'inherit',
-                  fontSize:
-                    currentQ.type === 'code' ? '0.875rem' : '1rem',
-                }}
-              />
-            )}
-
-            {/* Navigation Buttons */}
+          {/* Submit Confirmation Modal */}
+          {showConfirmSubmit && (
             <div
               style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
                 display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: '2rem',
-                paddingTop: '1.5rem',
-                borderTop: '1px solid #e5e7eb',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
               }}>
-              <button
-                onClick={() =>
-                  setCurrentQuestion(
-                    Math.max(0, currentQuestion - 1)
-                  )
-                }
-                disabled={currentQuestion === 0}
-                className='btn-secondary'
-                style={{
-                  opacity: currentQuestion === 0 ? 0.5 : 1,
-                  cursor:
-                    currentQuestion === 0
-                      ? 'not-allowed'
-                      : 'pointer',
-                }}>
-                Previous
-              </button>
-
-              {currentQuestion === questions.length - 1 ? (
-                <button
-                  onClick={() => setShowConfirmSubmit(true)}
-                  className='btn-primary'
-                  style={{
-                    background: '#22c55e',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    cursor: isSubmitting
-                      ? 'not-allowed'
-                      : 'pointer',
-                  }}
-                  disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Submit Exam'}
-                </button>
-              ) : (
-                <button
-                  onClick={() =>
-                    setCurrentQuestion(
-                      Math.min(
-                        questions.length - 1,
-                        currentQuestion + 1
-                      )
-                    )
-                  }
-                  className='btn-primary'>
-                  Next
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Question Navigation */}
-          <div className='service-card' style={{ height: 'fit-content' }}>
-            <h3 className='service-title'>Question Navigation</h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(5, 1fr)',
-                gap: '0.5rem',
-                marginBottom: '1.5rem',
-              }}>
-              {questions.map((q, index) => (
-                <button
-                  key={q.id}
-                  onClick={() => setCurrentQuestion(index)}
-                  style={{
-                    width: '2.5rem',
-                    height: '2.5rem',
-                    borderRadius: '0.375rem',
-                    border: '2px solid',
-                    borderColor:
-                      currentQuestion === index
-                        ? '#3b82f6'
-                        : answers[q.id] !== undefined
-                        ? '#22c55e'
-                        : '#e5e7eb',
-                    background:
-                      currentQuestion === index
-                        ? '#3b82f6'
-                        : answers[q.id] !== undefined
-                        ? '#22c55e'
-                        : 'white',
-                    color:
-                      currentQuestion === index ||
-                      answers[q.id] !== undefined
-                        ? 'white'
-                        : '#6b7280',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}>
-                  {index + 1}
-                </button>
-              ))}
-            </div>
-
-            <div
-              style={{
-                fontSize: '0.875rem',
-                color: '#6b7280',
-                lineHeight: '1.6',
-              }}>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <span style={{ color: '#22c55e' }}>●</span> Answered (
-                {getAnsweredCount()})
-              </div>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <span style={{ color: '#6b7280' }}>●</span> Not Answered (
-                {questions.length - getAnsweredCount()})
-              </div>
-              <div>
-                <span style={{ color: '#3b82f6' }}>●</span> Current
-                Question
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Confirmation Modal */}
-        {showConfirmSubmit && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-            }}>
-            <div
-              className='service-card'
-              style={{ maxWidth: '500px', margin: '1rem' }}>
-              <h3
-                style={{ color: '#374151', marginBottom: '1rem' }}>
-                Submit Exam?
-              </h3>
-              <p
-                style={{
-                  color: '#6b7280',
-                  marginBottom: '1.5rem',
-                }}>
-                Are you sure you want to submit your exam? You have
-                answered {getAnsweredCount()} out of {questions.length}{' '}
-                questions. You cannot change your answers after
-                submission.
-              </p>
               <div
-                style={{
-                  display: 'flex',
-                  gap: '1rem',
-                  justifyContent: 'flex-end',
-                }}>
-                <button
-                  onClick={() => setShowConfirmSubmit(false)}
-                  className='btn-secondary'>
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitExam}
-                  className='btn-primary'
+                className='service-card'
+                style={{ maxWidth: '500px', margin: '1rem' }}>
+                <h3 style={{ color: '#374151', marginBottom: '1rem' }}>
+                  Submit Exam?
+                </h3>
+                <p
                   style={{
-                    background: '#22c55e',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    cursor: isSubmitting
-                      ? 'not-allowed'
-                      : 'pointer',
-                  }}
-                  disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Yes, Submit Exam'}
-                </button>
+                    color: '#6b7280',
+                    marginBottom: '1.5rem',
+                  }}>
+                  Are you sure you want to submit your exam? You have answered{' '}
+                  {getAnsweredCount()} out of {questions.length} questions. You
+                  cannot change your answers after submission.
+                </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    justifyContent: 'flex-end',
+                  }}>
+                  <button
+                    onClick={() => setShowConfirmSubmit(false)}
+                    className='btn-secondary'>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmitExam}
+                    className='btn-primary'
+                    style={{
+                      background: '#22c55e',
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : 'Yes, Submit Exam'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </divs>
-      </>
+          )}
+        </div>
+      </divs>
+    </>
   );
 }

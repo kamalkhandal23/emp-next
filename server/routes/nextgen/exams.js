@@ -4,12 +4,13 @@ import {
   getAllExams,
   getExamById,
   getExamByName,
+  checkExamAvailability,
   updateExamStatus,
   updateExam,
   deleteExam,
   getSubmissionsForExam,
   submitExam,
-  gradeSubmission
+  gradeSubmission,
 } from '../../controllers/nextgen/examController.js';
 
 const router = express.Router();
@@ -22,6 +23,9 @@ router.get('/', getAllExams);
 
 // Get exam by ID
 router.get('/id/:id', getExamById);
+
+// Check exam availability (time-based)
+router.get('/:id/availability', checkExamAvailability);
 
 // Get exam by name
 router.get('/name/:examName', getExamByName);
