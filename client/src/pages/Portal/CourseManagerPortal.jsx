@@ -54,16 +54,12 @@ export default function CourseManagerPortal() {
     prerequisites: '',
     icon: '📘',
     visibility: 'draft',
-<<<<<<< HEAD
-    rating: 0,
-=======
     banner_url: '',
     courseCode: '',
     start_date: '',
     end_date: '',
     registration_start: '',
     registration_end: '',
->>>>>>> 1c398103 (Add course timing feature and improve course management)
   });
 
   const [newCourse, setNewCourse] = useState({
@@ -75,16 +71,12 @@ export default function CourseManagerPortal() {
     prerequisites: '',
     icon: '📘',
     visibility: 'draft',
-<<<<<<< HEAD
-    rating: 0,
-=======
     banner_url: '',
     courseCode: '',
     start_date: '',
     end_date: '',
     registration_start: '',
     registration_end: '',
->>>>>>> 1c398103 (Add course timing feature and improve course management)
   });
 
   // Filtered courses based on frontend filters
@@ -378,12 +370,8 @@ export default function CourseManagerPortal() {
       duration: course.duration || '',
       description: course.description || '',
       prerequisites: course.prerequisites || '',
-<<<<<<< HEAD
       icon: course.icon || '🎓',
       rating: course.rating || 0,
-=======
-      icon: course.icon || '📘',
->>>>>>> 1c398103 (Add course timing feature and improve course management)
       visibility: course.visibility || 'draft',
       banner_url: course.banner_url || '',
       courseCode: course.courseCode || '',
@@ -398,43 +386,6 @@ export default function CourseManagerPortal() {
   const handleAddCourse = async () => {
     setLoading(true);
     try {
-<<<<<<< HEAD
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/nextgen/courses`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newCourse),
-        }
-      );
-
-      if (res.ok) {
-        await fetchCourses();
-        setShowAddCourse(false);
-        setNewCourse({
-          slug: '',
-          title: '',
-          subtitle: '',
-          duration: '',
-          description: '',
-          prerequisites: '',
-          icon: '🎓',
-          visibility: 'draft',
-          rating: 0,
-        });
-        alert('Course added successfully!');
-      } else {
-        const err = await res.json().catch(() => ({}));
-        alert(`Error adding course: ${err?.message || 'Failed'}`);
-      }
-    } catch (e) {
-      console.error('Add course failed:', e);
-      alert('Error adding course');
-=======
       await apiClient.createCourse(newCourse);
       await fetchCourses();
       setShowAddCourse(false);
@@ -458,45 +409,11 @@ export default function CourseManagerPortal() {
     } catch (error) {
       console.error('Add course failed:', error);
       alert(`Error adding course: ${error.message}`);
->>>>>>> 1c398103 (Add course timing feature and improve course management)
     } finally {
       setLoading(false);
     }
   };
 
-<<<<<<< HEAD
-    const handleActionClick = (action) => {
-        console.log(action)
-        if (action === "Create exams") {
-        navigate("/portal/coursemanager/createexam");
-        }
-        if (action === "Create Assignments") {
-        navigate("/portal/coursemanager/createassignment");
-        }
-        if (action === "Manage Exams") {
-        navigate("/portal/coursemanager/manageexams");
-        }
-        if (action === "Create Coding exams") {
-        navigate("/portal/coursemanager/createcodingexam"); 
-        }
-        if (action === "Manage Coding Exams") {
-        navigate("/portal/coursemanager/managecodingexams");
-        }
-        if (action === "Manage Assignments") {
-        navigate("/portal/coursemanager/manageassignments");
-        }
-        if (action === "Grade Assignments") {
-        navigate("/portal/coursemanager/gradeassignments");
-        }
-        if (action === "Grade Exams") {
-        navigate("/portal/coursemanager/gradeexams");
-        }
-        if (action === "Add Lectures to Course") {
-        navigate("/portal/coursemanager/courselecture");
-        }
-
-    };
-=======
   const handleActionClick = (action) => {
     console.log(action);
     if (action === 'Create exams') {
@@ -523,8 +440,10 @@ export default function CourseManagerPortal() {
     if (action === 'Grade Exams') {
       navigate('/portal/coursemanager/gradeexams');
     }
+    if (action === 'Add Lectures to Course') {
+      navigate('/portal/coursemanager/courselecture');
+    }
   };
->>>>>>> 1c398103 (Add course timing feature and improve course management)
 
   const handleDeleteCourse = async (course) => {
     try {
@@ -1028,13 +947,9 @@ export default function CourseManagerPortal() {
                   <div
                     key={course?._id || idx}
                     className='table-row'
-<<<<<<< HEAD
-                    style={{ gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr 1fr auto' }}>
-=======
                     style={{
                       gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr auto',
                     }}>
->>>>>>> 1c398103 (Add course timing feature and improve course management)
                     <div style={{ fontWeight: 500 }}>
                       {course?.icon} {course?.title}
                     </div>
@@ -1092,7 +1007,7 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Assignments' style={{color : 'black'}}>
+                <Card title='Assignments' style={{ color: 'black' }}>
                   <ActionList
                     actions={[
                       'Create Assignments',
@@ -1663,16 +1578,18 @@ export default function CourseManagerPortal() {
                 placeholder='🎓'
               />
               <TextField
-<<<<<<< HEAD
                 label='Rating'
                 value={newCourse.rating}
-                onChange={(v) => setNewCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))}
+                onChange={(v) =>
+                  setNewCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))
+                }
                 type='number'
                 min='0'
                 max='5'
                 step='0.1'
                 placeholder='0.0'
-=======
+              />
+              <TextField
                 label='Course Code'
                 value={newCourse.courseCode}
                 onChange={(v) => setNewCourse((p) => ({ ...p, courseCode: v }))}
@@ -1683,7 +1600,6 @@ export default function CourseManagerPortal() {
                 value={newCourse.banner_url}
                 onChange={(v) => setNewCourse((p) => ({ ...p, banner_url: v }))}
                 placeholder='https://example.com/banner.jpg'
->>>>>>> 1c398103 (Add course timing feature and improve course management)
               />
               <Select
                 label='Visibility'
@@ -1807,16 +1723,18 @@ export default function CourseManagerPortal() {
                 placeholder='🎓'
               />
               <TextField
-<<<<<<< HEAD
                 label='Rating'
                 value={editCourse.rating}
-                onChange={(v) => setEditCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))}
+                onChange={(v) =>
+                  setEditCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))
+                }
                 type='number'
                 min='0'
                 max='5'
                 step='0.1'
                 placeholder='0.0'
-=======
+              />
+              <TextField
                 label='Course Code'
                 value={editCourse.courseCode}
                 onChange={(v) =>
@@ -1831,7 +1749,6 @@ export default function CourseManagerPortal() {
                   setEditCourse((p) => ({ ...p, banner_url: v }))
                 }
                 placeholder='https://example.com/banner.jpg'
->>>>>>> 1c398103 (Add course timing feature and improve course management)
               />
               <Select
                 label='Visibility'
@@ -2077,9 +1994,6 @@ function Modal({ title, children, onClose }) {
   );
 }
 
-<<<<<<< HEAD
-function TextField({ label, value, onChange, placeholder, required, type = 'text', min, max, step }) {
-=======
 function TextField({
   label,
   value,
@@ -2088,7 +2002,6 @@ function TextField({
   required,
   type = 'text',
 }) {
->>>>>>> 1c398103 (Add course timing feature and improve course management)
   return (
     <div className='form-group'>
       <label className='form-label'>{label}</label>
@@ -2099,12 +2012,6 @@ function TextField({
         placeholder={placeholder}
         required={required}
         type={type}
-<<<<<<< HEAD
-        min={min}
-        max={max}
-        step={step}
-=======
->>>>>>> 1c398103 (Add course timing feature and improve course management)
       />
     </div>
   );

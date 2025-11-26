@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { apiClient } from '../../utils/api';
+import { apiClient } from '@utils/api.js';
 
 export default function StudentLogin() {
   const [loginData, setLoginData] = useState({
@@ -159,7 +159,7 @@ export default function StudentLogin() {
         className='container'
         style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          {/* Welcome Header */}
+          {/* ,Welcome Header */}
           <div
             className='service-card'
             style={{
@@ -471,13 +471,23 @@ export default function StudentLogin() {
                   to={`/nextgen/class-link`}
                   className='btn-outline'
                   style={{ justifyContent: 'flex-start' }}>
-                  📚 Class Lecture
+                  📚 Course Handbook
                 </Link>
+
                 <Link
                   to={`/nextgen/lectures`}
-                  className='btn-outline'
-                  style={{ justifyContent: 'flex-start' }}>
-                  🎥 Video Lectures
+                  style={{ textDecoration: 'none' }}>
+                  <button
+                    className='btn-outline'
+                    style={{
+                      justifyContent: 'flex-start',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '10px 16px',
+                      cursor: 'pointer',
+                    }}>
+                    🎥 View Available Lectures
+                  </button>
                 </Link>
                 <Link
                   to='/nextgen/coding-exams'
@@ -627,136 +637,116 @@ export default function StudentLogin() {
               style={{ borderColor: loginError ? '#ef4444' : undefined }}
             />
           </div>
-        </form>
 
-        {/* Course Materials */}
-        <div className='service-card'>
-          <h3 className='service-title'>Course Materials</h3>
+          {loginError && (
+            <div
+              style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#dc2626',
+                padding: '0.75rem',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                marginBottom: '1rem',
+              }}>
+              {loginError}
+            </div>
+          )}
+
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: '0.75rem',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem',
             }}>
+            <label
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+              }}>
+              <input
+                type='checkbox'
+                name='rememberMe'
+                checked={loginData.rememberMe}
+                onChange={handleInputChange}
+              />
+              <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+                Remember me
+              </span>
+            </label>
             <button
-              className='btn-outline'
-              style={{ justifyContent: 'flex-start' }}>
-              📚 Course Handbook
+              type='button'
+              onClick={handleForgotPassword}
+              disabled={showForgotPassword}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#3b82f6',
+                fontSize: '0.875rem',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}>
+              {showForgotPassword ? 'Sending...' : 'Forgot Password?'}
             </button>
-            <Link
-              to={`/nextgen/lectures`}
-              className='btn-outline'
-              style={{ justifyContent: 'flex-start' }}>
-              🎥 Video Lectures
-            </Link>
-            <Link
-              to='/nextgen/coding-exams'
-              className='btn-outline'
-              style={{ justifyContent: 'flex-start' }}>
-              💻 Coding Exams
-            </Link>
-            <Link
-              to='/nextgen/results'
-              className='btn-outline'
-              style={{ justifyContent: 'flex-start' }}>
-              📊 View All Results
-            </Link>
           </div>
-        </div>
-      </div>
 
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem',
-        }}>
-        <label
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            cursor: 'pointer',
-          }}>
-          <input
-            type='checkbox'
-            name='rememberMe'
-            checked={loginData.rememberMe}
-            onChange={handleInputChange}
-          />
-          <span style={{ fontSize: '0.875rem', color: '#374151' }}>
-            Remember me
-          </span>
-        </label>
-        <button
-          type='button'
-          onClick={handleForgotPassword}
-          disabled={showForgotPassword}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#3b82f6',
-            fontSize: '0.875rem',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-          }}>
-          {showForgotPassword ? 'Sending...' : 'Forgot Password?'}
-        </button>
-      </div>
+          <button
+            type='submit'
+            disabled={isLoggingIn}
+            className='btn-primary'
+            style={{
+              width: '100%',
+              opacity: isLoggingIn ? 0.7 : 1,
+              cursor: isLoggingIn ? 'not-allowed' : 'pointer',
+            }}>
+            {isLoggingIn ? 'Logging in...' : 'Login to Dashboard'}
+          </button>
+        </form>
 
-      <button
-        type='submit'
-        disabled={isLoggingIn}
-        className='btn-primary'
-        style={{
-          width: '100%',
-          opacity: isLoggingIn ? 0.7 : 1,
-          cursor: isLoggingIn ? 'not-allowed' : 'pointer',
-        }}>
-        {isLoggingIn ? 'Logging in...' : 'Login to Dashboard'}
-      </button>
-
-      {/* Sign Up Link */}
-      <div
-        style={{
-          textAlign: 'center',
-          marginTop: '2rem',
-          padding: '1.5rem',
-          background: '#f8fafc',
-          borderRadius: '0.75rem',
-        }}>
-        <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-          Don't have an account yet?
-        </p>
-        <Link to='/nextgen/enroll' className='btn-primary'>
-          Enroll in a Course
-        </Link>
-      </div>
-
-      {/* Help Section */}
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <p
-          style={{
-            color: '#9ca3af',
-            fontSize: '0.875rem',
-            marginBottom: '1rem',
-          }}>
-          Need help accessing your account?
-        </p>
+        {/* Sign Up Link */}
         <div
           style={{
-            display: 'flex',
-            gap: '1rem',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
+            textAlign: 'center',
+            marginTop: '2rem',
+            padding: '1.5rem',
+            background: '#f8fafc',
+            borderRadius: '0.75rem',
           }}>
-          <a href='mailto:support@nextgenfreeedu.com' className='btn-outline'>
-            Contact Support
-          </a>
-          <Link to='/nextgen' className='btn-outline'>
-            Back to Home
+          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+            Don't have an account yet?
+          </p>
+          <Link to='/nextgen/enroll' className='btn-primary'>
+            Enroll in a Course
           </Link>
+        </div>
+
+        {/* Help Section */}
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <p
+            style={{
+              color: '#9ca3af',
+              fontSize: '0.875rem',
+              marginBottom: '1rem',
+            }}>
+            Need help accessing your account?
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+            }}>
+            <a href='mailto:support@nextgenfreeedu.com' className='btn-outline'>
+              Contact Support
+            </a>
+            <Link to='/nextgen' className='btn-outline'>
+              Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

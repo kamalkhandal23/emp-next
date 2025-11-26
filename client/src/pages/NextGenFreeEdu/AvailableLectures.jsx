@@ -20,7 +20,8 @@ export default function AvailableLectures() {
       title: 'Intro to JavaScript',
       topic: 'JavaScript Basics',
       duration: '25 min',
-      description: 'Understanding variables and execution flow.',
+      description: 'Basics of variables, datatypes and execution flow.',
+      color: '#E3F2FD',
       videoUrl: 'https://youtube.com',
     },
     {
@@ -29,6 +30,7 @@ export default function AvailableLectures() {
       topic: 'React Fundamentals',
       duration: '32 min',
       description: 'Understanding components, props and hooks.',
+      color: '#FFF3E0',
       videoUrl: 'https://youtube.com',
     },
     {
@@ -36,7 +38,8 @@ export default function AvailableLectures() {
       title: 'MongoDB Crash Course',
       topic: 'Databases',
       duration: '28 min',
-      description: 'Documents, collections and query basics.',
+      description: 'Documents, collections and query intro.',
+      color: '#FCE4EC',
       videoUrl: 'https://youtube.com',
     },
   ];
@@ -48,12 +51,18 @@ export default function AvailableLectures() {
         const studentData = getStudentData();
         const studentId = studentData?._id || studentData?.id;
 
-        if (!studentId) throw new Error('Student ID not found');
+        if (!studentId) {
+          throw new Error('Student ID not found in storage');
+        }
 
         const data = await apiClient.getNextGenLectureVideos(studentId);
 
         if (data?.courses?.length > 0) {
           setCourses(data.courses);
+
+          demoLectures = data.courses;
+          console.log(demoLectures, 'Fetched lecture data:');
+          setCourses(demoLectures);
         } else {
           setCourses([
             {
@@ -78,185 +87,156 @@ export default function AvailableLectures() {
     fetchLectures();
   }, [id]);
 
-  // ---------- Group Lectures by Topic ----------
-  const groupByTopic = (lectures = []) => {
-    const groups = {};
-    lectures.forEach((lec) => {
-      if (!groups[lec.topic]) groups[lec.topic] = [];
-      groups[lec.topic].push(lec);
-    });
-    return groups;
-  };
-
   // ---------- Styles ----------
   const styles = {
     page: {
-      padding: 32,
-      background: '#F5F7FA',
+      padding: 30,
       minHeight: '100vh',
-      fontFamily: 'Inter, sans-serif',
+      background: 'linear-gradient(to bottom, #F6FAFF, #FFFFFF)',
+      fontFamily: 'Inter, Arial',
     },
-
     headerRow: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 32,
+      marginBottom: 20,
     },
-
     heading: {
-      fontSize: 36,
+      fontSize: 40,
       fontWeight: 800,
-      color: '#1A237E',
+      color: '#0D47A1',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
     },
-
+    bookIcon: {
+      width: 35,
+      height: 35,
+      background: '#0D47A1',
+      borderRadius: 6,
+    },
     toggleContainer: {
       display: 'flex',
       gap: 10,
     },
-
     toggleBtn: (active) => ({
       padding: '10px 18px',
-      borderRadius: 8,
+      borderRadius: 10,
       cursor: 'pointer',
-      border: active ? '2px solid #3949AB' : '2px solid #C5CAE9',
-      background: active ? '#3949AB' : 'white',
-      color: active ? 'white' : '#3F51B5',
+      backgroundColor: active ? '#1976D2' : 'white',
+      color: active ? 'white' : '#1976D2',
+      border: active ? '2px solid #1565C0' : '2px solid #90CAF9',
       fontWeight: 600,
-      transition: '0.3s',
+      transition: '0.25s',
     }),
-
-    topicCard: {
-      background: 'white',
-      padding: 18,
-      borderRadius: 12,
-      marginBottom: 14,
-      boxShadow: '0px 2px 10px rgba(0,0,0,0.1)',
-      cursor: 'pointer',
-      border: '1px solid #E8EAF6',
-    },
-
-    topicHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      fontSize: 20,
+    courseTitle: {
       fontWeight: 700,
-      color: '#1A237E',
+      fontSize: 24,
+      color: '#083875',
+      marginBottom: 14,
+      marginTop: 10,
     },
-
     lectureGrid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-      gap: 20,
-      marginTop: 18,
-      padding: 10,
+      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+      gap: 25,
     },
-
     lectureList: {
-      width: '100%',
-      marginTop: 18,
-      padding: 10,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 25,
     },
-
-    lectureCard: {
+    card: {
       padding: 20,
-      borderRadius: 12,
-      background: '#FFFFFF',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-      border: '1px solid #E0E0E0',
+      borderRadius: 18,
+      minHeight: 240,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      boxShadow: '0px 4px 14px rgba(0,0,0,0.15)',
+      border: '1px solid #dce3ed',
       transition: '0.3s',
     },
-
     title: {
-      fontSize: 18,
+      fontSize: 20,
       fontWeight: 700,
-      color: '#1A237E',
+      color: '#0D47A1',
       marginBottom: 6,
     },
-
     desc: {
-      fontSize: 14,
       color: '#555',
-      marginBottom: 10,
+      fontSize: 14,
+      marginBottom: 8,
     },
-
     duration: {
-      color: '#3949AB',
+      color: '#1976D2',
       fontWeight: 600,
     },
-
     btn: {
-      marginTop: 14,
-      padding: '10px 0',
+      padding: '12px 0',
       width: '100%',
-      borderRadius: 6,
-      background: '#3949AB',
       border: 'none',
+      borderRadius: 10,
+      background: '#1976D2',
       color: 'white',
       fontWeight: 700,
+      fontSize: 15,
       cursor: 'pointer',
-      transition: '0.3s',
+      transition: '0.25s',
+    },
+    btnHover: {
+      background: '#0D47A1',
+      transform: 'scale(1.03)',
     },
   };
 
-  // ---------- Render Lecture Cards ----------
+  // ---------- Render Lectures ----------
   const renderLectureCards = (lectures) => {
-    if (viewType === 'grid') {
-      return (
-        <div style={styles.lectureGrid}>
-          {lectures.map((lec) => (
-            <div key={lec._id} style={styles.lectureCard}>
+    const container =
+      viewType === 'grid' ? styles.lectureGrid : styles.lectureList;
+    return (
+      <div style={container}>
+        {lectures?.map((lec) => (
+          <div
+            key={lec._id}
+            style={{ ...styles.card, backgroundColor: lec.color }}
+            className='lectureCard'>
+            <div>
               <h3 style={styles.title}>{lec.title}</h3>
               <p style={styles.desc}>{lec.description}</p>
               <p style={styles.duration}>⏱ {lec.duration}</p>
-
-              <button
-                style={styles.btn}
-                onClick={() => window.open(lec.videoUrl, '_blank')}>
-                ▶ Watch Video
-              </button>
             </div>
-          ))}
-        </div>
-      );
-    }
-
-    // List View
-    return (
-      <table style={styles.lectureList}>
-        <tbody>
-          {lectures.map((lec) => (
-            <tr
-              key={lec._id}
-              style={{
-                background: 'white',
-                borderBottom: '1px solid #EEE',
-                padding: '12px 0',
-              }}>
-              <td style={{ padding: 12, fontWeight: 600 }}>{lec.title}</td>
-              <td style={{ padding: 12 }}>{lec.description}</td>
-              <td style={{ padding: 12, color: '#3949AB' }}>{lec.duration}</td>
-              <td style={{ padding: 12 }}>
-                <button
-                  style={{ ...styles.btn, padding: '8px 14px' }}
-                  onClick={() => window.open(lec.videoUrl, '_blank')}>
-                  ▶ Watch
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            <button
+              className='watchBtn'
+              style={styles.btn}
+              onClick={() => window.open(lec.videoUrl, '_blank')}>
+              ▶ Watch Now
+            </button>
+          </div>
+        ))}
+      </div>
     );
   };
 
+  // ---------- Hover Effects ----------
+  useEffect(() => {
+    document.querySelectorAll('.lectureCard').forEach((card) => {
+      card.onmouseenter = () => (card.style.transform = 'translateY(-5px)');
+      card.onmouseleave = () => (card.style.transform = 'translateY(0)');
+    });
+    document.querySelectorAll('.watchBtn').forEach((btn) => {
+      btn.onmouseenter = () => Object.assign(btn.style, styles.btnHover);
+      btn.onmouseleave = () => Object.assign(btn.style, styles.btn);
+    });
+  }, [courses, viewType]);
+
   return (
     <div style={styles.page}>
-      {/* HEADER */}
       <div style={styles.headerRow}>
-        <h1 style={styles.heading}>Available Lectures</h1>
-
+        <h1 style={styles.heading}>
+          <div style={styles.bookIcon}></div>
+          Available Lectures
+        </h1>
         <div style={styles.toggleContainer}>
           <div
             style={styles.toggleBtn(viewType === 'grid')}
@@ -270,37 +250,12 @@ export default function AvailableLectures() {
           </div>
         </div>
       </div>
-
-      {/* COURSES */}
-      {courses.map((course) => {
-        const topics = groupByTopic(course.lectures);
-
-        return (
-          <div key={course._id}>
-            <h2 style={{ fontSize: 26, fontWeight: 700, marginBottom: 16 }}>
-              {course.title}
-            </h2>
-
-            {Object.keys(topics).map((topic) => (
-              <div key={topic}>
-                <div
-                  style={styles.topicCard}
-                  onClick={() =>
-                    setOpenTopic(openTopic === topic ? null : topic)
-                  }>
-                  <div style={styles.topicHeader}>
-                    {/* 👉 ADDED VIDEO COUNT HERE */}
-                    {topic} ({topics[topic].length})
-                    <span>{openTopic === topic ? '▲' : '▼'}</span>
-                  </div>
-                </div>
-
-                {openTopic === topic && renderLectureCards(topics[topic])}
-              </div>
-            ))}
-          </div>
-        );
-      })}
+      {courses.map((course) => (
+        <div key={course._id || course.id}>
+          <h3 style={styles.courseTitle}>{course.title}</h3>
+          {renderLectureCards(course.lectures)}
+        </div>
+      ))}
     </div>
   );
 }

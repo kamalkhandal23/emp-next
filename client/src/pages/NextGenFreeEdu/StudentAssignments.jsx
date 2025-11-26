@@ -499,7 +499,7 @@ export default function StudentAssignments() {
                           );
                         }
                       }}>
-                      {isCompleted ? 'Retake Assignment' : 'Start Assignment'}
+                      {'Start Assignment'}
                     </button>
                     <button
                       className='btn-outline'

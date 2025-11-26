@@ -705,20 +705,6 @@ export default function AssignmentDetails() {
                       </button>
                     )}
 
-                    {submission.status === 'submitted' ||
-                    submission.status === 'graded' ? (
-                      <button
-                        className='btn-primary'
-                        style={{ width: '100%' }}
-                        onClick={() =>
-                          navigate(
-                            `/nextgen/assignments/${assignmentId}/submit`
-                          )
-                        }>
-                        🔄 Retake Assignment
-                      </button>
-                    ) : null}
-
                     <button
                       className='btn-outline'
                       style={{ width: '100%' }}

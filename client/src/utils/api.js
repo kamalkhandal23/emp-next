@@ -564,6 +564,10 @@ class ApiClient {
       `/nextgen/codingExams${queryString ? `?${queryString}` : ''}`
     );
   }
+  async getNextGenLectureVideos(id){
+      console.log(id,"api lecture student id");
+      return this.request(`/nextgen/lectureVideo/student/${id}`);
+  }
 
   async getNextGenCodingExamById(id) {
     return this.request(`/nextgen/codingExams/id/${id}`);
