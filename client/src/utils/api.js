@@ -1,5 +1,7 @@
 const API_BASE_URL =
-  'https://emp-h6p98jwpk-teamoflifeboxs-projects.vercel.app' || 'http://localhost:5002/api';
+  process.env.NODE_ENV === 'production'
+    ? 'https://nextgenfreeedu.netlify.app'
+    : 'http://localhost:5002/api';
 
 class ApiClient {
   constructor() {
