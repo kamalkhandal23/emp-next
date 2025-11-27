@@ -423,6 +423,9 @@ export default function CourseManagerPortal() {
         if (action === "Grade Exams") {
         navigate("/portal/coursemanager/gradeexams");
         }
+        if (action === "Add Lectures to Course") {
+        navigate("/portal/coursemanager/courselecture");
+        }
 
     };
 
@@ -1318,14 +1321,15 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Employee Reports'>
+                <Card title='Course Management'>
                   <ActionList
                     actions={[
-                      'Attendance Report',
-                      'Performance Report',
+                      'Add Lectures to Course',
+                      'Meeting',
                       'Payroll Report',
                       'Leave Report',
                     ]}
+                    onActionClick={handleActionClick}
                   />
                 </Card>
                 <Card title='Project Reports'>

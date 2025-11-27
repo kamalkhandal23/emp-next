@@ -163,6 +163,15 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
+    lectures: [
+      {
+        title: { type: String, required: true },
+        description: { type: String, required: true },
+        videoURL: { type: String },
+        pdfURL: { type: String },
+        created_at: { type: Date, default: Date.now }
+      }
+    ],
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'ng_users', required: true },
   },
   {

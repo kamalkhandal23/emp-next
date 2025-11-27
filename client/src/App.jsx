@@ -57,6 +57,7 @@ import GradeAssignments from './pages/NextGenFreeEdu/GradeAssignments';
 import GradeExams from './pages/NextGenFreeEdu/GradeExams';
 import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
+import CourseLecture from './pages/NextGenFreeEdu/CourseLecture';
 
 function MainLayout() {
   return (
@@ -283,6 +284,10 @@ export default function App() {
             <Route
               path='/portal/coursemanager/gradeexams'
               element={<GradeExams />}
+            />
+            <Route
+              path='/portal/coursemanager/courselecture'
+              element={<CourseLecture />}
             />
             <Route path='test' element={<TestConnection />} />
           </Routes>
