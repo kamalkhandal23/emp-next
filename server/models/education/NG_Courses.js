@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { model } from "mongoose";
+import { model } from 'mongoose';
 
 const courseSchema = new mongoose.Schema(
   {
@@ -33,12 +33,12 @@ const courseSchema = new mongoose.Schema(
     icon: {
       type: String,
       trim: true,
-      default: "📘",
+      default: '📘',
     },
     visibility: {
       type: String,
-      enum: ["draft", "published", "archived"],
-      default: "draft",
+      enum: ['draft', 'published', 'archived'],
+      default: 'draft',
     },
     banner_url: {
       type: String,
@@ -49,6 +49,7 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
+<<<<<<< HEAD
     lectures: [
       {
         title: { type: String, required: true },
@@ -65,24 +66,97 @@ const courseSchema = new mongoose.Schema(
       default: 0,
     },
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'ng_users', required: true },
+=======
+    // Course timing fields
+    start_date: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    end_date: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    registration_start: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    registration_end: {
+      type: Date,
+      required: false,
+      default: null,
+    },
+    created_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ng_users',
+      required: true,
+    },
+>>>>>>> 1c398103 (Add course timing feature and improve course management)
   },
   {
     timestamps: {
-      createdAt: "created_at",
-      updatedAt: "updated_at",
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     },
   }
 );
 // Virtuals
 courseSchema.virtual('enrollmentPercentage').get(function () {
-  return this.enrollment.capacity > 0
+  return this.enrollment && this.enrollment.capacity > 0
     ? Math.round((this.enrollment.enrolled / this.enrollment.capacity) * 100)
     : 0;
 });
 
 courseSchema.virtual('totalHours').get(function () {
-  return this.duration.weeks * this.duration.hoursPerWeek;
+  return this.duration && this.duration.weeks && this.duration.hoursPerWeek
+    ? this.duration.weeks * this.duration.hoursPerWeek
+    : 0;
 });
 
-const NG_Courses = model("Ng_Courses", courseSchema);
+// Course status based on dates
+courseSchema.virtual('courseStatus').get(function () {
+  const now = new Date();
+
+  // If no dates are set, use visibility status
+  if (!this.start_date && !this.end_date) {
+    return this.visibility === 'published' ? 'open' : 'draft';
+  }
+
+  // Check registration period
+  if (this.registration_start && this.registration_end) {
+    if (now < this.registration_start) {
+      return 'registration_not_started';
+    }
+    if (now > this.registration_end) {
+      return 'registration_closed';
+    }
+  }
+
+  // Check course period
+  if (this.start_date && now < this.start_date) {
+    return 'coming_soon';
+  }
+
+  if (this.end_date && now > this.end_date) {
+    return 'closed';
+  }
+
+  // Course is currently active
+  if (this.start_date && now >= this.start_date) {
+    return 'open';
+  }
+
+  // Default based on visibility
+  return this.visibility === 'published' ? 'open' : 'draft';
+});
+
+// Method to check if course is accessible
+courseSchema.methods.isAccessible = function () {
+  const status = this.courseStatus;
+  return ['open', 'registration_closed'].includes(status);
+};
+
+const NG_Courses = model('Ng_Courses', courseSchema);
 export default NG_Courses;

@@ -10,19 +10,25 @@ export const getAllCourses = async (req, res) => {
       page = 1,
       limit = 10,
       search,
-      visibility = 'published',
+      visibility,
       sortBy = 'created_at',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
     } = req.query;
 
-    const query = {visibility };
+    // Build query object
+    const query = {};
 
+    // Only filter by visibility if explicitly provided in query params
+    // This allows admins to see all courses, but public API can filter with ?visibility=published
+    if (visibility) {
+      query.visibility = visibility;
+    }
 
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { subtitle: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -45,15 +51,15 @@ export const getAllCourses = async (req, res) => {
           current: parseInt(page),
           pages: Math.ceil(total / limit),
           total,
-          limit: parseInt(limit)
-        }
-      }
+          limit: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get courses error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error fetching courses'
+      message: 'Server error fetching courses',
     });
   }
 };
@@ -61,25 +67,25 @@ export const getAllCourses = async (req, res) => {
 // Get course by ID
 export const getCourseById = async (req, res) => {
   try {
-    const course = await NG_Courses.findById(req.params.id)
-      // .populate('created_by', 'full_name');
+    const course = await NG_Courses.findById(req.params.id);
+    // .populate('created_by', 'full_name');
 
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: 'Course not found',
       });
     }
 
     res.json({
       success: true,
-      data: { course }
+      data: { course },
     });
   } catch (error) {
     console.error('Get course error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error fetching course'
+      message: 'Server error fetching course',
     });
   }
 };
@@ -187,26 +193,26 @@ export const updateCourse = async (req, res) => {
 export const deleteCourse = async (req, res) => {
   try {
     const course = await NG_Courses.findById(req.params.id);
-    console.log(course)
-    
+    console.log(course);
+
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: 'Course not found',
       });
     }
 
     // Check if there are active registrations
     const activeRegistrations = await Registration.countDocuments({
       course_id: req.params.id,
-      status: { $in: ['submitted', 'under_review', 'accepted', 'activated'] }
+      status: { $in: ['submitted', 'under_review', 'accepted', 'activated'] },
     });
 
     if (activeRegistrations > 0) {
       return res.status(400).json({
         success: false,
         message: 'Cannot delete course with active registrations',
-        activeRegistrations
+        activeRegistrations,
       });
     }
 
@@ -214,13 +220,13 @@ export const deleteCourse = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Course deleted successfully'
+      message: 'Course deleted successfully',
     });
   } catch (error) {
     console.error('Delete course error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error deleting course'
+      message: 'Server error deleting course',
     });
   }
 };
@@ -234,7 +240,7 @@ export const getCourseStatistics = async (req, res) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: 'Course not found',
       });
     }
 
@@ -244,33 +250,36 @@ export const getCourseStatistics = async (req, res) => {
       {
         $group: {
           _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
     const stats = {
       course: {
         id: course._id,
         title: course.title,
-        slug: course.slug
+        slug: course.slug,
       },
       registrations: registrationStats.reduce((acc, stat) => {
         acc[stat._id] = stat.count;
         return acc;
       }, {}),
-      totalRegistrations: registrationStats.reduce((sum, stat) => sum + stat.count, 0)
+      totalRegistrations: registrationStats.reduce(
+        (sum, stat) => sum + stat.count,
+        0
+      ),
     };
 
     res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   } catch (error) {
     console.error('Get course statistics error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error fetching statistics'
+      message: 'Server error fetching statistics',
     });
   }
 };
@@ -281,5 +290,5 @@ export default {
   createCourse,
   updateCourse,
   deleteCourse,
-  getCourseStatistics
+  getCourseStatistics,
 };

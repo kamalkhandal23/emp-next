@@ -357,6 +357,26 @@ class ApiClient {
     return this.request('/nextgen/courses');
   }
 
+  async createCourse(courseData) {
+    return this.request('/nextgen/courses', {
+      method: 'POST',
+      body: courseData,
+    });
+  }
+
+  async updateCourse(courseId, courseData) {
+    return this.request(`/nextgen/courses/${courseId}`, {
+      method: 'PUT',
+      body: courseData,
+    });
+  }
+
+  async deleteCourse(courseId) {
+    return this.request(`/nextgen/courses/${courseId}`, {
+      method: 'DELETE',
+    });
+  }
+
   async enrollInCourse(courseData) {
     return this.request('/nextgen/enroll', {
       method: 'POST',
@@ -377,6 +397,30 @@ class ApiClient {
 
   async getNextGenResults() {
     return this.request('/nextgen/results');
+  }
+
+  // NextGen Admin endpoints
+  async getRegistrations() {
+    return this.request('/nextgen/registrations');
+  }
+
+  async approveRegistration(registrationId) {
+    return this.request(
+      `/nextgen/admin/registrations/${registrationId}/approve`,
+      {
+        method: 'PUT',
+      }
+    );
+  }
+
+  async rejectRegistration(registrationId, reason) {
+    return this.request(
+      `/nextgen/admin/registrations/${registrationId}/reject`,
+      {
+        method: 'PUT',
+        body: { reason },
+      }
+    );
   }
 
   // Employee Portal specific endpoints
