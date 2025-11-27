@@ -820,14 +820,6 @@ export default function Exam() {
         className='container'
         style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          {showPopup && (
-            <WarningPopup
-              onClose={() => {
-                setShowBanner(false);
-                setShowPopup(false);
-              }}
-            />
-          )}
           {/* Time Warning Banner */}
           {showTimeWarning && (
             <div
@@ -850,6 +842,14 @@ export default function Exam() {
             </div>
           )}
 
+          {showPopup && (
+            <WarningPopup
+              onClose={() => {
+                setShowBanner(false);
+                setShowPopup(false);
+              }}
+            />
+          )}
           {/* Exam Header */}
           <div
             style={{

@@ -154,19 +154,10 @@ class ApiClient {
   }
 
   // Get lecture videos for NextGen Education
-    async getNextGenLectureVideos(id){
-        console.log(id,"api lecture student id");
-        return this.request(`/nextgen/lectureVideo/student/${id}`);
-    }
-
-    //get student leader board
-    async getNextGenLeaderboard(courseId){
-      console.log("abs");
-      return this.request(`/nextgen/leaderboard/student/${courseId}`);
-
-    }
-
-
+  async getNextGenLectureVideos(id) {
+    console.log(id, 'api lecture student id');
+    return this.request(`/nextgen/lectureVideo/student/${id}`);
+  }
 
   // Tasks endpoints
   async getTasks(params = {}) {

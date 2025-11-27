@@ -49,15 +49,14 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
-<<<<<<< HEAD
     lectures: [
       {
         title: { type: String, required: true },
         description: { type: String, required: true },
         videoURL: { type: String },
         pdfURL: { type: String },
-        created_at: { type: Date, default: Date.now }
-      }
+        created_at: { type: Date, default: Date.now },
+      },
     ],
     rating: {
       type: Number,
@@ -65,8 +64,11 @@ const courseSchema = new mongoose.Schema(
       max: 5,
       default: 0,
     },
-    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'ng_users', required: true },
-=======
+    created_by: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ng_users',
+      required: true,
+    },
     // Course timing fields
     start_date: {
       type: Date,
@@ -93,7 +95,6 @@ const courseSchema = new mongoose.Schema(
       ref: 'ng_users',
       required: true,
     },
->>>>>>> 1c398103 (Add course timing feature and improve course management)
   },
   {
     timestamps: {
