@@ -1,120 +1,6 @@
 import mongoose from 'mongoose';
 import { model } from "mongoose";
 
-// const courseSchema = new mongoose.Schema({
-//   courseCode: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     uppercase: true
-//   },
-//   slug: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     trim: true
-//   },
-//   title: {
-//     type: String,
-//     required: true,
-//     trim: true
-//   },
-//   description: {
-//     type: String,
-//     required: true
-//   },
-//   category: {
-//     type: String,
-//     required: true,
-//     enum: ['Technology', 'Business', 'Design', 'Marketing', 'Healthcare', 'Education', 'Other']
-//   },
-//   level: {
-//     type: String,
-//     required: true,
-//     enum: ['Beginner', 'Intermediate', 'Advanced']
-//   },
-//   duration: {
-//     weeks: { type: Number, required: true },
-//     hoursPerWeek: { type: Number, required: true }
-//   },
-//   credits: {
-//     type: Number,
-//     required: true,
-//     min: 1,
-//     max: 6
-//   },
-//   prerequisites: [{
-//     course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
-//     required: { type: Boolean, default: true }
-//   }],
-//   instructor: {
-//     name: { type: String, required: true },
-//     email: { type: String, required: true },
-//     bio: String,
-//     qualifications: [String],
-//     profileImage: String
-//   },
-//   syllabus: [{
-//     week: Number,
-//     topic: String,
-//     description: String,
-//     materials: [String],
-//     assignments: [String]
-//   }],
-//   resources: [{
-//     type: { type: String, enum: ['video', 'document', 'link', 'book', 'article'] },
-//     title: String,
-//     url: String,
-//     description: String
-//   }],
-//   assessments: [{
-//     type: { type: String, enum: ['quiz', 'assignment', 'project', 'exam'] },
-//     title: String,
-//     description: String,
-//     weight: Number,
-//     dueDate: Date
-//   }],
-//   enrollment: {
-//     capacity: { type: Number, required: true },
-//     enrolled: { type: Number, default: 0 },
-//     waitlist: { type: Number, default: 0 }
-//   },
-//   schedule: {
-//     startDate: { type: Date, required: true },
-//     endDate: { type: Date, required: true },
-//     sessions: [{
-//       day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] },
-//       startTime: String,
-//       endTime: String,
-//       timezone: { type: String, default: 'UTC' }
-//     }]
-//   },
-//   pricing: {
-//     amount: { type: Number, required: true },
-//     currency: { type: String, default: 'USD' },
-//     discounts: [{
-//       type: { type: String },
-//       percentage: Number,
-//       validUntil: Date
-//     }]
-//   },
-//   status: {
-//     type: String,
-//     enum: ['draft', 'published', 'archived', 'cancelled'],
-//     default: 'draft'
-//   },
-//   tags: [String],
-//   rating: {
-//     average: { type: Number, default: 0, min: 0, max: 5 },
-//     count: { type: Number, default: 0 }
-//   },
-//   reviews: [{
-//     student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' },
-//     rating: { type: Number, min: 1, max: 5 },
-//     comment: String,
-//     date: { type: Date, default: Date.now }
-//   }]
-// }, { timestamps: true });
 const courseSchema = new mongoose.Schema(
   {
     slug: {
@@ -163,26 +49,11 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       unique: true,
     },
-    // Course timing fields
-    start_date: {
-      type: Date,
-      required: false,
-      default: null,
-    },
-    end_date: {
-      type: Date,
-      required: false,
-      default: null,
-    },
-    registration_start: {
-      type: Date,
-      required: false,
-      default: null,
-    },
-    registration_end: {
-      type: Date,
-      required: false,
-      default: null,
+    rating: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: 0,
     },
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'ng_users', required: true },
   },
@@ -195,59 +66,14 @@ const courseSchema = new mongoose.Schema(
 );
 // Virtuals
 courseSchema.virtual('enrollmentPercentage').get(function () {
-  return this.enrollment && this.enrollment.capacity > 0
+  return this.enrollment.capacity > 0
     ? Math.round((this.enrollment.enrolled / this.enrollment.capacity) * 100)
     : 0;
 });
 
 courseSchema.virtual('totalHours').get(function () {
-  return this.duration && this.duration.weeks && this.duration.hoursPerWeek
-    ? this.duration.weeks * this.duration.hoursPerWeek
-    : 0;
+  return this.duration.weeks * this.duration.hoursPerWeek;
 });
-
-// Course status based on dates
-courseSchema.virtual('courseStatus').get(function () {
-  const now = new Date();
-  
-  // If no dates are set, use visibility status
-  if (!this.start_date && !this.end_date) {
-    return this.visibility === 'published' ? 'open' : 'draft';
-  }
-  
-  // Check registration period
-  if (this.registration_start && this.registration_end) {
-    if (now < this.registration_start) {
-      return 'registration_not_started';
-    }
-    if (now > this.registration_end) {
-      return 'registration_closed';
-    }
-  }
-  
-  // Check course period
-  if (this.start_date && now < this.start_date) {
-    return 'coming_soon';
-  }
-  
-  if (this.end_date && now > this.end_date) {
-    return 'closed';
-  }
-  
-  // Course is currently active
-  if (this.start_date && now >= this.start_date) {
-    return 'open';
-  }
-  
-  // Default based on visibility
-  return this.visibility === 'published' ? 'open' : 'draft';
-});
-
-// Method to check if course is accessible
-courseSchema.methods.isAccessible = function() {
-  const status = this.courseStatus;
-  return ['open', 'registration_closed'].includes(status);
-};
 
 const NG_Courses = model("Ng_Courses", courseSchema);
 export default NG_Courses;

@@ -1,9 +1,6 @@
 
 # Dependencies
 node_modules/
-.env
-.env.*
-.env.backup
 
 # Logs
 logs
@@ -41,7 +38,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+#.env   # <--- Commented out to track .env in git
 
 # next.js build output
 .next

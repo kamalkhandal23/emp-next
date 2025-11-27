@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import apiClient from '../../utils/api'
+import CourseCard from '../../components/CourseCard'
 import profilePic1 from '../../assets/profilePic1.jpeg'
 import profilePic2 from '../../assets/profilePic2.jpeg'
 import profilePic3 from '../../assets/profilePic3.jpeg'
@@ -39,6 +40,8 @@ export default function NextGenLanding() {
     }
   ]
 
+
+
   const stats = [
     { number: '1000+', label: 'Active Students', icon: '👨‍🎓' },
     { number: '50+', label: 'Industry Projects', icon: '💼' },
@@ -70,7 +73,7 @@ export default function NextGenLanding() {
     }
   ]
 
-  function getTimeLeft(targetDate) {
+    function getTimeLeft(targetDate) {
     const now = new Date().getTime()
     const distance = targetDate - now
 
@@ -83,101 +86,27 @@ export default function NextGenLanding() {
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
     const seconds = Math.floor((distance % (1000 * 60)) / 1000)
 
-    return { days, hours, minutes, seconds }
-  }
+      return { days, hours, minutes, seconds }
+    } 
 
-  const [registrationCount, setRegistrationCount] = useState(12345)
+    const [registrationCount, setRegistrationCount] = useState(12345)
 
-  const enrollmentCloseDate = new Date(2025, 9, 30, 23, 59, 59)
+    const enrollmentCloseDate = new Date(2025, 9, 30, 23, 59, 59) 
 
-  const [timeLeft, setTimeLeft] = useState(getTimeLeft(enrollmentCloseDate.getTime()))
+    const [timeLeft, setTimeLeft] = useState(getTimeLeft(enrollmentCloseDate.getTime()))
 
-  // Helper function to get course registration status
-  const getCourseRegistrationStatus = (course) => {
-    const currentDate = new Date()
-    
-    if (course.registration_start) {
-      const regStartDate = new Date(course.registration_start)
-      if (currentDate < regStartDate) {
-        return {
-          status: 'not_started',
-          text: 'Registration Opens Soon',
-          color: '#fbbf24',
-          bgColor: '#fef3c7'
-        }
-      }
-    }
-
-    if (course.registration_end) {
-      const regEndDate = new Date(course.registration_end)
-      const timeDiff = regEndDate.getTime() - currentDate.getTime()
-      const daysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24))
-      
-      if (daysLeft <= 7 && daysLeft > 0) {
-        return {
-          status: 'ending_soon',
-          text: `${daysLeft} day${daysLeft > 1 ? 's' : ''} left`,
-          color: '#ef4444',
-          bgColor: '#fee2e2'
-        }
-      } else if (daysLeft > 0) {
-        return {
-          status: 'active',
-          text: 'Registration Open',
-          color: '#22c55e',
-          bgColor: '#dcfce7'
-        }
-      }
-    }
-
-    return {
-      status: 'active',
-      text: 'Registration Open',
-      color: '#22c55e',
-      bgColor: '#dcfce7'
-    }
-  }
-
-  useEffect(() => {
+    useEffect(() => {
     // Fetch courses on component mount
     const fetchCourses = async () => {
       try {
         const response = await apiClient.getNextGenCourses()
         const fetchedCourses = response.data.courses || []
 
-        // Filter courses to only show those with active registration
-        const currentDate = new Date()
-        const availableCourses = fetchedCourses.filter(course => {
-          // Only show published courses
-          if (course.visibility !== 'published') {
-            return false
-          }
-
-          // If course has registration_end date, check if registration is still open
-          if (course.registration_end) {
-            const registrationEndDate = new Date(course.registration_end)
-            if (currentDate > registrationEndDate) {
-              return false // Registration has ended, don't show this course
-            }
-          }
-
-          // If course has end_date, check if course hasn't ended
-          if (course.end_date) {
-            const courseEndDate = new Date(course.end_date)
-            if (currentDate > courseEndDate) {
-              return false // Course has ended, don't show this course
-            }
-          }
-
-          return true // Course is available for registration
-        })
-
-        // Map available courses to include default values for missing fields
-        const coursesWithDefaults = availableCourses.map(course => ({
+        // Map fetched courses to include default values for missing fields
+        const coursesWithDefaults = fetchedCourses.map(course => ({
           ...course,
           level: 'Beginner to Advanced',
           students: '100+',
-          rating: 4.8,
           skills: ['Web Development', 'Programming'],
           price: 'Free'
         }))
@@ -192,7 +121,6 @@ export default function NextGenLanding() {
     }
 
     fetchCourses()
-
 
     // Update countdown every second
     const timer = setInterval(() => {
@@ -209,7 +137,7 @@ export default function NextGenLanding() {
     return () => clearInterval(timer)
   }, [])
 
-  const countdownDisplay = timeLeft
+   const countdownDisplay = timeLeft
     ? `${timeLeft.days} Days ${timeLeft.hours} Hours ${timeLeft.minutes} Minutes ${timeLeft.seconds} Seconds`
     : 'Enrollment Closed'
 
@@ -220,7 +148,7 @@ export default function NextGenLanding() {
       <section className="hero-section">
         <h1 className="hero-title">NextGenFreeEdu</h1>
         <p className="hero-subtitle">
-          Revolutionizing education through practical, accessible learning experiences.
+          Revolutionizing education through practical, accessible learning experiences. 
           Master in-demand skills with hands-on projects, transparent evaluation, and industry mentorship.
         </p>
         <div className="hero-buttons">
@@ -231,11 +159,11 @@ export default function NextGenLanding() {
             Student Login →
           </Link>
         </div>
-
+        
         {/* Stats */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
           gap: '2rem',
           marginTop: '3rem',
           padding: '2rem',
@@ -252,18 +180,18 @@ export default function NextGenLanding() {
           ))}
         </div>
       </section>
-
+      
       {/* Why Choose NextGenFreeEdu */}
       <section className="section">
         <h2 className="section-title">Why Choose NextGenFreeEdu?</h2>
         <p className="section-content" style={{ marginBottom: '2rem' }}>
           Experience a new way of learning that bridges the gap between academic knowledge and industry requirements.
         </p>
-
+        
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem', alignItems: 'center' }}>
           <div>
             {features.map((feature, index) => (
-              <div
+              <div 
                 key={index}
                 onClick={() => setActiveFeature(index)}
                 style={{
@@ -291,7 +219,7 @@ export default function NextGenLanding() {
               </div>
             ))}
           </div>
-
+          
           <div className="service-card" style={{ height: 'fit-content' }}>
             <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}>
               {features[activeFeature].icon}
@@ -315,7 +243,7 @@ export default function NextGenLanding() {
       </section>
 
       {/* Registration count */}
-      <section className="section" style={{ textAlign: 'center', margin: '2rem 0' }}>
+        <section className="section" style={{ textAlign: 'center', margin: '2rem 0' }}>
         <h2 className="section-title">Registration Count</h2>
         <p style={{ fontSize: '2rem', color: '#d97706', fontWeight: '700' }}>
           {registrationCount.toLocaleString()} Students Registered
@@ -342,109 +270,16 @@ export default function NextGenLanding() {
             <p>{error}</p>
           </div>
         ) : (
-          <div className="services-grid">
-            {courses.map((course, index) => {
-              const registrationStatus = getCourseRegistrationStatus(course)
-              
-              return (
-                <div key={index} className="service-card" style={{ height: 'fit-content' }}>
-                  <div style={{ fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}>
-                    {course.icon}
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                    <h3 className="service-title" style={{ margin: 0 }}>{course.title}</h3>
-                    <span style={{
-                      background: '#22c55e',
-                      color: 'white',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '1rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '600'
-                    }}>
-                      {course.price}
-                    </span>
-                  </div>
-
-                  {/* Registration Status Badge */}
-                  <div style={{ marginBottom: '0.75rem', textAlign: 'center' }}>
-                    <span style={{
-                      background: registrationStatus.bgColor,
-                      color: registrationStatus.color,
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '1rem',
-                      fontSize: '0.75rem',
-                      fontWeight: '600',
-                      border: `1px solid ${registrationStatus.color}20`
-                    }}>
-                      {registrationStatus.text}
-                    </span>
-                  </div>
-
-                  <p className="service-description" style={{ marginBottom: '1rem' }}>
-                    {course.description}
-                  </p>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '0.5rem',
-                  marginBottom: '1rem',
-                  fontSize: '0.875rem',
-                  color: '#6b7280'
-                }}>
-                  <div><strong>Duration:</strong> {course.duration}</div>
-                  <div><strong>Level:</strong> {course.level}</div>
-                  <div><strong>Students:</strong> {course.students}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <strong>Rating:</strong>
-                    <span style={{ color: '#fbbf24' }}>⭐</span>
-                    {course.rating}
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
-                    Skills You'll Learn:
-                  </h4>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {course.skills.slice(0, 3).map((skill, skillIndex) => (
-                      <span key={skillIndex} style={{
-                        background: '#f3f4f6',
-                        color: '#374151',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        {skill}
-                      </span>
-                    ))}
-                    {course.skills.length > 3 && (
-                      <span style={{
-                        background: '#dbeafe',
-                        color: '#1d4ed8',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        +{course.skills.length - 3} more
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <Link
-                  to="/nextgen/enroll"
-                  className="btn-primary"
-                  style={{ width: '100%', textAlign: 'center', display: 'block', textDecoration: 'none' }}
-                >
-                  Enroll in This Course
-                </Link>
-              </div>
-              )
-            })}
+          <div 
+            style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '2rem',
+              alignItems: 'stretch'
+            }}>
+            {courses.map((course, index) => (
+              <CourseCard key={index} course={course} />
+            ))}
           </div>
         )}
       </section>
@@ -463,13 +298,13 @@ export default function NextGenLanding() {
         <p className="section-content" style={{ marginBottom: '2rem' }}>
           Hear from our graduates who have transformed their careers through NextGenFreeEdu.
         </p>
-
+        
         <div className="services-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
           {testimonials.map((testimonial, index) => (
             <div key={index} className="testimonial-card">
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
                 gap: '1rem',
                 marginBottom: '1rem'
               }}>
@@ -512,7 +347,7 @@ export default function NextGenLanding() {
             { step: 4, title: 'Earn Certificate', desc: 'Receive industry-recognized certification', icon: '🏆' }
           ].map((step) => (
             <div key={step.step} className="service-card" style={{ textAlign: 'center' }}>
-              <div style={{
+              <div style={{ 
                 background: '#3b82f6',
                 color: 'white',
                 width: '3rem',
@@ -534,8 +369,8 @@ export default function NextGenLanding() {
           ))}
         </div>
       </section>
-
-
+      
+      
 
 
       {/* Call to Action */}
@@ -549,11 +384,11 @@ export default function NextGenLanding() {
             <Link to="/nextgen/enroll" className="btn-primary">
               Enroll Now - Completely Free
             </Link>
-            <button
-              className="btn-secondary"
-              onClick={() => alert('You will be notified when enrollment opens!')}
-            >
-              Notify Me
+            <button 
+                className="btn-secondary" 
+                onClick={() => alert('You will be notified when enrollment opens!')}
+              >
+                Notify Me
             </button>
 
             <Link to="/nextgen/login" className="btn-secondary">

@@ -9,9 +9,9 @@ import paymentRoutes from './payment.js';
 const router = express.Router();
 
 // Mount student routes
-router.use('/', authRoutes); // login, set-password, validate-token
+router.use('/login', loginRoutes); // Primary login route
+router.use('/', authRoutes); // set-password, validate-token (but NOT login to avoid conflict)
 router.use('/registration', registrationRoutes);
-router.use("/login",loginRoutes)
 router.use('/payment', paymentRoutes);
 router.use('/profile', profileRoutes);
 

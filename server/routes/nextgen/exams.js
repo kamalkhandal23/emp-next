@@ -5,7 +5,11 @@ import {
   getExamById,
   getExamByName,
   updateExamStatus,
-  deleteExam
+  updateExam,
+  deleteExam,
+  getSubmissionsForExam,
+  submitExam,
+  gradeSubmission
 } from '../../controllers/nextgen/examController.js';
 
 const router = express.Router();
@@ -25,7 +29,19 @@ router.get('/name/:examName', getExamByName);
 // Update exam status
 router.patch('/:id/status', updateExamStatus);
 
+// Update entire exam
+router.put('/:id', updateExam);
+
 // Delete exam
 router.delete('/:id', deleteExam);
+
+// Get submissions for a specific exam
+router.get('/:id/submissions', getSubmissionsForExam);
+
+// Submit an exam
+router.post('/submit', submitExam);
+
+// Grade a submission
+router.put('/grade/:submissionId', gradeSubmission);
 
 export default router;

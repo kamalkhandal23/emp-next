@@ -66,8 +66,9 @@ ngExamWithQuestionsSchema.methods.getExamData = function() {
   this.questions.forEach((value, key) => {
     questionsObj[key] = value;
   });
-  
+
   return {
+    _id: this._id,
     examName: this.examName,
     totalQuestions: this.totalQuestions,
     questions: questionsObj,
@@ -80,22 +81,21 @@ ngExamWithQuestionsSchema.methods.getExamData = function() {
 // Static method to create exam from frontend data
 ngExamWithQuestionsSchema.statics.createFromFrontend = async function(examName, totalQuestions, questionData) {
   const questionsMap = new Map();
-  
+
   // Convert questionData object to Map
   Object.keys(questionData).forEach(key => {
     questionsMap.set(key, questionData[key]);
   });
-  
+
   const exam = new this({
     examName,
     totalQuestions,
     questions: questionsMap
   });
-  
+
   return await exam.save();
 };
 
-const NGExamWithQuestions = mongoose.models.NG_ExamWithQuestions || 
-  mongoose.model('NG_ExamWithQuestions', ngExamWithQuestionsSchema);
+const NGExamWithQuestions = mongoose.model('NG_ExamWithQuestions', ngExamWithQuestionsSchema);
 
 export default NGExamWithQuestions;
