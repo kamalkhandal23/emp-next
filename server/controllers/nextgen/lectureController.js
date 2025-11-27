@@ -2,21 +2,28 @@ import Course from "../../models/nextgen/education/Course.js";
 import ng_student from "../../models/ng_student.js";
 
 export const getLectureVideo = async (req, res) => {
-    // const { studentId, courseId } = req.params;
+    const { Id }  = req.params;
+    // console.log("Fetching lecture videos for student ID:", Id);
     //
     // try {
     //     // Optional: check if student exists in DB if needed
-    //     const student = await ng_student.findById(studentId);
+    //     const student = await ng_student.findOne({ student_id: Id });
+    //     console.log("Student found:", student);
     //     if (!student) {
     //         return res.status(404).json({ message: "Student not found" });
     //     }
-    //     const enrolledCourseId =await Course.findById(student.course._id);
-    //     if (enrolledCourseId.toString() !== courseId) {
+    //     console.log(student);
+    //     const  courseId = student.course._id;
+    //     console.log(courseId);
+    //     const course = await Course.findById(courseId);
+    //     console.log(course);
+    //
+    //     if (!course) {
     //         return res.status(403).json({ message: "Student not enrolled in this course" });
     //     }
-    //
-    //
-    //     return res.status(200).json({ courses: [course] });
+    //     const lectures = course.lectures;
+    //     console.log("Lectures fetched from DB:", lectures);
+    //     return res.status(200).json({ courses: [{ _id: course._id, title: course.title, lectures }] });
     // } catch (error) {
     //     console.error("Error fetching lecture videos:", error);
     //     return res.status(500).json({ message: "Server error" });
@@ -60,5 +67,5 @@ export const getLectureVideo = async (req, res) => {
         }
     ];
     console.log("Lectures fetched:", lectures);
-    return res.status(200).json({ courses: [{ _id: "demo-course", title: "Demo Course", lectures }] });
+    return res.status(200).json({ courses: [{ _id: "demo-course", title: "Demo course", lectures }] });
 };
