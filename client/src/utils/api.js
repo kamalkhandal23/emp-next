@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+  'https://emp-new-red.vercel.app' || 'http://localhost:5002/api';
 
 class ApiClient {
   constructor() {
