@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  'https://emp-new-red.vercel.app' || 'http://localhost:5002/api';
+  'https://emp-h6p98jwpk-teamoflifeboxs-projects.vercel.app' || 'http://localhost:5002/api';
 
 class ApiClient {
   constructor() {
