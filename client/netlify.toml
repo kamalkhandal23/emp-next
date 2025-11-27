@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://emp-h6p98jwpk-teamoflifeboxs-projects.vercel.app/api/:splat"
+  to = "https://emp-hee877vkc-teamoflifeboxs-projects.vercel.app"
   status = 200
   force = true
 

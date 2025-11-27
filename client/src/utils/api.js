@@ -1,6 +1,6 @@
 const API_BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? 'https://emp-1xd88k1wk-teamoflifeboxs-projects.vercel.app'
+    ? 'https://emp-hee877vkc-teamoflifeboxs-projects.vercel.app'
     : 'http://localhost:5002/api';
 
 class ApiClient {
