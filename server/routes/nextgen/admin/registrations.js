@@ -255,4 +255,24 @@ router.get("/",async(req,res)=>{
   }
 })
 
+/* -------------------- DELETE REGISTRATION -------------------- */
+router.delete("/:id", auth, ensureAdminOrManager, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const registration = await Registration.findById(id);
+    if (!registration) {
+      return res.status(404).json({ success: false, message: "Registration not found" });
+    }
+
+    await Registration.findByIdAndDelete(id);
+
+    // Optionally remove any uploaded files or related records here
+
+    res.json({ success: true, message: "Registration deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting registration:", error);
+    res.status(500).json({ success: false, message: "Server error while deleting registration", error: error.message });
+  }
+});
+
 export default router;
