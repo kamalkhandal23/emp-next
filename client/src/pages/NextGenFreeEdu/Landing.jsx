@@ -107,7 +107,6 @@ export default function NextGenLanding() {
           ...course,
           level: 'Beginner to Advanced',
           students: '100+',
-          rating: 4.8,
           skills: ['Web Development', 'Programming'],
           price: 'Free'
         }))

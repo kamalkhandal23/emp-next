@@ -47,6 +47,7 @@ export default function CourseManagerPortal() {
     prerequisites: '',
     icon: '🎓',
     visibility: 'draft',
+    rating: 0,
   });
 
   const [newCourse, setNewCourse] = useState({
@@ -58,6 +59,7 @@ export default function CourseManagerPortal() {
     prerequisites: '',
     icon: '🎓',
     visibility: 'draft',
+    rating: 0,
   });
 
   // Mock data fallbacks
@@ -350,6 +352,7 @@ export default function CourseManagerPortal() {
       description: course.description || '',
       prerequisites: course.prerequisites || '',
       icon: course.icon || '🎓',
+      rating: course.rating || 0,
       visibility: course.visibility || 'draft',
     });
     setShowEditCourse(true);
@@ -383,6 +386,7 @@ export default function CourseManagerPortal() {
           prerequisites: '',
           icon: '🎓',
           visibility: 'draft',
+          rating: 0,
         });
         alert('Course added successfully!');
       } else {
@@ -781,7 +785,7 @@ export default function CourseManagerPortal() {
                 <div
                   className='table-row'
                   style={{
-                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr auto',
                     fontWeight: 600,
                     background: '#f8fafc',
                     color: 'black',
@@ -791,6 +795,7 @@ export default function CourseManagerPortal() {
                   <div>Duration</div>
                   <div>Visibility</div>
                   <div>Enrollments</div>
+                  <div>Rating</div>
                   <div>Actions</div>
                 </div>
 
@@ -798,7 +803,7 @@ export default function CourseManagerPortal() {
                   <div
                     key={course?._id || idx}
                     className='table-row'
-                    style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto' }}>
+                    style={{ gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr 1fr auto' }}>
                     <div style={{ fontWeight: 500 }}>
                       {course?.icon} {course?.title}
                     </div>
@@ -815,6 +820,7 @@ export default function CourseManagerPortal() {
                       </span>
                     </div>
                     <div>{course?.enrolled_count || 0}</div>
+                    <div>{course?.rating || 0} / 5</div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
                         className='action-button primary'
@@ -1415,6 +1421,16 @@ export default function CourseManagerPortal() {
                 onChange={(v) => setNewCourse((p) => ({ ...p, icon: v }))}
                 placeholder='🎓'
               />
+              <TextField
+                label='Rating'
+                value={newCourse.rating}
+                onChange={(v) => setNewCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))}
+                type='number'
+                min='0'
+                max='5'
+                step='0.1'
+                placeholder='0.0'
+              />
               <Select
                 label='Visibility'
                 value={newCourse.visibility}
@@ -1507,6 +1523,16 @@ export default function CourseManagerPortal() {
                 value={editCourse.icon}
                 onChange={(v) => setEditCourse((p) => ({ ...p, icon: v }))}
                 placeholder='🎓'
+              />
+              <TextField
+                label='Rating'
+                value={editCourse.rating}
+                onChange={(v) => setEditCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))}
+                type='number'
+                min='0'
+                max='5'
+                step='0.1'
+                placeholder='0.0'
               />
               <Select
                 label='Visibility'
@@ -1722,7 +1748,7 @@ function Modal({ title, children, onClose }) {
   );
 }
 
-function TextField({ label, value, onChange, placeholder, required }) {
+function TextField({ label, value, onChange, placeholder, required, type = 'text', min, max, step }) {
   return (
     <div className='form-group'>
       <label className='form-label'>{label}</label>
@@ -1732,7 +1758,10 @@ function TextField({ label, value, onChange, placeholder, required }) {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        type='text'
+        type={type}
+        min={min}
+        max={max}
+        step={step}
       />
     </div>
   );
