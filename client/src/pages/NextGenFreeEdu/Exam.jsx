@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import TopBanner from "../../components/TopBanner";
+import WarningPopup from "../../components/WarningPopup";
 
 export default function Exam() {
   const [searchParams] = useSearchParams();
@@ -14,6 +16,9 @@ export default function Exam() {
   const [examStartTime, setExamStartTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+    const [showBanner, setShowBanner] = useState(false);
+    const [showPopup, setShowPopup] = useState(false);
+    const [warningCount, setWarningCount] = useState(0);
 
   // ---- Student info (localStorage se) ----
   const getStudentData = () => {
@@ -182,8 +187,23 @@ export default function Exam() {
     });
     return Math.round((correct / questions.length) * 100);
   };
+    //Window change during the exam
+    useEffect(() => {
+        const handleVisibility = () => {
+            if (document.hidden && examStarted  && !examSubmitted && timeLeft > 0) {
+                setWarningCount((count) => count + 1);
+                setShowBanner(true);
+                setShowPopup(true);
 
-  // ---- Exam submit: backend call to ng_submission_exams ----
+            }
+
+        };
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () =>
+            document.removeEventListener("visibilitychange", handleVisibility);
+    }, [document.hidden]);
+
+    // ---- Exam submit: backend call to ng_submission_exams ----
   async function handleSubmitExam() {
     try {
       if (isSubmitting || examSubmitted) return;
@@ -611,10 +631,30 @@ export default function Exam() {
   const currentQ = questions[currentQuestion];
 
   return (
-    <div
+      <>
+          {showBanner && (
+              <div style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 1100
+              }}>
+                  <TopBanner />
+              </div>
+          )}
+    <divs
       className='container'
       style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          {showPopup && (
+              <WarningPopup
+                  onClose={() => {
+                      setShowBanner(false);
+                      setShowPopup(false);
+                  }}
+              />
+          )}
         {/* Exam Header */}
         <div
           style={{
@@ -958,6 +998,7 @@ export default function Exam() {
           </div>
         )}
       </div>
-    </div>
+    </divs>
+      </>
   );
 }

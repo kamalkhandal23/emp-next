@@ -23,6 +23,8 @@ import leaveRoutes from './routes/leaves.js';
 import meetingRoutes from './routes/meetings.js';
 import dashboardRoutes from './routes/dashboard.js';
 import nextgenSystemRoutes from './routes/nextgen/index.js';
+import lectureRoutes from "./routes/nextgen/lecture.js";
+import leaderboard from "./routes/nextgen/leaderboard.js";
 
 import uploadRoutes from './routes/upload.js';
 import studentRoutes from './routes/students.js';
@@ -153,6 +155,8 @@ app.use('/api/results', resultRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/employee-portal', employeePortalRoutes);
 app.use('/api/nextgen/admin', adminRoutes);
+app.use("/api/nextgen/lectureVideo", lectureRoutes);
+app.use("/api/nextgen/leaderboard", leaderboard);
 //  NextGen routes (last, to avoid overlap)
 app.use('/api/nextgen', nextgenSystemRoutes);
 app.use('/api/nextgen', nextgenStudentRoutes);
