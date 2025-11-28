@@ -784,7 +784,7 @@ export default function AssignmentDetails() {
                 <li>Read all questions carefully before starting</li>
                 <li>You can save answers for individual questions</li>
                 <li>Make sure to submit the final assignment when done</li>
-                <li>You can retake the assignment after submission</li>
+
               </ul>
             </div>
           </div>
