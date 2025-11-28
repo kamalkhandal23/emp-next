@@ -159,6 +159,13 @@ class ApiClient {
         return this.request(`/nextgen/lectureVideo/student/${id}`);
     }
 
+    //get student leader board
+    async getNextGenLeaderboard(courseId){
+      console.log("abs");
+      return this.request(`/nextgen/leaderboard/student/${courseId}`);
+
+    }
+
 
 
   // Tasks endpoints
