@@ -153,6 +153,14 @@ class ApiClient {
     return this.request('/attendance/my');
   }
 
+  // Get lecture videos for NextGen Education
+    async getNextGenLectureVideos(id){
+        console.log(id,"api lecture student id");
+        return this.request(`/nextgen/lectureVideo/student/${id}`);
+    }
+
+
+
   // Tasks endpoints
   async getTasks(params = {}) {
     const queryString = new URLSearchParams(params).toString();

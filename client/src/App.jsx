@@ -57,6 +57,7 @@ import GradeAssignments from './pages/NextGenFreeEdu/GradeAssignments';
 import GradeExams from './pages/NextGenFreeEdu/GradeExams';
 import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
+import AvailableLectures from "@pages/NextGenFreeEdu/AvailableLectures.jsx";
 import CourseLecture from './pages/NextGenFreeEdu/CourseLecture';
 
 function MainLayout() {
@@ -234,6 +235,7 @@ export default function App() {
               <Route path='coding-exams' element={<CodingExamsList />} />
               <Route path='coding-exam/:id' element={<CodingExam />} />
               <Route path='assignments' element={<StudentAssignments />} />
+                <Route path="lectures" element={<AvailableLectures />} />
               <Route
                 path='assignments/:assignmentId'
                 element={<AssignmentDetails />}
