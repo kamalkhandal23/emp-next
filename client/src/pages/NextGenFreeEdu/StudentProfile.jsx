@@ -7,7 +7,6 @@ function normalizeStudent(raw) {
   const course = raw.course_id || raw.course || {};
   const progress = raw.progress || {};
   const performance = raw.performance || {};
-
   return {
     _id: raw._id,
     student_id: raw.student_id || raw.studentId || raw.code || '',

@@ -54,6 +54,7 @@ export default function CourseManagerPortal() {
     prerequisites: '',
     icon: '📘',
     visibility: 'draft',
+    rating: 0,
     banner_url: '',
     courseCode: '',
     start_date: '',
@@ -71,6 +72,7 @@ export default function CourseManagerPortal() {
     prerequisites: '',
     icon: '📘',
     visibility: 'draft',
+    rating: 0,
     banner_url: '',
     courseCode: '',
     start_date: '',
@@ -1588,12 +1590,6 @@ export default function CourseManagerPortal() {
                 max='5'
                 step='0.1'
                 placeholder='0.0'
-              />
-              <TextField
-                label='Course Code'
-                value={newCourse.courseCode}
-                onChange={(v) => setNewCourse((p) => ({ ...p, courseCode: v }))}
-                placeholder='e.g., CS101'
               />
               <TextField
                 label='Banner URL'
