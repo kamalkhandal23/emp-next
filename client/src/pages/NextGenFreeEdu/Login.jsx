@@ -259,7 +259,7 @@ export default function StudentLogin() {
                                         cursor: 'pointer',
                                         fontWeight: '600',
                                     }}
-                                    onClick={() => console.log("Leaderboard")}
+                                    onClick={() => navigate('/nextgen/leaderboard')}
                                 >
                                     View Leaderboard
                                 </button>
@@ -462,11 +462,11 @@ export default function StudentLogin() {
                                     flexDirection: 'column',
                                     gap: '0.75rem',
                                 }}>
-                                <button
+                                <Link to={`/nextgen/class-link`}
                                     className='btn-outline'
                                     style={{ justifyContent: 'flex-start' }}>
-                                    📚 Course Handbook
-                                </button>
+                                    📚 Class Lecture
+                                </Link>
                                 <Link to={`/nextgen/lectures`}
                                       className='btn-outline'
                                       style={{ justifyContent: 'flex-start' }}>

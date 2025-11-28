@@ -57,7 +57,9 @@ import GradeAssignments from './pages/NextGenFreeEdu/GradeAssignments';
 import GradeExams from './pages/NextGenFreeEdu/GradeExams';
 import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
-import AvailableLectures from "@pages/NextGenFreeEdu/AvailableLectures.jsx";
+import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures';
+import ClassLink from './pages/NextGenFreeEdu/LecturePage.jsx';
+import Leaderboard from "@pages/NextGenFreeEdu/Leaderboard.jsx";
 
 function MainLayout() {
   return (
@@ -234,11 +236,9 @@ export default function App() {
               <Route path='coding-exams' element={<CodingExamsList />} />
               <Route path='coding-exam/:id' element={<CodingExam />} />
               <Route path='assignments' element={<StudentAssignments />} />
-                <Route path="lectures" element={<AvailableLectures />} />
-              <Route
-                path='assignments/:assignmentId'
-                element={<AssignmentDetails />}
-              />
+              <Route path='lectures' element={<AvailableLectures />} />
+                <Route path='class-link' element={<ClassLink />} />
+                <Route path='leaderboard' element={<Leaderboard/>} />
               <Route
                 path='assignments/:assignmentId/submit'
                 element={<SubmitAssignment />}

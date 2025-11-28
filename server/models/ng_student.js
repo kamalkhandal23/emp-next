@@ -17,6 +17,9 @@ const ngApprovedStudentSchema = new mongoose.Schema({
   password: { type: String, required: true },
   registeredAt: { type: Date, default: Date.now },
   registrationRef: { type: mongoose.Schema.Types.ObjectId, ref: "Registration" },
+    //new fields
+    rank: {type: Number, default: 1},
+    grade: {type: Number, default: 0}
 });
 
 const ngApprovedStudent = mongoose.model(
