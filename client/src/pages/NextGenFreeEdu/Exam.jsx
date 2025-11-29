@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import TopBanner from "../../components/TopBanner";
-import WarningPopup from "../../components/WarningPopup";
 
 export default function Exam() {
   const [searchParams] = useSearchParams();
@@ -9,16 +7,19 @@ export default function Exam() {
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(3600); // 60 minutes in seconds
+  const [timeLeft, setTimeLeft] = useState(30); // 30 seconds
   const [examStarted, setExamStarted] = useState(false);
   const [examSubmitted, setExamSubmitted] = useState(false);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [examStartTime, setExamStartTime] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-    const [showBanner, setShowBanner] = useState(false);
-    const [showPopup, setShowPopup] = useState(false);
-    const [warningCount, setWarningCount] = useState(0);
+
+  // New states for time-based validation
+  const [examAvailability, setExamAvailability] = useState(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(true);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
 
   // ---- Student info (localStorage se) ----
   const getStudentData = () => {
@@ -119,7 +120,8 @@ export default function Exam() {
     {
       id: 8,
       type: 'multiple-choice',
-      question: 'Which lifecycle method is called after a component is mounted?',
+      question:
+        'Which lifecycle method is called after a component is mounted?',
       options: [
         'componentWillMount',
         'componentDidMount',
@@ -165,7 +167,71 @@ export default function Exam() {
   const handleStartExam = () => {
     setExamStarted(true);
     setExamStartTime(new Date().toISOString());
+
+    // Set timer based on exam availability data
+    if (examAvailability && examAvailability.timeRemaining) {
+      setTimeLeft(examAvailability.timeRemaining);
+    }
   };
+
+  // Check exam availability on component mount
+  useEffect(() => {
+    if (!examId) {
+      setCheckingAvailability(false);
+      return;
+    }
+
+    const checkAvailability = async () => {
+      try {
+        const baseUrl =
+          import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+        const response = await fetch(
+          `${baseUrl}/nextgen/exams/${examId}/availability`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          setExamAvailability(data.data);
+        }
+      } catch (error) {
+        console.error('Error checking exam availability:', error);
+      } finally {
+        setCheckingAvailability(false);
+      }
+    };
+
+    checkAvailability();
+  }, [examId]);
+
+  // Timer effect with auto-submit
+  useEffect(() => {
+    if (examStarted && !examSubmitted && timeLeft > 0) {
+      // Show warnings
+      if (timeLeft === 300 && !showTimeWarning) {
+        setWarningMessage('⏰ 5 minutes remaining!');
+        setShowTimeWarning(true);
+        setTimeout(() => setShowTimeWarning(false), 5000);
+      }
+
+      if (timeLeft === 60 && !showTimeWarning) {
+        setWarningMessage('⚠️ 1 minute remaining!');
+        setShowTimeWarning(true);
+        setTimeout(() => setShowTimeWarning(false), 5000);
+      }
+
+      const timer = setTimeout(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+
+    // Auto-submit when time expires
+    if (examStarted && !examSubmitted && timeLeft === 0) {
+      alert('⏰ Time is up! Your exam will be submitted automatically.');
+      handleSubmitExam();
+    }
+  }, [examStarted, examSubmitted, timeLeft, showTimeWarning]);
 
   const getAnsweredCount = () => {
     return Object.keys(answers).length;
@@ -187,23 +253,8 @@ export default function Exam() {
     });
     return Math.round((correct / questions.length) * 100);
   };
-    //Window change during the exam
-    useEffect(() => {
-        const handleVisibility = () => {
-            if (document.hidden && examStarted  && !examSubmitted && timeLeft > 0) {
-                setWarningCount((count) => count + 1);
-                setShowBanner(true);
-                setShowPopup(true);
 
-            }
-
-        };
-        document.addEventListener("visibilitychange", handleVisibility);
-        return () =>
-            document.removeEventListener("visibilitychange", handleVisibility);
-    }, [document.hidden]);
-
-    // ---- Exam submit: backend call to ng_submission_exams ----
+  // ---- Exam submit: backend call to ng_submission_exams ----
   async function handleSubmitExam() {
     try {
       if (isSubmitting || examSubmitted) return;
@@ -232,9 +283,7 @@ export default function Exam() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${
-              localStorage.getItem('authToken') || ''
-            }`,
+            Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
           },
           body: JSON.stringify({
             studentId,
@@ -262,19 +311,6 @@ export default function Exam() {
       setIsSubmitting(false);
     }
   }
-
-  // Timer effect
-  useEffect(() => {
-    if (examStarted && !examSubmitted && timeLeft > 0) {
-      const timer = setTimeout(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (timeLeft === 0 && !examSubmitted && examStarted) {
-      // Auto-submit when time is over
-      handleSubmitExam();
-    }
-  }, [timeLeft, examStarted, examSubmitted]);
 
   // ---- Result screen ----
   if (examSubmitted) {
@@ -386,8 +422,7 @@ export default function Exam() {
                     fontSize: '0.875rem',
                     color: '#6b7280',
                   }}>
-                  Passing score: {examData.passingScore}% • Your score:{' '}
-                  {score}%
+                  Passing score: {examData.passingScore}% • Your score: {score}%
                 </div>
               </div>
             </div>
@@ -429,6 +464,129 @@ export default function Exam() {
 
   // ---- Pre-exam instructions ----
   if (!examStarted) {
+    // Show loading while checking availability
+    if (checkingAvailability) {
+      return (
+        <div
+          className='container'
+          style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+          <div
+            style={{
+              maxWidth: '600px',
+              margin: '0 auto',
+              textAlign: 'center',
+            }}>
+            <div className='service-card'>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+              <h2>Checking Exam Availability...</h2>
+              <p style={{ color: '#6b7280' }}>
+                Please wait while we verify exam access.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show exam not started message
+    if (examAvailability && examAvailability.status === 'not-started') {
+      const startDate = new Date(examAvailability.startTime);
+      const hours = Math.floor(examAvailability.timeUntilStart / 3600);
+      const minutes = Math.floor((examAvailability.timeUntilStart % 3600) / 60);
+
+      return (
+        <div
+          className='container'
+          style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+          <div
+            style={{
+              maxWidth: '600px',
+              margin: '0 auto',
+              textAlign: 'center',
+            }}>
+            <div
+              className='service-card'
+              style={{ border: '2px solid #f59e0b' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏰</div>
+              <h2 style={{ color: '#d97706' }}>Exam Has Not Started Yet</h2>
+              <p style={{ color: '#6b7280', margin: '1.5rem 0' }}>
+                This exam will be available starting:
+              </p>
+              <div
+                style={{
+                  background: '#fef3c7',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
+                  color: '#92400e',
+                  fontWeight: '600',
+                }}>
+                {startDate.toLocaleString()}
+              </div>
+              <p style={{ color: '#6b7280' }}>
+                Time remaining: {hours > 0 && `${hours}h `}
+                {minutes}m
+              </p>
+              <Link
+                to='/nextgen/login'
+                className='btn-primary'
+                style={{ marginTop: '2rem' }}>
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show exam ended message
+    if (examAvailability && examAvailability.status === 'ended') {
+      const endDate = new Date(examAvailability.endTime);
+
+      return (
+        <div
+          className='container'
+          style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+          <div
+            style={{
+              maxWidth: '600px',
+              margin: '0 auto',
+              textAlign: 'center',
+            }}>
+            <div
+              className='service-card'
+              style={{ border: '2px solid #ef4444' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>❌</div>
+              <h2 style={{ color: '#dc2626' }}>Exam Has Ended</h2>
+              <p style={{ color: '#6b7280', margin: '1.5rem 0' }}>
+                This exam ended on:
+              </p>
+              <div
+                style={{
+                  background: '#fef2f2',
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  marginBottom: '1rem',
+                  color: '#991b1b',
+                  fontWeight: '600',
+                }}>
+                {endDate.toLocaleString()}
+              </div>
+              <p style={{ color: '#6b7280' }}>
+                No more submissions are allowed for this exam.
+              </p>
+              <Link
+                to='/nextgen/login'
+                className='btn-primary'
+                style={{ marginTop: '2rem' }}>
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div
         className='container'
@@ -508,8 +666,7 @@ export default function Exam() {
             {/* Exam Details */}
             <div className='service-card'>
               <h3 className='service-title'>Exam Details</h3>
-              <div
-                style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>
+              <div style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>
                 <div
                   style={{
                     marginBottom: '0.75rem',
@@ -523,9 +680,7 @@ export default function Exam() {
                     }}>
                     Duration
                   </div>
-                  <div style={{ color: '#6b7280' }}>
-                    {examData.duration}
-                  </div>
+                  <div style={{ color: '#6b7280' }}>{examData.duration}</div>
                 </div>
                 <div
                   style={{
@@ -593,8 +748,7 @@ export default function Exam() {
               background: '#f8fafc',
               borderRadius: '0.75rem',
             }}>
-            <h3
-              style={{ color: '#374151', marginBottom: '1rem' }}>
+            <h3 style={{ color: '#374151', marginBottom: '1rem' }}>
               Need Help?
             </h3>
             <p
@@ -631,30 +785,32 @@ export default function Exam() {
   const currentQ = questions[currentQuestion];
 
   return (
-      <>
-          {showBanner && (
-              <div style={{
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  zIndex: 1100
-              }}>
-                  <TopBanner />
-              </div>
-          )}
-    <divs
+    <div
       className='container'
       style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          {showPopup && (
-              <WarningPopup
-                  onClose={() => {
-                      setShowBanner(false);
-                      setShowPopup(false);
-                  }}
-              />
-          )}
+        {/* Time Warning Banner */}
+        {showTimeWarning && (
+          <div
+            style={{
+              position: 'fixed',
+              top: '20px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 1000,
+              background: timeLeft <= 60 ? '#dc2626' : '#f59e0b',
+              color: 'white',
+              padding: '1rem 2rem',
+              borderRadius: '0.5rem',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+              fontSize: '1.125rem',
+              fontWeight: '600',
+              animation: 'pulse 1s ease-in-out infinite',
+            }}>
+            {warningMessage}
+          </div>
+        )}
+
         {/* Exam Header */}
         <div
           style={{
@@ -769,9 +925,7 @@ export default function Exam() {
                       borderRadius: '0.5rem',
                       cursor: 'pointer',
                       background:
-                        answers[currentQ.id] === index
-                          ? '#f0f9ff'
-                          : 'white',
+                        answers[currentQ.id] === index ? '#f0f9ff' : 'white',
                       transition: 'all 0.2s ease',
                     }}>
                     <input
@@ -779,9 +933,7 @@ export default function Exam() {
                       name={`question-${currentQ.id}`}
                       value={index}
                       checked={answers[currentQ.id] === index}
-                      onChange={() =>
-                        handleAnswerChange(currentQ.id, index)
-                      }
+                      onChange={() => handleAnswerChange(currentQ.id, index)}
                     />
                     <span style={{ flex: 1 }}>{option}</span>
                   </label>
@@ -805,8 +957,7 @@ export default function Exam() {
                 style={{
                   fontFamily:
                     currentQ.type === 'code' ? 'monospace' : 'inherit',
-                  fontSize:
-                    currentQ.type === 'code' ? '0.875rem' : '1rem',
+                  fontSize: currentQ.type === 'code' ? '0.875rem' : '1rem',
                 }}
               />
             )}
@@ -822,18 +973,13 @@ export default function Exam() {
               }}>
               <button
                 onClick={() =>
-                  setCurrentQuestion(
-                    Math.max(0, currentQuestion - 1)
-                  )
+                  setCurrentQuestion(Math.max(0, currentQuestion - 1))
                 }
                 disabled={currentQuestion === 0}
                 className='btn-secondary'
                 style={{
                   opacity: currentQuestion === 0 ? 0.5 : 1,
-                  cursor:
-                    currentQuestion === 0
-                      ? 'not-allowed'
-                      : 'pointer',
+                  cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
                 }}>
                 Previous
               </button>
@@ -845,9 +991,7 @@ export default function Exam() {
                   style={{
                     background: '#22c55e',
                     opacity: isSubmitting ? 0.7 : 1,
-                    cursor: isSubmitting
-                      ? 'not-allowed'
-                      : 'pointer',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
                   }}
                   disabled={isSubmitting}>
                   {isSubmitting ? 'Submitting...' : 'Submit Exam'}
@@ -856,10 +1000,7 @@ export default function Exam() {
                 <button
                   onClick={() =>
                     setCurrentQuestion(
-                      Math.min(
-                        questions.length - 1,
-                        currentQuestion + 1
-                      )
+                      Math.min(questions.length - 1, currentQuestion + 1)
                     )
                   }
                   className='btn-primary'>
@@ -901,8 +1042,7 @@ export default function Exam() {
                         ? '#22c55e'
                         : 'white',
                     color:
-                      currentQuestion === index ||
-                      answers[q.id] !== undefined
+                      currentQuestion === index || answers[q.id] !== undefined
                         ? 'white'
                         : '#6b7280',
                     fontSize: '0.875rem',
@@ -930,8 +1070,7 @@ export default function Exam() {
                 {questions.length - getAnsweredCount()})
               </div>
               <div>
-                <span style={{ color: '#3b82f6' }}>●</span> Current
-                Question
+                <span style={{ color: '#3b82f6' }}>●</span> Current Question
               </div>
             </div>
           </div>
@@ -955,8 +1094,7 @@ export default function Exam() {
             <div
               className='service-card'
               style={{ maxWidth: '500px', margin: '1rem' }}>
-              <h3
-                style={{ color: '#374151', marginBottom: '1rem' }}>
+              <h3 style={{ color: '#374151', marginBottom: '1rem' }}>
                 Submit Exam?
               </h3>
               <p
@@ -964,10 +1102,9 @@ export default function Exam() {
                   color: '#6b7280',
                   marginBottom: '1.5rem',
                 }}>
-                Are you sure you want to submit your exam? You have
-                answered {getAnsweredCount()} out of {questions.length}{' '}
-                questions. You cannot change your answers after
-                submission.
+                Are you sure you want to submit your exam? You have answered{' '}
+                {getAnsweredCount()} out of {questions.length} questions. You
+                cannot change your answers after submission.
               </p>
               <div
                 style={{
@@ -986,9 +1123,7 @@ export default function Exam() {
                   style={{
                     background: '#22c55e',
                     opacity: isSubmitting ? 0.7 : 1,
-                    cursor: isSubmitting
-                      ? 'not-allowed'
-                      : 'pointer',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
                   }}
                   disabled={isSubmitting}>
                   {isSubmitting ? 'Submitting...' : 'Yes, Submit Exam'}
@@ -998,7 +1133,6 @@ export default function Exam() {
           </div>
         )}
       </div>
-    </divs>
-      </>
+    </div>
   );
 }

@@ -1,291 +1,261 @@
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { apiClient } from '@utils/api.js';
 
 export default function AvailableLectures() {
-    const { id } = useParams();
-    const [courses, setCourses] = useState([]);
-    const [viewType, setViewType] = useState("grid");
-    const [openTopic, setOpenTopic] = useState(null);
+  const { id } = useParams();
+  const [courses, setCourses] = useState([]);
+  const [viewType, setViewType] = useState('grid');
+  const [openTopic, setOpenTopic] = useState(null);
 
-    const getStudentData = () => {
-        const studentInfo = localStorage.getItem("studentInfo");
-        return studentInfo ? JSON.parse(studentInfo) : null;
-    };
-    // Fetch Lectures
-    useEffect(() => {
-        const fetchLectures = async () => {
-            try {
-                const studentData = getStudentData();
-                console.log("Student Data:", studentData);
-                const studentId = studentData?.student_id || studentData?.id;
+  const getStudentData = () => {
+    const studentInfo = localStorage.getItem('studentInfo');
+    return studentInfo ? JSON.parse(studentInfo) : null;
+  };
 
-                if (!studentId) throw new Error("Student ID not found");
+  // ---------- Demo Lectures ----------
+  let demoLectures = [
+    {
+      _id: '1',
+      title: 'Intro to JavaScript',
+      topic: 'JavaScript Basics',
+      duration: '25 min',
+      description: 'Basics of variables, datatypes and execution flow.',
+      color: '#E3F2FD',
+      videoUrl: 'https://youtube.com',
+    },
+    {
+      _id: '2',
+      title: 'React Components Basics',
+      topic: 'React Fundamentals',
+      duration: '32 min',
+      description: 'Understanding components, props and hooks.',
+      color: '#FFF3E0',
+      videoUrl: 'https://youtube.com',
+    },
+    {
+      _id: '3',
+      title: 'MongoDB Crash Course',
+      topic: 'Databases',
+      duration: '28 min',
+      description: 'Documents, collections and query intro.',
+      color: '#FCE4EC',
+      videoUrl: 'https://youtube.com',
+    },
+  ];
 
-                const data = await apiClient.getNextGenLectureVideos(studentId);
+  // ---------- Fetch Lecture Videos ----------
+  useEffect(() => {
+    const fetchLectures = async () => {
+      try {
+        const studentData = getStudentData();
+        const studentId = studentData?._id || studentData?.id;
 
-                if (data?.courses?.length > 0) {
-                    setCourses(data.courses);
-                } else {
-                    throw new Error("No courses found for the student");
-                }
-            } catch (err) {
-                console.error("Error fetching lectures:", err);
-            }
-        };
-
-        fetchLectures();
-    }, [id]);
-
-    // Group Lectures by Topic
-    const groupByTopic = (lectures = []) => {
-        const groups = {};
-        lectures.forEach(lec => {
-            if (!groups[lec.topic]) groups[lec.topic] = [];
-            groups[lec.topic].push(lec);
-        });
-        return groups;
-    };
-
-    // Styles (UPGRADED + MORE BEAUTIFUL)
-    const styles = {
-        page: {
-            padding: 32,
-            background: "#F9FAFB",
-            minHeight: "100vh",
-            fontFamily: "Inter, sans-serif",
-        },
-
-        mainHeader: {
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 10,
-        },
-
-        heading: {
-            fontSize: 34,
-            fontWeight: 800,
-            color: "#111827",
-        },
-
-        subText: {
-            fontSize: 16,
-            color: "#6B7280",
-            marginBottom: 30,
-        },
-
-        courseTitle: {
-            fontSize: 22,
-            fontWeight: 700,
-            marginTop: 25,
-            marginBottom: 12,
-            color: "#1F2937",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-        },
-
-        topicCard: {
-            background: "linear-gradient(to right, #ffffff, #f8fbff)",
-            padding: 18,
-            borderRadius: 12,
-            marginBottom: 12,
-            border: "1px solid #E6E8EC",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-            cursor: "pointer",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            transition: "0.2s",
-        },
-
-        topicCardHover: {
-            boxShadow: "0 3px 10px rgba(0,0,0,0.09)",
-        },
-
-        topicTitle: {
-            fontSize: 17,
-            fontWeight: 600,
-            color: "#111827",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-        },
-
-        arrow: {
-            fontSize: 18,
-            color: "#6B7280",
-        },
-
-        lectureGrid: {
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            gap: 20,
-            marginBottom: 25,
-        },
-
-        lectureCard: {
-            padding: 20,
-            borderRadius: 12,
-            background: "#ffffff",
-            border: "1px solid #E6E8EC",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
-            transition: "0.25s",
-        },
-
-        lectureCardHover: {
-            transform: "scale(1.02)",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-        },
-
-        lectureTitle: {
-            fontSize: 17,
-            fontWeight: 600,
-            marginBottom: 4,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-        },
-
-        desc: {
-            fontSize: 14,
-            color: "#6B7280",
-            margin: "8px 0",
-        },
-
-        duration: {
-            color: "#2563EB",
-            fontWeight: 600,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-        },
-
-        btn: {
-            marginTop: 16,
-            padding: "10px 0",
-            width: "100%",
-            borderRadius: 8,
-            background: "#2563EB",
-            border: "none",
-            color: "white",
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "0.3s",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 8,
-        },
-    };
-
-    // Render Lecture Cards
-    const renderLectureCards = (lectures) => {
-        if (viewType === "grid") {
-            return (
-                <div style={styles.lectureGrid}>
-                    {lectures.map((lec) => (
-                        <div
-                            key={lec._id}
-                            style={styles.lectureCard}
-                            onMouseEnter={(e) =>
-                                Object.assign(e.currentTarget.style, styles.lectureCardHover)
-                            }
-                            onMouseLeave={(e) =>
-                                Object.assign(e.currentTarget.style, styles.lectureCard)
-                            }
-                        >
-                            <div style={styles.lectureTitle}>
-                                🎥 {lec.title}
-                            </div>
-
-                            <div style={styles.desc}>
-                                📄 {lec.description}
-                            </div>
-
-                            <div style={styles.duration}>⏱ {lec.duration}</div>
-
-                            <button
-                                style={styles.btn}
-                                onClick={() => window.open(lec.videoUrl, "_blank")}
-                            >
-                                ▶ Watch Video
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            );
+        if (!studentId) {
+          throw new Error('Student ID not found in storage');
         }
 
-        // List View
-        return (
-            <div>
-                {lectures.map((lec) => (
-                    <div
-                        key={lec._id}
-                        style={{ ...styles.lectureCard, marginBottom: 12 }}
-                    >
-                        <div style={styles.lectureTitle}>🎥 {lec.title}</div>
-                        <div style={styles.desc}>📄 {lec.description}</div>
-                        <div style={styles.duration}>⏱ {lec.duration}</div>
+        const data = await apiClient.getNextGenLectureVideos(studentId);
 
-                        <button
-                            style={{ ...styles.btn, marginTop: 10 }}
-                            onClick={() => window.open(lec.videoUrl, "_blank")}
-                        >
-                            ▶ Watch
-                        </button>
-                    </div>
-                ))}
-            </div>
-        );
+        if (data?.courses?.length > 0) {
+          setCourses(data.courses);
+
+          demoLectures = data.courses;
+          console.log(demoLectures, 'Fetched lecture data:');
+          setCourses(demoLectures);
+        } else {
+          setCourses([
+            {
+              _id: 'demo-course',
+              title: 'Demo Course',
+              lectures: demoLectures,
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error('Error fetching lectures:', err);
+        setCourses([
+          {
+            _id: 'demo-course',
+            title: 'Demo Course',
+            lectures: demoLectures,
+          },
+        ]);
+      }
     };
 
+    fetchLectures();
+  }, [id]);
+
+  // ---------- Styles ----------
+  const styles = {
+    page: {
+      padding: 30,
+      minHeight: '100vh',
+      background: 'linear-gradient(to bottom, #F6FAFF, #FFFFFF)',
+      fontFamily: 'Inter, Arial',
+    },
+    headerRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    heading: {
+      fontSize: 40,
+      fontWeight: 800,
+      color: '#0D47A1',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 12,
+    },
+    bookIcon: {
+      width: 35,
+      height: 35,
+      background: '#0D47A1',
+      borderRadius: 6,
+    },
+    toggleContainer: {
+      display: 'flex',
+      gap: 10,
+    },
+    toggleBtn: (active) => ({
+      padding: '10px 18px',
+      borderRadius: 10,
+      cursor: 'pointer',
+      backgroundColor: active ? '#1976D2' : 'white',
+      color: active ? 'white' : '#1976D2',
+      border: active ? '2px solid #1565C0' : '2px solid #90CAF9',
+      fontWeight: 600,
+      transition: '0.25s',
+    }),
+    courseTitle: {
+      fontWeight: 700,
+      fontSize: 24,
+      color: '#083875',
+      marginBottom: 14,
+      marginTop: 10,
+    },
+    lectureGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+      gap: 25,
+    },
+    lectureList: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 25,
+    },
+    card: {
+      padding: 20,
+      borderRadius: 18,
+      minHeight: 240,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      boxShadow: '0px 4px 14px rgba(0,0,0,0.15)',
+      border: '1px solid #dce3ed',
+      transition: '0.3s',
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: 700,
+      color: '#0D47A1',
+      marginBottom: 6,
+    },
+    desc: {
+      color: '#555',
+      fontSize: 14,
+      marginBottom: 8,
+    },
+    duration: {
+      color: '#1976D2',
+      fontWeight: 600,
+    },
+    btn: {
+      padding: '12px 0',
+      width: '100%',
+      border: 'none',
+      borderRadius: 10,
+      background: '#1976D2',
+      color: 'white',
+      fontWeight: 700,
+      fontSize: 15,
+      cursor: 'pointer',
+      transition: '0.25s',
+    },
+    btnHover: {
+      background: '#0D47A1',
+      transform: 'scale(1.03)',
+    },
+  };
+
+  // ---------- Render Lectures ----------
+  const renderLectureCards = (lectures) => {
+    const container =
+      viewType === 'grid' ? styles.lectureGrid : styles.lectureList;
     return (
-        <div style={styles.page}>
-
-            {/* Header */}
-            <div style={styles.mainHeader}>
-                <span style={{ fontSize: 32 }}>📚</span>
-                <h1 style={styles.heading}>Available Lectures</h1>
+      <div style={container}>
+        {lectures?.map((lec) => (
+          <div
+            key={lec._id}
+            style={{ ...styles.card, backgroundColor: lec.color }}
+            className='lectureCard'>
+            <div>
+              <h3 style={styles.title}>{lec.title}</h3>
+              <p style={styles.desc}>{lec.description}</p>
+              <p style={styles.duration}>⏱ {lec.duration}</p>
             </div>
-
-            <div style={styles.subText}>
-                Explore your course topics and watch recorded sessions anytime.
-            </div>
-
-            {/* COURSES */}
-            {courses.map(course => {
-                const topics = groupByTopic(course.lectures);
-
-                return (
-                    <div key={course._id}>
-                        <h2 style={styles.courseTitle}>📘 {course.title}</h2>
-
-                        {Object.keys(topics).map(topic => (
-                            <div key={topic}>
-                                <div
-                                    style={styles.topicCard}
-                                    onClick={() =>
-                                        setOpenTopic(openTopic === topic ? null : topic)
-                                    }
-                                >
-                                    <span style={styles.topicTitle}>
-                                        🗂 {topic} ({topics[topic].length})
-                                    </span>
-
-                                    <span style={styles.arrow}>
-                                        {openTopic === topic ? "▲" : "▼"}
-                                    </span>
-                                </div>
-
-                                {openTopic === topic && renderLectureCards(topics[topic])}
-                            </div>
-                        ))}
-                    </div>
-                );
-            })}
-        </div>
+            <button
+              className='watchBtn'
+              style={styles.btn}
+              onClick={() => window.open(lec.videoUrl, '_blank')}>
+              ▶ Watch Now
+            </button>
+          </div>
+        ))}
+      </div>
     );
+  };
+
+  // ---------- Hover Effects ----------
+  useEffect(() => {
+    document.querySelectorAll('.lectureCard').forEach((card) => {
+      card.onmouseenter = () => (card.style.transform = 'translateY(-5px)');
+      card.onmouseleave = () => (card.style.transform = 'translateY(0)');
+    });
+    document.querySelectorAll('.watchBtn').forEach((btn) => {
+      btn.onmouseenter = () => Object.assign(btn.style, styles.btnHover);
+      btn.onmouseleave = () => Object.assign(btn.style, styles.btn);
+    });
+  }, [courses, viewType]);
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.headerRow}>
+        <h1 style={styles.heading}>
+          <div style={styles.bookIcon}></div>
+          Available Lectures
+        </h1>
+        <div style={styles.toggleContainer}>
+          <div
+            style={styles.toggleBtn(viewType === 'grid')}
+            onClick={() => setViewType('grid')}>
+            Grid
+          </div>
+          <div
+            style={styles.toggleBtn(viewType === 'list')}
+            onClick={() => setViewType('list')}>
+            List
+          </div>
+        </div>
+      </div>
+      {courses.map((course) => (
+        <div key={course._id || course.id}>
+          <h3 style={styles.courseTitle}>{course.title}</h3>
+          {renderLectureCards(course.lectures)}
+        </div>
+      ))}
+    </div>
+  );
 }

@@ -58,8 +58,10 @@ import GradeAssignments from './pages/NextGenFreeEdu/GradeAssignments';
 import GradeExams from './pages/NextGenFreeEdu/GradeExams';
 import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
-//import AvailableLectures from "@pages/NextGenFreeEdu/AvailableLectures.jsx";
 import CourseLecture from './pages/NextGenFreeEdu/CourseLecture';
+import ManageLecture from './pages/NextGenFreeEdu/ManageLecture.jsx';
+import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures.jsx';
+import Leaderboard from './pages/NextGenFreeEdu/Leaderboard.jsx';
 import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures';
 import Leaderboard from './pages/NextGenFreeEdu/Leaderboard';
 import ClassLink from './pages/NextGenFreeEdu/LecturePage';
@@ -153,9 +155,10 @@ function AppRoutes() {
         <Route index element={<NextGenLanding />} />
         <Route path='enroll' element={<Enrollment />} />
         <Route path='payment/checkout' element={<PaymentCheckout />} />
-        <Route path='login' element={<StudentLogin />} />
+        <Route path='login' element={<StudentLogin />} />s
         <Route path='set-password' element={<SetPassword />} />
         <Route path='profile' element={<StudentProfile />} />
+        <Route path='student/lectures' element={<AvailableLectures />} />
         <Route path='exam' element={<Exam />} />
         <Route path='exams' element={<StudentExams />} />
         {/* ✅ yahi important */}
@@ -230,6 +233,7 @@ export default function App() {
               <Route index element={<NextGenLanding />} />
               <Route path='enroll' element={<Enrollment />} />
               <Route path='payment/checkout' element={<PaymentCheckout />} />
+              <Route path='lectures' element={<AvailableLectures />} />
               <Route path='login' element={<StudentLogin />} />
               <Route path='set-password' element={<SetPassword />} />
               <Route path='profile' element={<StudentProfile />} />
@@ -240,8 +244,12 @@ export default function App() {
               <Route path='coding-exam/:id' element={<CodingExam />} />
               <Route path='assignments' element={<StudentAssignments />} />
               <Route path='lectures' element={<AvailableLectures />} />
-                <Route path='class-link' element={<ClassLink />} />
-                <Route path='leaderboard' element={<Leaderboard/>} />
+              {/* <Route path='class-link' element={<ClassLink />} />*/}
+              <Route path='leaderboard' element={<Leaderboard />} />
+              <Route
+                path='assignments/:assignmentId'
+                element={<AssignmentDetails />}
+              />
               <Route
                 path='assignments/:assignmentId/submit'
                 element={<SubmitAssignment />}
@@ -271,7 +279,7 @@ export default function App() {
             />
             <Route
               path='/portal/coursemanager/createcodingexam'
-               element={<CreateCodingExam />}
+              element={<CreateCodingExam />}
             />
             <Route
               path='/portal/coursemanager/managecodingexams'
@@ -291,7 +299,11 @@ export default function App() {
             />
             <Route
               path='/portal/coursemanager/courselecture'
-              element={<CourseLecture/>}
+              element={<CourseLecture />}
+            />
+            <Route
+              path='/portal/coursemanager/managelecture'
+              element={<ManageLecture/>}
             />
             <Route path='test' element={<TestConnection />} />
           </Routes>

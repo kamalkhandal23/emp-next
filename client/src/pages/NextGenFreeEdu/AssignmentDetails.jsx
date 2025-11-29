@@ -705,20 +705,6 @@ export default function AssignmentDetails() {
                       </button>
                     )}
 
-                    {submission.status === 'submitted' ||
-                    submission.status === 'graded' ? (
-                      <button
-                        className='btn-primary'
-                        style={{ width: '100%' }}
-                        onClick={() =>
-                          navigate(
-                            `/nextgen/assignments/${assignmentId}/submit`
-                          )
-                        }>
-                        🔄 Retake Assignment
-                      </button>
-                    ) : null}
-
                     <button
                       className='btn-outline'
                       style={{ width: '100%' }}
@@ -798,7 +784,7 @@ export default function AssignmentDetails() {
                 <li>Read all questions carefully before starting</li>
                 <li>You can save answers for individual questions</li>
                 <li>Make sure to submit the final assignment when done</li>
-                <li>You can retake the assignment after submission</li>
+
               </ul>
             </div>
           </div>
