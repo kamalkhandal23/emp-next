@@ -1,4 +1,5 @@
 // src/App.jsx
+
 import './App.css';
 import React, { useEffect } from 'react';
 import {
@@ -57,8 +58,11 @@ import GradeAssignments from './pages/NextGenFreeEdu/GradeAssignments';
 import GradeExams from './pages/NextGenFreeEdu/GradeExams';
 import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
-import AvailableLectures from "@pages/NextGenFreeEdu/AvailableLectures.jsx";
+//import AvailableLectures from "@pages/NextGenFreeEdu/AvailableLectures.jsx";
 import CourseLecture from './pages/NextGenFreeEdu/CourseLecture';
+import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures';
+import Leaderboard from './pages/NextGenFreeEdu/Leaderboard';
+import ClassLink from './pages/NextGenFreeEdu/LecturePage';
 
 function MainLayout() {
   return (
@@ -287,7 +291,7 @@ export default function App() {
             />
             <Route
               path='/portal/coursemanager/courselecture'
-              element={<CourseLecture />}
+              element={<CourseLecture/>}
             />
             <Route path='test' element={<TestConnection />} />
           </Routes>
