@@ -58,6 +58,7 @@ import GradeExams from './pages/NextGenFreeEdu/GradeExams';
 import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
 import CourseLecture from './pages/NextGenFreeEdu/CourseLecture';
+import ManageLecture from './pages/NextGenFreeEdu/ManageLecture.jsx';
 import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures.jsx';
 import Leaderboard from './pages/NextGenFreeEdu/Leaderboard.jsx';
 
@@ -295,6 +296,10 @@ export default function App() {
             <Route
               path='/portal/coursemanager/courselecture'
               element={<CourseLecture />}
+            />
+            <Route
+              path='/portal/coursemanager/managelecture'
+              element={<ManageLecture/>}
             />
             <Route path='test' element={<TestConnection />} />
           </Routes>

@@ -445,6 +445,9 @@ export default function CourseManagerPortal() {
     if (action === 'Add Lectures to Course') {
       navigate('/portal/coursemanager/courselecture');
     }
+    if (action === "Manage Lecture"){
+      navigate("/portal/coursemanager/managelecture")
+    }
   };
 
   const handleDeleteCourse = async (course) => {
@@ -1489,8 +1492,8 @@ export default function CourseManagerPortal() {
                   <ActionList
                     actions={[
                       'Add Lectures to Course',
+                      'Manage Lecture',
                       'Meeting',
-                      'Payroll Report',
                       'Leave Report',
                     ]}
                     onActionClick={handleActionClick}
