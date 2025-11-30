@@ -78,12 +78,15 @@ export const AuthProvider = ({ children }) => {
             payload: { user, token },
           });
         })
-        .catch((error) => {
-          console.error("Failed to get current user:", error);
-          localStorage.removeItem("authToken");
-          dispatch({ type: "LOGOUT" });
-        })
-        .finally(() => {
+          .catch((error) => {
+              console.error("Failed to get current user:", error);
+              dispatch({
+                  type: "LOGIN_FAILURE",
+                  payload: error.message
+              });
+          })
+
+          .finally(() => {
           dispatch({ type: "SET_LOADING", payload: false });
         });
     } else {

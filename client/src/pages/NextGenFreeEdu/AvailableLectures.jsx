@@ -1,8 +1,9 @@
-import { useParams } from "react-router-dom";
+import { useNavigate,useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { apiClient } from '@utils/api.js';
 
 export default function AvailableLectures() {
+    const navigate = useNavigate();
     const { id } = useParams();
     const [courses, setCourses] = useState([]);
     const [viewType, setViewType] = useState("grid");
@@ -15,14 +16,29 @@ export default function AvailableLectures() {
     // Fetch Lectures
     useEffect(() => {
         const fetchLectures = async () => {
-            try {
-                const studentData = getStudentData();
-                console.log("Student Data:", studentData);
-                const studentId = studentData?.student_id || studentData?.id;
+            try {const raw = localStorage.getItem("studentInfo");
+                let studentInfo = null;
+                try {
+                    studentInfo = raw ? JSON.parse(raw) : null;
+                } catch (err) {
+                    console.warn("Failed to parse studentInfo from localStorage", err);
+                    studentInfo = null;
+                }
 
-                if (!studentId) throw new Error("Student ID not found");
+                //Checking token existence
+                const token = localStorage.getItem('authToken');
+                if (!token ) {
+                    console.warn('⚠️ Redirecting to login - missing token or studentInfo');
+                    navigate('/nextgen/login');
+                    return;
+                }
 
-                const data = await apiClient.getNextGenLectureVideos(studentId);
+                const studentId = studentInfo?.student_id ?? studentInfo?.id;
+                const courseId = studentInfo?.course?._id;
+                console.log("Fetching lectures for student:", studentId, "course:", courseId, token);
+
+                const data = await apiClient.getNextGenLectureVideos(studentId,courseId,token);
+                console.log("Fetched lecture data:", data);
 
                 if (data?.courses?.length > 0) {
                     setCourses(data.courses);

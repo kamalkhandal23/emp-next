@@ -154,16 +154,37 @@ class ApiClient {
   }
 
   // Get lecture videos for NextGen Education
-    async getNextGenLectureVideos(id){
-        console.log(id,"api lecture student id");
-        return this.request(`/nextgen/lectureVideo/student/${id}`);
+    async getNextGenLectureVideos(studentId, courseId, token) {
+        console.log(studentId, courseId, "api lecture student & course id");
+
+        return this.request(
+            `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
     }
 
     //get student leader board
-    async getNextGenLeaderboard(courseId){
-      console.log("abs");
-      return this.request(`/nextgen/leaderboard/student/${courseId}`);
+    async getNextGenLeaderboard(studentId, courseId,token) {
+      // ALWAYS load inside function
 
+        console.log("HEADER SENT:", `Bearer ${token}`);
+
+        return this.request(
+            `/nextgen/leaderboard/student?studentId=${studentId}&courseId=${courseId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
     }
 
 

@@ -50,6 +50,9 @@ import ManageExams from './pages/NextGenFreeEdu/ManageExams';
 import ManageAssignments from './pages/NextGenFreeEdu/ManageAssignments';
 import CreateCodingExam from './pages/NextGenFreeEdu/CreateCodingExam';
 import ManageCodingExams from './pages/NextGenFreeEdu/ManageCodingExams';
+import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures';
+import Leaderboard from './pages/NextGenFreeEdu/Leaderboard';
+import ClassLink from './pages/NextGenFreeEdu/LecturePage';
 
 import SubmitAssignment from './pages/NextGenFreeEdu/SubmitAssignment';
 
@@ -57,6 +60,7 @@ import GradeAssignments from './pages/NextGenFreeEdu/GradeAssignments';
 import GradeExams from './pages/NextGenFreeEdu/GradeExams';
 import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
+import CourseLecture from "./pages/NextGenFreeEdu/CourseLecture";
 
 function MainLayout() {
   return (
@@ -282,10 +286,6 @@ export default function App() {
             <Route
               path='/portal/coursemanager/gradeexams'
               element={<GradeExams />}
-            />
-            <Route
-              path='/portal/coursemanager/courselecture'
-              element={<CourseLecture />}
             />
             <Route path='test' element={<TestConnection />} />
           </Routes>
