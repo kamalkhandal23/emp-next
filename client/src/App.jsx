@@ -287,6 +287,10 @@ export default function App() {
               path='/portal/coursemanager/gradeexams'
               element={<GradeExams />}
             />
+            <Route
+              path='/portal/coursemanager/courselecture'
+              element={<CourseLecture />}
+            />
             <Route path='test' element={<TestConnection />} />
           </Routes>
         </AuthProvider>

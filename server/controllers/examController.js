@@ -8,23 +8,23 @@ import mongoose from 'mongoose';
 // Get all exams
 export const getAllExams = async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 10, 
-      search, 
-      course, 
-      type, 
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      course,
+      type,
       status,
       sortBy = 'createdAt',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
     } = req.query;
-    
+
     const query = {};
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { examId: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
+        { description: { $regex: search, $options: 'i' } },
       ];
     }
     if (course) query.course = course;
@@ -47,10 +47,12 @@ export const getAllExams = async (req, res) => {
       exams,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
-      total
+      total,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching exams', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error fetching exams', error: error.message });
   }
 };
 
@@ -68,7 +70,9 @@ export const getExamById = async (req, res) => {
 
     res.json(exam);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching exam', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error fetching exam', error: error.message });
   }
 };
 
@@ -87,8 +91,17 @@ export const createExam = async (req, res) => {
     const examData = {
       ...req.body,
       examId,
-      createdBy: req.user.id
+      createdBy: req.user.id,
     };
+
+    // Handle start time and end time if provided
+    if (req.body.startTime && req.body.endTime) {
+      examData.schedule = {
+        startDate: new Date(req.body.startTime),
+        endDate: new Date(req.body.endTime),
+        timezone: req.body.timezone || 'UTC',
+      };
+    }
 
     const exam = new Exam(examData);
     await exam.save();
@@ -99,11 +112,13 @@ export const createExam = async (req, res) => {
         id: exam._id,
         examId: exam.examId,
         title: exam.title,
-        course: exam.course
-      }
+        course: exam.course,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating exam', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error creating exam', error: error.message });
   }
 };
 
@@ -117,14 +132,13 @@ export const updateExam = async (req, res) => {
 
     const examData = {
       ...req.body,
-      lastModifiedBy: req.user.id
+      lastModifiedBy: req.user.id,
     };
 
-    const exam = await Exam.findByIdAndUpdate(
-      req.params.id,
-      examData,
-      { new: true, runValidators: true }
-    ).populate('course', 'title courseCode');
+    const exam = await Exam.findByIdAndUpdate(req.params.id, examData, {
+      new: true,
+      runValidators: true,
+    }).populate('course', 'title courseCode');
 
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found' });
@@ -132,10 +146,12 @@ export const updateExam = async (req, res) => {
 
     res.json({
       message: 'Exam updated successfully',
-      exam
+      exam,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating exam', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error updating exam', error: error.message });
   }
 };
 
@@ -151,9 +167,9 @@ export const deleteExam = async (req, res) => {
     // Check if there are any results
     const resultCount = await Result.countDocuments({ exam: req.params.id });
     if (resultCount > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: 'Cannot delete exam with existing results',
-        resultCount
+        resultCount,
       });
     }
 
@@ -161,7 +177,9 @@ export const deleteExam = async (req, res) => {
 
     res.json({ message: 'Exam deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting exam', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error deleting exam', error: error.message });
   }
 };
 
@@ -173,7 +191,9 @@ export const getExamForStudent = async (req, res) => {
 
     const exam = await Exam.findById(examId)
       .populate('course', 'title courseCode')
-      .select('-questions.correctAnswer -questions.options.isCorrect -questions.explanation');
+      .select(
+        '-questions.correctAnswer -questions.options.isCorrect -questions.explanation'
+      );
 
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found' });
@@ -181,20 +201,22 @@ export const getExamForStudent = async (req, res) => {
 
     // Check if exam is active and student can take it
     if (!exam.canStudentTakeExam(studentId)) {
-      return res.status(403).json({ message: 'You are not eligible to take this exam' });
+      return res
+        .status(403)
+        .json({ message: 'You are not eligible to take this exam' });
     }
 
     // Check previous attempts
     const previousAttempts = await Result.countDocuments({
       student: studentId,
-      exam: examId
+      exam: examId,
     });
 
     if (previousAttempts >= exam.settings.attemptsAllowed) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: 'Maximum attempts exceeded',
         attemptsUsed: previousAttempts,
-        attemptsAllowed: exam.settings.attemptsAllowed
+        attemptsAllowed: exam.settings.attemptsAllowed,
       });
     }
 
@@ -205,9 +227,9 @@ export const getExamForStudent = async (req, res) => {
     }
 
     if (exam.settings.randomizeOptions) {
-      questions = questions.map(q => ({
+      questions = questions.map((q) => ({
         ...q.toObject(),
-        options: q.options ? q.options.sort(() => Math.random() - 0.5) : []
+        options: q.options ? q.options.sort(() => Math.random() - 0.5) : [],
       }));
     }
 
@@ -220,19 +242,23 @@ export const getExamForStudent = async (req, res) => {
         course: exam.course,
         type: exam.type,
         settings: exam.settings,
-        questions: questions.map(q => ({
+        questions: questions.map((q) => ({
           questionId: q.questionId,
           type: q.type,
           question: q.question,
-          options: q.options ? q.options.map(opt => ({ text: opt.text })) : [],
-          points: q.points
-        }))
+          options: q.options
+            ? q.options.map((opt) => ({ text: opt.text }))
+            : [],
+          points: q.points,
+        })),
       },
       attemptsUsed: previousAttempts,
-      attemptsRemaining: exam.settings.attemptsAllowed - previousAttempts
+      attemptsRemaining: exam.settings.attemptsAllowed - previousAttempts,
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching exam', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error fetching exam', error: error.message });
   }
 };
 
@@ -249,16 +275,20 @@ export const submitExam = async (req, res) => {
     }
 
     // Validate submission
-    const timeSpent = Math.round((new Date(endTime) - new Date(startTime)) / (1000 * 60));
-    if (timeSpent > exam.settings.duration + 5) { // 5 minute grace period
+    const timeSpent = Math.round(
+      (new Date(endTime) - new Date(startTime)) / (1000 * 60)
+    );
+    if (timeSpent > exam.settings.duration + 5) {
+      // 5 minute grace period
       return res.status(400).json({ message: 'Exam time exceeded' });
     }
 
     // Check attempts
-    const attemptNumber = await Result.countDocuments({
-      student: studentId,
-      exam: examId
-    }) + 1;
+    const attemptNumber =
+      (await Result.countDocuments({
+        student: studentId,
+        exam: examId,
+      })) + 1;
 
     if (attemptNumber > exam.settings.attemptsAllowed) {
       return res.status(403).json({ message: 'Maximum attempts exceeded' });
@@ -269,22 +299,25 @@ export const submitExam = async (req, res) => {
     const resultId = `RES${String(resultCount + 1).padStart(8, '0')}`;
 
     // Process answers
-    const processedAnswers = answers.map(answer => {
-      const question = exam.questions.find(q => q.questionId === answer.questionId);
+    const processedAnswers = answers.map((answer) => {
+      const question = exam.questions.find(
+        (q) => q.questionId === answer.questionId
+      );
       let isCorrect = false;
-      
+
       if (question) {
         switch (question.type) {
           case 'multiple-choice':
-            const correctOption = question.options.find(opt => opt.isCorrect);
+            const correctOption = question.options.find((opt) => opt.isCorrect);
             isCorrect = correctOption && correctOption.text === answer.answer;
             break;
           case 'true-false':
             isCorrect = question.correctAnswer === answer.answer;
             break;
           case 'short-answer':
-            isCorrect = question.correctAnswer.toLowerCase().trim() === 
-                       answer.answer.toLowerCase().trim();
+            isCorrect =
+              question.correctAnswer.toLowerCase().trim() ===
+              answer.answer.toLowerCase().trim();
             break;
           default:
             isCorrect = false; // Manual grading required
@@ -294,7 +327,7 @@ export const submitExam = async (req, res) => {
       return {
         ...answer,
         isCorrect,
-        pointsEarned: isCorrect ? question.points : 0
+        pointsEarned: isCorrect ? question.points : 0,
       };
     });
 
@@ -308,7 +341,7 @@ export const submitExam = async (req, res) => {
       endTime: new Date(endTime),
       timeSpent,
       answers: processedAnswers,
-      status: 'completed'
+      status: 'completed',
     });
 
     await result.calculateScore(exam);
@@ -318,7 +351,7 @@ export const submitExam = async (req, res) => {
     // Update student's exam results
     const student = await Student.findById(studentId);
     const existingResultIndex = student.examResults.findIndex(
-      r => r.exam.toString() === examId
+      (r) => r.exam.toString() === examId
     );
 
     const examResult = {
@@ -326,7 +359,7 @@ export const submitExam = async (req, res) => {
       score: result.score.raw,
       grade: result.score.grade,
       dateTaken: new Date(),
-      attempts: attemptNumber
+      attempts: attemptNumber,
     };
 
     if (existingResultIndex >= 0) {
@@ -344,11 +377,13 @@ export const submitExam = async (req, res) => {
         resultId: result.resultId,
         score: result.score,
         timeSpent: result.timeSpent,
-        feedback: exam.settings.showResultsImmediately ? result.feedback : null
-      }
+        feedback: exam.settings.showResultsImmediately ? result.feedback : null,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error submitting exam', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error submitting exam', error: error.message });
   }
 };
 
@@ -356,17 +391,19 @@ export const submitExam = async (req, res) => {
 export const getExamStatistics = async (req, res) => {
   try {
     const examId = req.params.id;
-    
+
     const exam = await Exam.findById(examId);
     if (!exam) {
       return res.status(404).json({ message: 'Exam not found' });
     }
 
     const stats = await Result.getExamStatistics(examId);
-    
+
     // Get additional statistics
     const detailedStats = await Result.aggregate([
-      { $match: { exam: mongoose.Types.ObjectId(examId), status: 'completed' } },
+      {
+        $match: { exam: mongoose.Types.ObjectId(examId), status: 'completed' },
+      },
       {
         $group: {
           _id: null,
@@ -376,15 +413,17 @@ export const getExamStatistics = async (req, res) => {
           highestScore: { $max: '$score.percentage' },
           lowestScore: { $min: '$score.percentage' },
           averageTime: { $avg: '$timeSpent' },
-          passCount: { $sum: { $cond: ['$score.passed', 1, 0] } }
-        }
+          passCount: { $sum: { $cond: ['$score.passed', 1, 0] } },
+        },
       },
       {
         $addFields: {
           uniqueStudentCount: { $size: '$uniqueStudents' },
-          passRate: { $multiply: [{ $divide: ['$passCount', '$totalAttempts'] }, 100] }
-        }
-      }
+          passRate: {
+            $multiply: [{ $divide: ['$passCount', '$totalAttempts'] }, 100],
+          },
+        },
+      },
     ]);
 
     const result = {
@@ -393,7 +432,7 @@ export const getExamStatistics = async (req, res) => {
         title: exam.title,
         examId: exam.examId,
         totalQuestions: exam.totalQuestions,
-        totalPoints: exam.settings.totalPoints
+        totalPoints: exam.settings.totalPoints,
       },
       statistics: detailedStats[0] || {
         totalAttempts: 0,
@@ -403,13 +442,18 @@ export const getExamStatistics = async (req, res) => {
         lowestScore: 0,
         averageTime: 0,
         passCount: 0,
-        passRate: 0
-      }
+        passRate: 0,
+      },
     };
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching exam statistics', error: error.message });
+    res
+      .status(500)
+      .json({
+        message: 'Error fetching exam statistics',
+        error: error.message,
+      });
   }
 };
 
@@ -434,11 +478,13 @@ export const updateExamStatus = async (req, res) => {
       exam: {
         id: exam._id,
         title: exam.title,
-        status: exam.status
-      }
+        status: exam.status,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating exam status', error: error.message });
+    res
+      .status(500)
+      .json({ message: 'Error updating exam status', error: error.message });
   }
 };
 
@@ -451,5 +497,5 @@ export default {
   getExamForStudent,
   submitExam,
   getExamStatistics,
-  updateExamStatus
+  updateExamStatus,
 };

@@ -32,6 +32,13 @@ export default function CourseManagerPortal() {
   const [studentRegistrations, setStudentRegistrations] = useState([]);
   const [courses, setCourses] = useState([]);
 
+  // Filter state
+  const [courseFilter, setCourseFilter] = useState({
+    visibility: 'all', // all, published, draft, archived
+    status: 'all', // all, coming_soon, open, closed, registration_not_started, registration_closed
+    search: '',
+  });
+
   // Misc
   const [loading, setLoading] = useState(false);
   const [showAddCourse, setShowAddCourse] = useState(false);
@@ -45,9 +52,15 @@ export default function CourseManagerPortal() {
     duration: '',
     description: '',
     prerequisites: '',
-    icon: '🎓',
+    icon: '📘',
     visibility: 'draft',
     rating: 0,
+    banner_url: '',
+    courseCode: '',
+    start_date: '',
+    end_date: '',
+    registration_start: '',
+    registration_end: '',
   });
 
   const [newCourse, setNewCourse] = useState({
@@ -57,10 +70,81 @@ export default function CourseManagerPortal() {
     duration: '',
     description: '',
     prerequisites: '',
-    icon: '🎓',
+    icon: '📘',
     visibility: 'draft',
     rating: 0,
+    banner_url: '',
+    courseCode: '',
+    start_date: '',
+    end_date: '',
+    registration_start: '',
+    registration_end: '',
   });
+
+  // Filtered courses based on frontend filters
+  const filteredCourses = useMemo(() => {
+    let filtered = [...courses];
+
+    // Filter by visibility
+    if (courseFilter.visibility !== 'all') {
+      filtered = filtered.filter(
+        (course) => course.visibility === courseFilter.visibility
+      );
+    }
+
+    // Filter by status
+    if (courseFilter.status !== 'all') {
+      filtered = filtered.filter(
+        (course) => course.courseStatus === courseFilter.status
+      );
+    }
+
+    // Filter by search term
+    if (courseFilter.search.trim()) {
+      const searchTerm = courseFilter.search.toLowerCase().trim();
+      filtered = filtered.filter(
+        (course) =>
+          course.title?.toLowerCase().includes(searchTerm) ||
+          course.subtitle?.toLowerCase().includes(searchTerm) ||
+          course.description?.toLowerCase().includes(searchTerm) ||
+          course.courseCode?.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    return filtered;
+  }, [courses, courseFilter]);
+
+  // Helper function to get status styling
+  const getStatusStyle = (status) => {
+    switch (status) {
+      case 'coming_soon':
+        return {
+          className: 'status-badge status-pending',
+          text: 'Coming Soon',
+        };
+      case 'open':
+        return { className: 'status-badge status-active', text: 'Open' };
+      case 'closed':
+        return { className: 'status-badge status-inactive', text: 'Closed' };
+      case 'registration_not_started':
+        return {
+          className: 'status-badge status-pending',
+          text: 'Registration Not Started',
+        };
+      case 'registration_closed':
+        return {
+          className: 'status-badge status-warning',
+          text: 'Registration Closed',
+        };
+      case 'draft':
+        return { className: 'status-badge status-pending', text: 'Draft' };
+      default:
+        return {
+          className: 'status-badge status-pending',
+          text: status || 'Unknown',
+        };
+    }
+  };
 
   // Mock data fallbacks
   const mockRegistrations = useMemo(
@@ -174,27 +258,6 @@ export default function CourseManagerPortal() {
   };
 
   useEffect(() => {
-    const fetchRegistrations = async () => {
-      try {
-        const response = await axios.get(
-          'http://localhost:5002/api/nextgen/registrations',
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setStudentRegistrations(response.data);
-
-        // setStudentRegistrations(response.data.data);
-
-        console.log('Fetched registrations:', response.data);
-      } catch (error) {
-        console.error('Error fetching registrations:', error);
-      }
-    };
-
     fetchRegistrations();
     fetchCourses();
   }, []);
@@ -202,19 +265,9 @@ export default function CourseManagerPortal() {
   // Fetch registrations from API
   const fetchRegistrations = async () => {
     try {
-      const token = localStorage.getItem('token'); // get token from localStorage
-
-      const res = await axios.get(
-        'http://localhost:5002/api/nextgen/registrations',
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        }
-      );
-
-      console.log(res.data);
+      const response = await apiClient.getRegistrations();
+      setStudentRegistrations(response);
+      console.log('Fetched registrations:', response);
     } catch (error) {
       console.error('Error fetching registrations:', error);
     }
@@ -245,34 +298,14 @@ export default function CourseManagerPortal() {
   const handleApproveRegistration = async (id) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('authToken');
-      console.log('🔹 Token from localStorage:', token);
 
-      if (!token) {
-        alert('No token found! Please login again.');
-        return;
-      }
-
-      const url = `http://localhost:5002/api/nextgen/admin/registrations/${id}/approve`;
-      console.log('🔹 Requesting:', url);
-
-      const res = await axios.put(
-        url,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log(' Response:', res.data);
-      alert(res.data?.message || 'Registration approved successfully!');
+      const response = await apiClient.approveRegistration(id);
+      console.log('✅ Response:', response);
+      alert(response?.message || 'Registration approved successfully!');
       fetchRegistrations();
     } catch (error) {
       console.error('Full error object:', error);
-      console.error('Error response:', error.response?.data);
-      alert(error.response?.data?.message || 'Approval failed!');
+      alert(error.message || 'Approval failed!');
     } finally {
       setLoading(false);
     }
@@ -282,32 +315,12 @@ export default function CourseManagerPortal() {
   const handleRejectRegistration = async (registrationId, reason) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_URL
-        }/nextgen/admin/registrations/${registrationId}/reject`,
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ reason }),
-        }
-      );
-
-      if (response.ok) {
-        await fetchRegistrations();
-        alert('Registration rejected successfully!');
-      } else {
-        const errorData = await response.json();
-        alert(`Error rejecting registration: ${errorData.message}`);
-      }
+      await apiClient.rejectRegistration(registrationId, reason);
+      await fetchRegistrations();
+      alert('Registration rejected successfully!');
     } catch (error) {
       console.error('Error rejecting registration:', error);
-      alert('Error rejecting registration');
+      alert(`Error rejecting registration: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -344,6 +357,14 @@ export default function CourseManagerPortal() {
 
   const handleEditCourse = (course) => {
     setSelectedCourse(course);
+
+    // Helper function to format date for datetime-local input
+    const formatDateForInput = (dateString) => {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      return date.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM format
+    };
+
     setEditCourse({
       slug: course.slug || '',
       title: course.title || '',
@@ -354,6 +375,12 @@ export default function CourseManagerPortal() {
       icon: course.icon || '🎓',
       rating: course.rating || 0,
       visibility: course.visibility || 'draft',
+      banner_url: course.banner_url || '',
+      courseCode: course.courseCode || '',
+      start_date: formatDateForInput(course.start_date),
+      end_date: formatDateForInput(course.end_date),
+      registration_start: formatDateForInput(course.registration_start),
+      registration_end: formatDateForInput(course.registration_end),
     });
     setShowEditCourse(true);
   };
@@ -361,133 +388,90 @@ export default function CourseManagerPortal() {
   const handleAddCourse = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/nextgen/courses`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newCourse),
-        }
-      );
-
-      if (res.ok) {
-        await fetchCourses();
-        setShowAddCourse(false);
-        setNewCourse({
-          slug: '',
-          title: '',
-          subtitle: '',
-          duration: '',
-          description: '',
-          prerequisites: '',
-          icon: '🎓',
-          visibility: 'draft',
-          rating: 0,
-        });
-        alert('Course added successfully!');
-      } else {
-        const err = await res.json().catch(() => ({}));
-        alert(`Error adding course: ${err?.message || 'Failed'}`);
-      }
-    } catch (e) {
-      console.error('Add course failed:', e);
-      alert('Error adding course');
+      await apiClient.createCourse(newCourse);
+      await fetchCourses();
+      setShowAddCourse(false);
+      setNewCourse({
+        slug: '',
+        title: '',
+        subtitle: '',
+        duration: '',
+        description: '',
+        prerequisites: '',
+        icon: '📘',
+        visibility: 'draft',
+        banner_url: '',
+        courseCode: '',
+        start_date: '',
+        end_date: '',
+        registration_start: '',
+        registration_end: '',
+      });
+      alert('Course added successfully!');
+    } catch (error) {
+      console.error('Add course failed:', error);
+      alert(`Error adding course: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-    const handleActionClick = (action) => {
-        console.log(action)
-        if (action === "Create exams") {
-        navigate("/portal/coursemanager/createexam");
-        }
-        if (action === "Create Assignments") {
-        navigate("/portal/coursemanager/createassignment");
-        }
-        if (action === "Manage Exams") {
-        navigate("/portal/coursemanager/manageexams");
-        }
-        if (action === "Create Coding exams") {
-        navigate("/portal/coursemanager/createcodingexam"); 
-        }
-        if (action === "Manage Coding Exams") {
-        navigate("/portal/coursemanager/managecodingexams");
-        }
-        if (action === "Manage Assignments") {
-        navigate("/portal/coursemanager/manageassignments");
-        }
-        if (action === "Grade Assignments") {
-        navigate("/portal/coursemanager/gradeassignments");
-        }
-        if (action === "Grade Exams") {
-        navigate("/portal/coursemanager/gradeexams");
-        }
-        if (action === "Add Lectures to Course") {
-        navigate("/portal/coursemanager/courselecture");
-        }
-
-    };
+  const handleActionClick = (action) => {
+    console.log(action);
+    if (action === 'Create exams') {
+      navigate('/portal/coursemanager/createexam');
+    }
+    if (action === 'Create Assignments') {
+      navigate('/portal/coursemanager/createassignment');
+    }
+    if (action === 'Manage Exams') {
+      navigate('/portal/coursemanager/manageexams');
+    }
+    if (action === 'Create Coding exams') {
+      navigate('/portal/coursemanager/createcodingexam');
+    }
+    if (action === 'Manage Coding Exams') {
+      navigate('/portal/coursemanager/managecodingexams');
+    }
+    if (action === 'Manage Assignments') {
+      navigate('/portal/coursemanager/manageassignments');
+    }
+    if (action === 'Grade Assignments') {
+      navigate('/portal/coursemanager/gradeassignments');
+    }
+    if (action === 'Grade Exams') {
+      navigate('/portal/coursemanager/gradeexams');
+    }
+    if (action === 'Add Lectures to Course') {
+      navigate('/portal/coursemanager/courselecture');
+    }
+    if (action === "Manage Lecture"){
+      navigate("/portal/coursemanager/managelecture")
+    }
+  };
 
   const handleDeleteCourse = async (course) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(
-        `http://localhost:5002/api/nextgen/courses/${course._id}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      const data = await res.json();
-
-      if (data.success) {
-        alert('Course deleted successfully');
-        setCourses((prev) => prev.filter((c) => c._id !== course._id));
-      } else {
-        message.error(data.message || 'Failed to delete course');
-      }
+      await apiClient.deleteCourse(course._id);
+      alert('Course deleted successfully');
+      setCourses((prev) => prev.filter((c) => c._id !== course._id));
     } catch (error) {
       console.error(error);
-      alert('Server error while deleting course');
+      alert(`Server error while deleting course: ${error.message}`);
     }
   };
 
   const handleEditCourseSubmit = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/nextgen/courses/${selectedCourse._id}`,
-        {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(editCourse),
-        }
-      );
-
-      if (res.ok) {
-        await fetchCourses();
-        setShowEditCourse(false);
-        setSelectedCourse(null);
-        alert('Course updated successfully!');
-      } else {
-        const err = await res.json().catch(() => ({}));
-        alert(`Error updating course: ${err?.message || 'Failed'}`);
-      }
-    } catch (e) {
-      console.error('Edit course failed:', e);
-      alert('Error updating course');
+      await apiClient.updateCourse(selectedCourse._id, editCourse);
+      await fetchCourses();
+      setShowEditCourse(false);
+      setSelectedCourse(null);
+      alert('Course updated successfully!');
+    } catch (error) {
+      console.error('Edit course failed:', error);
+      alert(`Error updating course: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -780,6 +764,170 @@ export default function CourseManagerPortal() {
                 />
               </div>
 
+              {/* Course Filters */}
+              <div
+                style={{
+                  background: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  marginBottom: '1.5rem',
+                }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 1fr 1fr',
+                    gap: '1rem',
+                    alignItems: 'end',
+                  }}>
+                  {/* Search */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#374151',
+                      }}>
+                      Search Courses
+                    </label>
+                    <input
+                      type='text'
+                      placeholder='Search by title, subtitle, code, or description...'
+                      value={courseFilter.search}
+                      onChange={(e) =>
+                        setCourseFilter((prev) => ({
+                          ...prev,
+                          search: e.target.value,
+                        }))
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem 0.875rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                      }}
+                    />
+                  </div>
+
+                  {/* Visibility Filter */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#374151',
+                      }}>
+                      Visibility
+                    </label>
+                    <select
+                      value={courseFilter.visibility}
+                      onChange={(e) =>
+                        setCourseFilter((prev) => ({
+                          ...prev,
+                          visibility: e.target.value,
+                        }))
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem 0.875rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        background: 'white',
+                      }}>
+                      <option value='all'>All</option>
+                      <option value='published'>Published</option>
+                      <option value='draft'>Draft</option>
+                      <option value='archived'>Archived</option>
+                    </select>
+                  </div>
+
+                  {/* Status Filter */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        marginBottom: '0.5rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: '#374151',
+                      }}>
+                      Status
+                    </label>
+                    <select
+                      value={courseFilter.status}
+                      onChange={(e) =>
+                        setCourseFilter((prev) => ({
+                          ...prev,
+                          status: e.target.value,
+                        }))
+                      }
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem 0.875rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        background: 'white',
+                      }}>
+                      <option value='all'>All Statuses</option>
+                      <option value='draft'>Draft</option>
+                      <option value='coming_soon'>Coming Soon</option>
+                      <option value='registration_not_started'>
+                        Registration Not Started
+                      </option>
+                      <option value='open'>Open</option>
+                      <option value='registration_closed'>
+                        Registration Closed
+                      </option>
+                      <option value='closed'>Closed</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Filter Summary */}
+                <div
+                  style={{
+                    marginTop: '1rem',
+                    display: 'flex',
+                    gap: '0.75rem',
+                    alignItems: 'center',
+                    fontSize: '0.875rem',
+                    color: '#6b7280',
+                  }}>
+                  <span>
+                    Showing {filteredCourses.length} of {courses.length} courses
+                  </span>
+                  {(courseFilter.search ||
+                    courseFilter.visibility !== 'all' ||
+                    courseFilter.status !== 'all') && (
+                    <button
+                      onClick={() =>
+                        setCourseFilter({
+                          visibility: 'all',
+                          status: 'all',
+                          search: '',
+                        })
+                      }
+                      style={{
+                        padding: '0.25rem 0.75rem',
+                        background: '#f3f4f6',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.8125rem',
+                      }}>
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className='data-table'>
                 <div className='table-header'>All Courses</div>
                 <div
@@ -794,16 +942,19 @@ export default function CourseManagerPortal() {
                   <div>Subtitle</div>
                   <div>Duration</div>
                   <div>Visibility</div>
+                  <div>Status</div>
                   <div>Enrollments</div>
                   <div>Rating</div>
                   <div>Actions</div>
                 </div>
 
-                {courses.map((course, idx) => (
+                {filteredCourses.map((course, idx) => (
                   <div
                     key={course?._id || idx}
                     className='table-row'
-                    style={{ gridTemplateColumns: '2fr 2fr 1fr 1fr 1fr 1fr auto' }}>
+                    style={{
+                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr auto',
+                    }}>
                     <div style={{ fontWeight: 500 }}>
                       {course?.icon} {course?.title}
                     </div>
@@ -818,6 +969,16 @@ export default function CourseManagerPortal() {
                         }`}>
                         {course?.visibility}
                       </span>
+                    </div>
+                    <div>
+                      {course?.courseStatus && (
+                        <span
+                          className={
+                            getStatusStyle(course.courseStatus).className
+                          }>
+                          {getStatusStyle(course.courseStatus).text}
+                        </span>
+                      )}
                     </div>
                     <div>{course?.enrolled_count || 0}</div>
                     <div>{course?.rating || 0} / 5</div>
@@ -851,7 +1012,7 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Assignments' style={{color : 'black'}}>
+                <Card title='Assignments' style={{ color: 'black' }}>
                   <ActionList
                     actions={[
                       'Create Assignments',
@@ -1331,8 +1492,8 @@ export default function CourseManagerPortal() {
                   <ActionList
                     actions={[
                       'Add Lectures to Course',
+                      'Manage Lecture',
                       'Meeting',
-                      'Payroll Report',
                       'Leave Report',
                     ]}
                     onActionClick={handleActionClick}
@@ -1424,12 +1585,20 @@ export default function CourseManagerPortal() {
               <TextField
                 label='Rating'
                 value={newCourse.rating}
-                onChange={(v) => setNewCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))}
+                onChange={(v) =>
+                  setNewCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))
+                }
                 type='number'
                 min='0'
                 max='5'
                 step='0.1'
                 placeholder='0.0'
+              />
+              <TextField
+                label='Banner URL'
+                value={newCourse.banner_url}
+                onChange={(v) => setNewCourse((p) => ({ ...p, banner_url: v }))}
+                placeholder='https://example.com/banner.jpg'
               />
               <Select
                 label='Visibility'
@@ -1439,6 +1608,34 @@ export default function CourseManagerPortal() {
                   { value: 'draft', label: 'Draft' },
                   { value: 'published', label: 'Published' },
                 ]}
+              />
+              <TextField
+                label='Course Start Date'
+                type='datetime-local'
+                value={newCourse.start_date}
+                onChange={(v) => setNewCourse((p) => ({ ...p, start_date: v }))}
+              />
+              <TextField
+                label='Course End Date'
+                type='datetime-local'
+                value={newCourse.end_date}
+                onChange={(v) => setNewCourse((p) => ({ ...p, end_date: v }))}
+              />
+              <TextField
+                label='Registration Start Date'
+                type='datetime-local'
+                value={newCourse.registration_start}
+                onChange={(v) =>
+                  setNewCourse((p) => ({ ...p, registration_start: v }))
+                }
+              />
+              <TextField
+                label='Registration End Date'
+                type='datetime-local'
+                value={newCourse.registration_end}
+                onChange={(v) =>
+                  setNewCourse((p) => ({ ...p, registration_end: v }))
+                }
               />
             </div>
 
@@ -1527,12 +1724,30 @@ export default function CourseManagerPortal() {
               <TextField
                 label='Rating'
                 value={editCourse.rating}
-                onChange={(v) => setEditCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))}
+                onChange={(v) =>
+                  setEditCourse((p) => ({ ...p, rating: parseFloat(v) || 0 }))
+                }
                 type='number'
                 min='0'
                 max='5'
                 step='0.1'
                 placeholder='0.0'
+              />
+              <TextField
+                label='Course Code'
+                value={editCourse.courseCode}
+                onChange={(v) =>
+                  setEditCourse((p) => ({ ...p, courseCode: v }))
+                }
+                placeholder='e.g., CS101'
+              />
+              <TextField
+                label='Banner URL'
+                value={editCourse.banner_url}
+                onChange={(v) =>
+                  setEditCourse((p) => ({ ...p, banner_url: v }))
+                }
+                placeholder='https://example.com/banner.jpg'
               />
               <Select
                 label='Visibility'
@@ -1544,6 +1759,36 @@ export default function CourseManagerPortal() {
                   { value: 'draft', label: 'Draft' },
                   { value: 'published', label: 'Published' },
                 ]}
+              />
+              <TextField
+                label='Course Start Date'
+                type='datetime-local'
+                value={editCourse.start_date}
+                onChange={(v) =>
+                  setEditCourse((p) => ({ ...p, start_date: v }))
+                }
+              />
+              <TextField
+                label='Course End Date'
+                type='datetime-local'
+                value={editCourse.end_date}
+                onChange={(v) => setEditCourse((p) => ({ ...p, end_date: v }))}
+              />
+              <TextField
+                label='Registration Start Date'
+                type='datetime-local'
+                value={editCourse.registration_start}
+                onChange={(v) =>
+                  setEditCourse((p) => ({ ...p, registration_start: v }))
+                }
+              />
+              <TextField
+                label='Registration End Date'
+                type='datetime-local'
+                value={editCourse.registration_end}
+                onChange={(v) =>
+                  setEditCourse((p) => ({ ...p, registration_end: v }))
+                }
               />
             </div>
 
@@ -1748,7 +1993,14 @@ function Modal({ title, children, onClose }) {
   );
 }
 
-function TextField({ label, value, onChange, placeholder, required, type = 'text', min, max, step }) {
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  required,
+  type = 'text',
+}) {
   return (
     <div className='form-group'>
       <label className='form-label'>{label}</label>
@@ -1759,9 +2011,6 @@ function TextField({ label, value, onChange, placeholder, required, type = 'text
         placeholder={placeholder}
         required={required}
         type={type}
-        min={min}
-        max={max}
-        step={step}
       />
     </div>
   );

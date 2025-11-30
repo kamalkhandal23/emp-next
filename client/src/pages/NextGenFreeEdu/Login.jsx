@@ -101,8 +101,6 @@ export default function StudentLogin() {
             if (student) {
                 localStorage.setItem('studentInfo', JSON.stringify(student));
                 console.log('✅ Login successful - saved authToken and studentInfo');
-                setStudentRank(student.rank || 1);
-                console.log(studentRank,"student rank");
             } else {
                 console.warn('⚠️ Login successful but no student data to save');
             }
@@ -246,7 +244,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#111827',
                                         }}
-                                    >{studentRank || 1}
+                                    >{/*{studentRank || 1}*/1}
                           </span>
                                 </div>
 

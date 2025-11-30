@@ -1,4 +1,4 @@
-import Course from "../../models/nextgen/education/Course.js";
+import ng_course from "../../models/education/NG_Courses.js";
 import ng_student from "../../models/nextgen/core/NG_ApprovedStudents.js";
 
 export const getLectureVideo = async (req, res) => {
@@ -12,27 +12,12 @@ export const getLectureVideo = async (req, res) => {
         }
 
         // Find the course
-        const course = await Course.findById(courseId);
+        const course = await ng_course.findById(courseId).select("title lectures");
         if (!course) {
             return res.status(404).json({ error: "Course not found" });
         }
-
-        // Map the lectures to include only needed fields
-        const lectures = course.lectures.map(lec => ({
-            _id: lec._id,
-            title: lec.title,
-            description: lec.description,
-            videoURL: lec.videoURL,
-            pdfURL: lec.pdfURL || ""
-        }));
-
-        // Send course name and lectures
         return res.status(200).json({
-            course: {
-                _id: course._id,
-                title: course.title,
-                lectures
-            }
+            courses: [course]   // 👈 IMPORTANT: frontend expects array
         });
 
     } catch (error) {
