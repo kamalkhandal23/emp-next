@@ -5,7 +5,7 @@ const ngApprovedStudentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "NG_User",
     unique: true,
-    sparse: true, 
+    sparse: true,
     default: null,
   },
   student_id: { type: String, unique: true, required: true },
@@ -17,13 +17,11 @@ const ngApprovedStudentSchema = new mongoose.Schema({
   password: { type: String, required: true },
   registeredAt: { type: Date, default: Date.now },
   registrationRef: { type: mongoose.Schema.Types.ObjectId, ref: "Registration" },
-    //new fields
-    rank: {type: Number, default: 1},
-    grade: {type: Number, default: 0}
 });
 
 const ngApprovedStudent = mongoose.model(
   "ng_students",
   ngApprovedStudentSchema
 );
+
 export default ngApprovedStudent;
