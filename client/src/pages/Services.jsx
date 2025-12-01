@@ -68,7 +68,7 @@ export default function Services() {
     },
     {
       id: 3,
-      title: 'NextGenFreeEdu Platform',
+      title: 'NextGenFreedu Platform',
       category: 'Digital Education',
       description: 'Revolutionary digital education platform providing practical learning experiences with transparent evaluation systems.',
       icon: '🎓',
@@ -226,7 +226,7 @@ export default function Services() {
     {
       name: 'Dr. Priya Sharma',
       position: 'Director, Excellence Institute',
-      content: 'The NextGenFreeEdu platform revolutionized our teaching methodology. Student engagement and learning outcomes improved significantly.',
+      content: 'The NextGenFreedu platform revolutionized our teaching methodology. Student engagement and learning outcomes improved significantly.',
       rating: 5,
       project: 'Digital Education Platform'
     },

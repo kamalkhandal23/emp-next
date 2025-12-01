@@ -248,7 +248,7 @@ export default function NextGenLanding() {
       style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       {/* Hero Section */}
       <section className='hero-section'>
-        <h1 className='hero-title'>NextGenFreeEdu</h1>
+        <h1 className='hero-title'>NextGenFreedu</h1>
         <p className='hero-subtitle'>
           Revolutionizing education through practical, accessible learning
           experiences. Master in-demand skills with hands-on projects,
@@ -256,7 +256,7 @@ export default function NextGenLanding() {
         </p>
         <div className='hero-buttons'>
           <Link to='/nextgen/enroll' className='btn-primary'>
-            Enroll Now - It's Free!
+            Enroll Now
           </Link>
           <Link to='/nextgen/login' className='btn-outline'>
             Student Login →
@@ -303,7 +303,7 @@ export default function NextGenLanding() {
 
       {/* Why Choose NextGenFreeEdu */}
       <section className='section'>
-        <h2 className='section-title'>Why Choose NextGenFreeEdu?</h2>
+        <h2 className='section-title'>Why Choose NextGenFreedu?</h2>
         <p className='section-content' style={{ marginBottom: '2rem' }}>
           Experience a new way of learning that bridges the gap between academic
           knowledge and industry requirements.
@@ -465,7 +465,7 @@ export default function NextGenLanding() {
         <h2 className='section-title'>Student Success Stories</h2>
         <p className='section-content' style={{ marginBottom: '2rem' }}>
           Hear from our graduates who have transformed their careers through
-          NextGenFreeEdu.
+          NextGenFreedu.
         </p>
 
         <div
@@ -612,7 +612,7 @@ export default function NextGenLanding() {
               flexWrap: 'wrap',
             }}>
             <Link to='/nextgen/enroll' className='btn-primary'>
-              Enroll Now - Completely Free
+              Enroll Now
             </Link>
             <button
               className='btn-secondary'

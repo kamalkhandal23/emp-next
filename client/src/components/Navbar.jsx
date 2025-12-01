@@ -38,7 +38,7 @@ export default function Navbar() {
             Services
           </NavLink>
           <a href="/nextgen" target="_blank" rel="noreferrer" className="navbar-link">
-            NextGenFreeEdu
+            NextGenFreedu
           </a>
           <NavLink to="/careers" className={({ isActive }) => getLinkClass(isActive)}>
             Careers
@@ -82,7 +82,7 @@ export default function Navbar() {
               rel="noreferrer"
               onClick={() => setOpen(false)}
               className="navbar-link">
-              NextGenFreeEdu
+              NextGenFreedu
             </a>
             <NavLink
               to="/careers"

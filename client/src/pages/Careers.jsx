@@ -86,7 +86,7 @@ export default function Careers() {
       responsibilities: [
         'Create visual content for marketing campaigns',
         'Manage social media accounts',
-        'Produce educational videos for NextGenFreeEdu',
+        'Produce educational videos for NextGenFreedu',
         'Design marketing materials',
         'Analyze content performance metrics'
       ],
@@ -124,7 +124,7 @@ export default function Careers() {
       title: 'Full Stack Development Internship',
       duration: '6 months',
       stipend: '₹15,000/month',
-      description: 'AICTE supported program through NextGenFreeEdu platform',
+      description: 'AICTE supported program through NextGenFreedu platform',
       requirements: ['Final year students', 'Basic programming knowledge', 'Eagerness to learn'],
       icon: '🎓'
     },
@@ -318,7 +318,7 @@ export default function Careers() {
       <section className="section" id="internships">
         <h2 className="section-title">Internship Programs</h2>
         <p className="section-content" style={{ marginBottom: '2rem' }}>
-          AICTE supported internship programs through our NextGenFreeEdu platform.
+          AICTE supported internship programs through our NextGenFreedu platform.
         </p>
         <div className="services-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
           {internshipPrograms.map((program) => (

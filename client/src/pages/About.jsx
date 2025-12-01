@@ -32,7 +32,7 @@ export default function About() {
     },
     {
       year: '2024',
-      title: 'NextGenFreeEdu Launch',
+      title: 'NextGenFreedu Launch',
       description: 'Launched our flagship educational platform serving thousands of students.'
     },
     {
@@ -223,7 +223,7 @@ export default function About() {
             Start a Conversation
           </Link>
           <Link to="/nextgen" className="btn-secondary">
-            Explore NextGenFreeEdu
+            Explore NextGenFreedu
           </Link>
         </div>
       </section>

@@ -15,7 +15,7 @@ export default function Home() {
     },
     { 
       title: 'Digital Education', 
-      desc: 'NextGenFreeEdu platform for practical learning and skill development.',
+      desc: 'NextGenFreedu platform for practical learning and skill development.',
       icon: '🎓'
     },
     { 
@@ -36,7 +36,7 @@ export default function Home() {
         </p>
         <div className="hero-buttons">
           <Link to="/nextgen" className="btn-primary">
-            Explore NextGenFreeEdu
+            Explore NextGenFreedu
           </Link>
           <Link to="/services" className="btn-outline">
             View Services →
@@ -106,7 +106,7 @@ export default function Home() {
         <h2 className="section-title">About the Company</h2>
         <p className="section-content">
           We deliver secure, scalable software solutions for enterprises, educational institutes, and startups. 
-          Our flagship initiative, NextGenFreeEdu, empowers students through practical learning experiences 
+          Our flagship initiative, NextGenFreedu, empowers students through practical learning experiences 
           and transparent evaluation systems, bridging the gap between academic knowledge and industry requirements.
         </p>
       </section>
@@ -166,7 +166,7 @@ export default function Home() {
         <div className="testimonial-card">
           <blockquote className="testimonial-quote">
             "Lifebox NextGen delivered exceptional software solutions that transformed our operations. 
-            Their NextGenFreeEdu platform provides practical training with reliable assessment systems. 
+            Their NextGenFreedu platform provides practical training with reliable assessment systems. 
             Highly recommended for any organization seeking innovative technology partners."
           </blockquote>
           <figcaption className="testimonial-author">

@@ -77,7 +77,7 @@ export default function Contact() {
   const inquiryTypes = [
     { value: 'general', label: 'General Inquiry' },
     { value: 'services', label: 'Services & Solutions' },
-    { value: 'nextgen', label: 'NextGenFreeEdu' },
+    { value: 'nextgen', label: 'NextGenFreedu' },
     { value: 'careers', label: 'Career Opportunities' },
     { value: 'partnership', label: 'Partnership' },
     { value: 'support', label: 'Technical Support' }

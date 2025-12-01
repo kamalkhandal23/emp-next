@@ -11,6 +11,57 @@ import {
   useNavigate,
 } from 'react-router-dom';
 
+// Dynamic page titles and favicon component
+function DynamicTitle() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const routeTitles = {
+      '/': 'Lifebox NextGen Pvt. Ltd.',
+      '/about': 'About Us - Lifebox NextGen Pvt. Ltd.',
+      '/services': 'Services - Lifebox NextGen Pvt. Ltd.',
+      '/careers': 'Careers - Lifebox NextGen Pvt. Ltd.',
+      '/contact': 'Contact Us - Lifebox NextGen Pvt. Ltd.',
+      '/login': 'Login - Lifebox NextGen Pvt. Ltd.',
+      '/nextgen': 'NextGenFreedu ',
+      '/nextgen/enroll': 'Enroll - NextGenFreedu',
+      '/nextgen/payment/checkout': 'Payment Checkout - NextGenFreedu',
+      '/nextgen/login': 'Student Login - NextGenFreedu',
+      '/nextgen/set-password': 'Set Password - NextGenFreedu',
+      '/nextgen/profile': 'Student Profile - NextGenFreedu',
+      '/nextgen/student/lectures': 'Lectures - NextGenFreedu',
+      '/nextgen/exam': 'Take Exam - NextGenFreedu',
+      '/nextgen/exams': 'Exams - NextGenFreedu',
+      '/nextgen/results': 'Results - NextGenFreedu',
+      '/nextgen/coding-exams': 'Coding Exams - NextGenFreedu',
+      '/nextgen/assignments': 'Assignments - NextGenFreedu',
+      '/nextgen/privacy-policy': 'Privacy Policy - NextGenFreedu',
+      '/portal/admin': 'Admin Portal - Lifebox NextGen',
+      '/portal/hr': 'HR Portal - Lifebox NextGen',
+      '/portal/team-lead': 'Team Lead Portal - Lifebox NextGen',
+      '/portal/manager': 'Manager Portal - Lifebox NextGen',
+      '/portal/employee': 'Employee Portal - Lifebox NextGen',
+      '/portal/coursemanager': 'Course Manager Portal - Lifebox NextGen',
+      '/test': 'Test Connection - Lifebox NextGen',
+    };
+
+    // Set title based on current path, fallback to default
+    document.title = routeTitles[location.pathname] || 'Lifebox NextGen Pvt. Ltd.';
+
+    // Set favicon based on path
+    const faviconLink = document.querySelector('link[rel="icon"]');
+    if (faviconLink) {
+      if (location.pathname.startsWith('/nextgen')) {
+        faviconLink.href = '/nextgen_logo.png';
+      } else {
+        faviconLink.href = '/logo.png';
+      }
+    }
+  }, [location.pathname]);
+
+  return null;
+}
+
 import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
@@ -62,8 +113,6 @@ import CourseLecture from './pages/NextGenFreeEdu/CourseLecture';
 import ManageLecture from './pages/NextGenFreeEdu/ManageLecture.jsx';
 import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures.jsx';
 import Leaderboard from './pages/NextGenFreeEdu/Leaderboard.jsx';
-import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures';
-import Leaderboard from './pages/NextGenFreeEdu/Leaderboard';
 import ClassLink from './pages/NextGenFreeEdu/LecturePage';
 
 function MainLayout() {
@@ -98,7 +147,7 @@ function NextGenLayout() {
               fontWeight: '700',
               color: '#92400e',
             }}>
-            NextGenFreeEdu
+            NextGenFreedu
           </h1>
         </div>
       </header>
@@ -115,27 +164,27 @@ function AppRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Dynamic tab titles
-    if (hostname === 'nextgenfreedu.site') {
-      document.title = 'Welcome to NextGenFreeEdu';
-    } else {
-      document.title = 'Welcome to Lifebox NextGen Pvt. Ltd.';
-    }
+  // useEffect(() => {
+  //   // Dynamic tab titles
+  //   if (hostname === 'nextgenfreedu.site') {
+  //     document.title = 'Welcome to NextGenFreedu';
+  //   } else {
+  //     document.title = 'Welcome to Lifebox NextGen Pvt. Ltd.';
+  //   }
 
-    // lifeboxnextgen.co.site/nextgen -> redirect to nextgenfreedu.site
-    if (
-      hostname === 'lifeboxnextgen.co.site' &&
-      location.pathname === '/nextgen'
-    ) {
-      window.location.replace('https://nextgenfreedu.site');
-    }
+  //   // lifeboxnextgen.co.site/nextgen -> redirect to nextgenfreedu.site
+  //   if (
+  //     hostname === 'lifeboxnextgen.co.site' &&
+  //     location.pathname === '/nextgen'
+  //   ) {
+  //     window.location.replace('https://nextgenfreedu.site');
+  //   }
 
-    // if on nextgenfreedu.site root, redirect to /nextgen
-    if (hostname === 'nextgenfreedu.site' && location.pathname === '/') {
-      navigate('/nextgen', { replace: true });
-    }
-  }, [hostname, location.pathname, navigate]);
+  //   // if on nextgenfreedu.site root, redirect to /nextgen
+  //   if (hostname === 'nextgenfreedu.site' && location.pathname === '/') {
+  //     navigate('/nextgen', { replace: true });
+  //   }
+  // }, [hostname, location.pathname, navigate]);
 
   return (
     <Routes>
@@ -219,6 +268,7 @@ export default function App() {
           v7_startTransition: true,
           v7_relativeSplatPath: true,
         }}>
+        <DynamicTitle />
         <AuthProvider>
           <Routes>
             <Route element={<MainLayout />}>
