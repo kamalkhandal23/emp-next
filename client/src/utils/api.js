@@ -154,10 +154,40 @@ class ApiClient {
   }
 
   // Get lecture videos for NextGen Education
-  async getNextGenLectureVideos(id) {
-    console.log(id, 'api lecture student id');
-    return this.request(`/nextgen/lectureVideo/student/${id}`);
-  }
+    async getNextGenLectureVideos(studentId, courseId, token) {
+        console.log(studentId, courseId, "api lecture student & course id");
+
+        return this.request(
+            `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    }
+
+    //get student leader board
+    async getNextGenLeaderboard(studentId, courseId,token) {
+      // ALWAYS load inside function
+
+        console.log("HEADER SENT:", `Bearer ${token}`);
+
+        return this.request(
+            `/nextgen/leaderboard/student?studentId=${studentId}&courseId=${courseId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    }
+
+
 
   // Tasks endpoints
   async getTasks(params = {}) {
@@ -348,26 +378,6 @@ class ApiClient {
     return this.request('/nextgen/courses');
   }
 
-  async createCourse(courseData) {
-    return this.request('/nextgen/courses', {
-      method: 'POST',
-      body: courseData,
-    });
-  }
-
-  async updateCourse(courseId, courseData) {
-    return this.request(`/nextgen/courses/${courseId}`, {
-      method: 'PUT',
-      body: courseData,
-    });
-  }
-
-  async deleteCourse(courseId) {
-    return this.request(`/nextgen/courses/${courseId}`, {
-      method: 'DELETE',
-    });
-  }
-
   async enrollInCourse(courseData) {
     return this.request('/nextgen/enroll', {
       method: 'POST',
@@ -388,30 +398,6 @@ class ApiClient {
 
   async getNextGenResults() {
     return this.request('/nextgen/results');
-  }
-
-  // NextGen Admin endpoints
-  async getRegistrations() {
-    return this.request('/nextgen/registrations');
-  }
-
-  async approveRegistration(registrationId) {
-    return this.request(
-      `/nextgen/admin/registrations/${registrationId}/approve`,
-      {
-        method: 'PUT',
-      }
-    );
-  }
-
-  async rejectRegistration(registrationId, reason) {
-    return this.request(
-      `/nextgen/admin/registrations/${registrationId}/reject`,
-      {
-        method: 'PUT',
-        body: { reason },
-      }
-    );
   }
 
   // Employee Portal specific endpoints
@@ -563,10 +549,6 @@ class ApiClient {
     return this.request(
       `/nextgen/codingExams${queryString ? `?${queryString}` : ''}`
     );
-  }
-  async getNextGenLectureVideos(id){
-      console.log(id,"api lecture student id");
-      return this.request(`/nextgen/lectureVideo/student/${id}`);
   }
 
   async getNextGenCodingExamById(id) {

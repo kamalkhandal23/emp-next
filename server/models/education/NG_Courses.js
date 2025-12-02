@@ -53,6 +53,7 @@ const courseSchema = new mongoose.Schema(
       {
         title: { type: String, required: true },
         description: { type: String, required: true },
+          topic: { type: String, required: true },
         videoURL: { type: String },
         pdfURL: { type: String },
         created_at: { type: Date, default: Date.now },
@@ -63,11 +64,6 @@ const courseSchema = new mongoose.Schema(
       min: 0,
       max: 5,
       default: 0,
-    },
-    created_by: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'ng_users',
-      required: true,
     },
     // Course timing fields
     start_date: {

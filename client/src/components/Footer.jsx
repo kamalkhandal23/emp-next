@@ -9,14 +9,14 @@ export default function Footer() {
           </a>
         </div>
         <div className="footer-links">
-          <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="footer-link">
+          <a href="https://www.linkedin.com/company/lifebox-global-pvt-ltd/" target="_blank" rel="noreferrer" className="footer-link">
             LinkedIn
           </a>
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="footer-link">
-            GitHub
+          <a href="https://www.instagram.com/lifeboxnexgen_media?igsh=ZXFnanNrYzVnejA4" target="_blank" rel="noreferrer" className="footer-link">
+            Instagram
           </a>
-          <a href="https://x.com" target="_blank" rel="noreferrer" className="footer-link">
-            X (Twitter)
+          <a href="https://youtube.com/@techabouttodie?si=I_9I2wdxl8ZvMJ7l" target="_blank" rel="noreferrer" className="footer-link">
+            YouTube
           </a>
           <a href="/nextgen/privacy-policy" className="footer-link">
             Privacy Policy

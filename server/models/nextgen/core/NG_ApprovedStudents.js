@@ -47,10 +47,21 @@ const NG_ApprovedStudents = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "NG_Registration",
     },
+      leaderboardValue: {
+          rank: {
+              type: Number,
+              default: 1, // Default now 1
+          },
+          score: {
+              type: Number,
+              default: 0,
+          },
+      },
   },
   { timestamps: true }
 );
 
 
-const NG_Approved_Students = model("ng_approved_students",NG_ApprovedStudents)
+const NG_Approved_Students = model("ng_approved_students",NG_ApprovedStudents);
+
 export default NG_Approved_Students

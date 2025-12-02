@@ -9,6 +9,7 @@ import assignmentSubmissionsRoutes from './assignmentSubmissions.js';
 import codingExamsRoutes from './codingExams.js';
 import addLectureRoutes from './addLecture.js';
 import notificationRoutes from './notificationRoutes.js';
+import editdeleteRoutes from './editdeleteLecture.js';
 
 const router = express.Router();
 
@@ -23,5 +24,5 @@ router.use('/assignment-submissions', assignmentSubmissionsRoutes);
 router.use('/codingExams', codingExamsRoutes);
 router.use("/addLecture",addLectureRoutes);
 router.use("/notifications",notificationRoutes);
-
+router.use("/lectures",editdeleteRoutes)
 export default router;

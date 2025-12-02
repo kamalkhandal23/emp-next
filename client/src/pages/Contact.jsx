@@ -54,9 +54,9 @@ export default function Contact() {
     {
       title: 'Call Us',
       description: 'Speak directly with our team during business hours',
-      value: '+91 XXX XXX XXXX',
+      value: '+91 9542156929',
       icon: '📞',
-      link: 'tel:+91XXXXXXXXXX'
+      link: 'tel:+919542156929'
     },
     {
       title: 'Visit Us',
@@ -70,7 +70,7 @@ export default function Contact() {
       description: 'Connect with us on professional networks',
       value: 'Lifebox NextGen',
       icon: '💼',
-      link: 'https://linkedin.com'
+      link: 'https://www.linkedin.com/company/lifebox-global-pvt-ltd/'
     }
   ]
 
@@ -85,14 +85,14 @@ export default function Contact() {
 
   const officeLocations = [
     {
-      city: 'Kakinada',
-      address: 'Technology Hub, Kakinada, Andhra Pradesh',
+      city: 'Narasaraopet',
+      address: 'Technology Hub, Narasaraopet, Andhra Pradesh',
       description: 'Main development center and headquarters',
       icon: '🏢'
     },
     {
-      city: 'Narasaraopet',
-      address: 'Business Center, Narasaraopet, Andhra Pradesh',
+      city: 'Kakinada',
+      address: 'Business Center, Kakinada, Andhra Pradesh',
       description: 'Regional office and client services',
       icon: '🏛️'
     }

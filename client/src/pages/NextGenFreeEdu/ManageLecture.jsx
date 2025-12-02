@@ -70,9 +70,16 @@ function ManageLecture() {
     if (!window.confirm("Are you sure you want to delete this lecture?")) return;
 
     try {
+      const token = localStorage.getItem("authToken")
       const response = await fetch(
         `http://localhost:5002/api/nextgen/lectures/${lectureId}`,
-        { method: "DELETE" }
+        { 
+          method: "DELETE",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
+        }
       );
 
       const data = await response.json();
@@ -91,11 +98,15 @@ function ManageLecture() {
   // -----------------------------
   const updateLecture = async (lecture) => {
     try {
+      const token = localStorage.getItem("authToken");
       const response = await fetch(
         `http://localhost:5002/api/nextgen/lectures/${lecture._id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}` 
+          },
           body: JSON.stringify(lecture)
         }
       );
@@ -122,7 +133,7 @@ function ManageLecture() {
         ← Back
       </button>
 
-      <h1 className="text-3xl font-bold mb-6 text-gray-950">📘 Manage Course Lectures</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-950" style={{color:"black"}}>📘 Manage Course Lectures</h1>
 
       {/* Select Course */}
       <label className="font-semibold text-gray-700">Select Course</label>
@@ -141,7 +152,7 @@ function ManageLecture() {
 
       {/* Lectures */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold mb-4">📄 Lecture List</h2>
+        <h2 className="text-xl font-bold mb-4" style={{color:"gray"}}>📄 Lecture List</h2>
 
         {lectures.length === 0 && selectedCourse && (
           <p className="text-gray-500">No lectures found for this course.</p>
@@ -153,7 +164,7 @@ function ManageLecture() {
             className="border p-4 rounded-lg mb-4 bg-gray-50 shadow-sm"
           >
             <div className="flex justify-between">
-              <h3 className="font-semibold">Lecture {index + 1}</h3>
+              <h3 className="font-semibold" style={{color:"black"}}>Lecture {index + 1}</h3>
 
               {/* Delete Button */}
               <button
@@ -215,3 +226,5 @@ function ManageLecture() {
 }
 
 export default ManageLecture;
+
+

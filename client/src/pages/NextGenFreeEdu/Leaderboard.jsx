@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from "react";
 import "../../components/cssComonents/leaderBoard.css";
 import ApiClient from "../../utils/api";
+import { useNavigate } from 'react-router-dom';
 
 export default function Leaderboard() {
+    const navigate = useNavigate();
     const [students, setStudents] = useState([]);
     const [page, setPage] = useState(1);
     const pageSize = 7;
@@ -27,15 +29,25 @@ export default function Leaderboard() {
                     console.warn("Failed to parse studentInfo from localStorage", err);
                     studentInfo = null;
                 }
-                const studentId = studentInfo?.student_id ?? studentInfo?.id ?? null;
-                console.log("studentInfo:", studentInfo);
 
-                const apiRes = await ApiClient.getNextGenLeaderboard(studentId);
+                //Checking token existence
+                const token = localStorage.getItem('authToken');
+                if (!token ) {
+                    console.warn('⚠️ Redirecting to login - missing token or studentInfo');
+                    navigate('/nextgen/login');
+                    return;
+                }
+
+                const studentId = studentInfo?.student_id ?? studentInfo?.id;
+                const courseId = studentInfo?.course?._id;
+
+                const apiRes = await ApiClient.getNextGenLeaderboard(studentId, courseId, token);
 
                 // If ApiClient returns a fetch Response, parse JSON; otherwise use as-is
                 const resJson = apiRes && typeof apiRes.json === "function"
                     ? await apiRes.json()
                     : apiRes;
+                console.log(resJson, "raw api response");
 
                 console.log("api response (normalized):", resJson);
 
