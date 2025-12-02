@@ -139,15 +139,19 @@ function NextGenLayout() {
           borderBottom: '2px solid #f59e0b',
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
         }}>
-        <div className='container'>
+        <div className='container' style={{ display: 'flex', alignItems: 'center' }}>
+          <img
+              src='/nextgen_logo.png'
+              alt='NextGenFreedu Logo'
+              style={{ height: '40px', marginRight: '0.5rem' }}
+            />
           <h1
             style={{
               margin: 0,
               fontSize: '1.5rem',
               fontWeight: '700',
               color: '#92400e',
-            }}>
-            NextGenFreedu
+            }}>NextGenFreedu
           </h1>
         </div>
       </header>

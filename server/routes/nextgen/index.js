@@ -7,7 +7,8 @@ import examsRoutes from './exams.js';
 import assignmentsRoutes from './assignments.js';
 import assignmentSubmissionsRoutes from './assignmentSubmissions.js';
 import codingExamsRoutes from './codingExams.js';
-import addLectureRoutes from './addLecture.js'
+import addLectureRoutes from './addLecture.js';
+import notificationRoutes from './notificationRoutes.js';
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ router.use('/exams', examsRoutes);
 router.use('/assignments', assignmentsRoutes);
 router.use('/assignment-submissions', assignmentSubmissionsRoutes);
 router.use('/codingExams', codingExamsRoutes);
-router.use("/addLecture",addLectureRoutes)
+router.use("/addLecture",addLectureRoutes);
+router.use("/notifications",notificationRoutes);
 
 export default router;

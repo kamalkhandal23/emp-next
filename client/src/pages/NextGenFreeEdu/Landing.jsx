@@ -5,12 +5,14 @@ import CourseCard from '../../components/CourseCard';
 import profilePic1 from '../../assets/profilePic1.jpeg';
 import profilePic2 from '../../assets/profilePic2.jpeg';
 import profilePic3 from '../../assets/profilePic3.jpeg';
+import NotificationModal from '../../components/NotificationModal';
 
 export default function NextGenLanding() {
   const [activeFeature, setActiveFeature] = useState(0);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
 
   const features = [
     {
@@ -616,9 +618,7 @@ export default function NextGenLanding() {
             </Link>
             <button
               className='btn-secondary'
-              onClick={() =>
-                alert('You will be notified when enrollment opens!')
-              }>
+              onClick={() => setIsNotificationModalOpen(true)}>
               Notify Me
             </button>
 
@@ -653,6 +653,11 @@ export default function NextGenLanding() {
           Contact Us
         </Link>
       </footer>
+
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+      />
     </div>
   );
 }

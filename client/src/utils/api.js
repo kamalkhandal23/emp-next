@@ -757,6 +757,17 @@ class ApiClient {
     }
     return response;
   }
+  // NextGen Notification Endpoints
+  async createNotification(notificationData) {
+    return this.request('/nextgen/notifications', {
+      method: 'POST',
+      body: notificationData,
+    });
+  }
+  async getAllNotifications() {
+    return this.request('/nextgen/notifications');
+  } 
+
 }
 
 export const apiClient = new ApiClient();
