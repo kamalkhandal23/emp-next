@@ -2,6 +2,7 @@
 import ng_student from "../../models/nextgen/core/NG_ApprovedStudents.js";
 import ng_student_leaderboard from "../../models/nextgen/education/ng_student_leaderboard.js";
 import {createLeaderboardImpl} from "../../services/createLeaderBoardImpl.js";
+import {updateScoreAndSort} from "../../services/leaderboardService.js";
 
 export const getLeaderboard = async (req, res) => {
 

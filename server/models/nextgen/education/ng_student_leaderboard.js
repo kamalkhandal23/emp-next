@@ -16,6 +16,7 @@ const studentLeaderboardSchema = new mongoose.Schema({
     // Array of students in the leaderboard
     students: [
         {
+            student : { type: mongoose.Schema.Types.ObjectId, ref: "NG_ApprovedStudents", required: true },
             name: { type: String, required: true },
             rank: { type: Number, default: 1 },
             score: { type: Number, default: 0 },
