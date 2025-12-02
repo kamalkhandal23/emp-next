@@ -21,7 +21,7 @@ export default function Footer() {
           <a href="/nextgen/privacy-policy" className="footer-link">
             Privacy Policy
           </a>
-          <a href="/terms" className="footer-link">
+          <a href="/nextgen/terms-of-service" className="footer-link">
             Terms of Service
           </a>
         </div>

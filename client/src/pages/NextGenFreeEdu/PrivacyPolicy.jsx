@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
         Effective Date: 02 December 2025  <br />
       </p>
       <p>
-        LifeBox NextGen Pvt. Ltd. (“we”, “our”, “us”) is commited to protecting the privacy of every user who accesses our platorms under the brands LifeBox NextGen and NextGenFreedu. This Privacy Policy explains how we collect, use, store, and safeguard your information on while you use services such as our digital diary, emotional tracker, vault, ERP systems, CRM, attendance portal, examination portal, learning platforms, and mobile or web applications. 
+        LifeBox NextGen Pvt. Ltd. (“we”, “our”, “us”) is commited to protecting the privacy of every user who accesses our platorms under the brands <strong>LifeBox NextGen</strong> and <strong>NextGenFreedu</strong>. This Privacy Policy explains how we collect, use, store, and safeguard your information on while you use services such as our digital diary, emotional tracker, vault, ERP systems, CRM, attendance portal, examination portal, learning platforms, and mobile or web applications. 
         <br /> <br />
        We collect personal information including your name, email address, phone number, student or course details, and other information you voluntarily submit. Additionally, we automatically collect technical information such as device details, browser type, IP address, access logs, exam activity (including fullscreen usage and tab switching), and attendance submissions. For users of the LifeBox NextGen diary and vault, we store personal entries, emotional tracking data, and uploaded files or documents. These are encrypted and treated as strictly private. 
        <br /> <br />

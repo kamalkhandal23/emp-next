@@ -35,7 +35,8 @@ function DynamicTitle() {
       '/nextgen/results': 'Results - NextGenFreedu',
       '/nextgen/coding-exams': 'Coding Exams - NextGenFreedu',
       '/nextgen/assignments': 'Assignments - NextGenFreedu',
-      '/nextgen/privacy-policy': 'Privacy Policy - NextGenFreedu',
+      '/nextgen/privacy-policy': 'Privacy Policy',
+      '/nextgen/terms-of-service': 'Terms of Service',
       '/portal/admin': 'Admin Portal - Lifebox NextGen',
       '/portal/hr': 'HR Portal - Lifebox NextGen',
       '/portal/team-lead': 'Team Lead Portal - Lifebox NextGen',
@@ -83,7 +84,7 @@ import StudentProfile from './pages/NextGenFreeEdu/StudentProfile';
 import Exam from './pages/NextGenFreeEdu/Exam';
 import Results from './pages/NextGenFreeEdu/Results';
 import PrivacyPolicy from './pages/NextGenFreeEdu/PrivacyPolicy';
-
+import TermsOfService from './pages/NextGenFreeEdu/Termsofservice';
 import StudentAssignments from './pages/NextGenFreeEdu/StudentAssignments';
 import AssignmentDetails from './pages/NextGenFreeEdu/AssignmentDetails';
 import StudentExams from './pages/NextGenFreeEdu/StudentExams';
@@ -228,6 +229,7 @@ function AppRoutes() {
           element={<SubmitAssignment />}
         />
         <Route path='privacy-policy' element={<PrivacyPolicy />} />
+        <Route path='terms-of-service' element={<TermsOfService />} />
       </Route>
 
       {/* Portals */}
@@ -304,6 +306,7 @@ export default function App() {
                 element={<SubmitAssignment />}
               />
               <Route path='privacy-policy' element={<PrivacyPolicy />} />
+              <Route path='terms-of-service' element={<TermsOfService />} />
             </Route>
             <Route path='portal/admin' element={<AdminPortal />} />
             <Route path='portal/hr' element={<HRPortal />} />
