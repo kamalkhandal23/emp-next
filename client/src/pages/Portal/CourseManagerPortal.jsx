@@ -388,7 +388,19 @@ export default function CourseManagerPortal() {
   const handleAddCourse = async () => {
     setLoading(true);
     try {
-      await apiClient.createCourse(newCourse);
+      // Generate courseCode if empty
+      const courseData = { ...newCourse };
+      if (!courseData.courseCode.trim()) {
+        // Generate a unique course code based on title or slug
+        const baseCode = courseData.title
+          .replace(/[^a-zA-Z0-9]/g, '')
+          .substring(0, 6)
+          .toUpperCase();
+        const timestamp = Date.now().toString().slice(-4);
+        courseData.courseCode = `${baseCode}${timestamp}`;
+      }
+
+      await apiClient.createCourse(courseData);
       await fetchCourses();
       setShowAddCourse(false);
       setNewCourse({
@@ -464,7 +476,16 @@ export default function CourseManagerPortal() {
   const handleEditCourseSubmit = async () => {
     setLoading(true);
     try {
-      await apiClient.updateCourse(selectedCourse._id, editCourse);
+      // Prepare data for update, converting empty date strings to null
+      const updateData = { ...editCourse };
+      const dateFields = ['start_date', 'end_date', 'registration_start', 'registration_end'];
+      dateFields.forEach(field => {
+        if (updateData[field] === '') {
+          updateData[field] = null;
+        }
+      });
+
+      await apiClient.updateCourse(selectedCourse._id, updateData);
       await fetchCourses();
       setShowEditCourse(false);
       setSelectedCourse(null);
@@ -933,7 +954,7 @@ export default function CourseManagerPortal() {
                 <div
                   className='table-row'
                   style={{
-                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr auto',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1fr auto',
                     fontWeight: 600,
                     background: '#f8fafc',
                     color: 'black',
@@ -953,7 +974,7 @@ export default function CourseManagerPortal() {
                     key={course?._id || idx}
                     className='table-row'
                     style={{
-                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr auto',
+                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1fr auto',
                     }}>
                     <div style={{ fontWeight: 500 }}>
                       {course?.icon} {course?.title}

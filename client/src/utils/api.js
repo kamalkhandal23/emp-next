@@ -378,6 +378,26 @@ class ApiClient {
     return this.request('/nextgen/courses');
   }
 
+  async createCourse(courseData) {
+    return this.request('/nextgen/courses', {
+      method: 'POST',
+      body: courseData,
+    });
+  }
+
+  async updateCourse(id, courseData) {
+    return this.request(`/nextgen/courses/${id}`, {
+      method: 'PUT',
+      body: courseData,
+    });
+  }
+
+  async deleteCourse(id) {
+    return this.request(`/nextgen/courses/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   async enrollInCourse(courseData) {
     return this.request('/nextgen/enroll', {
       method: 'POST',

@@ -157,7 +157,7 @@ export const updateCourse = async (req, res) => {
       req.params.id,
       updateData,
       { new: true, runValidators: true }
-    ).populate('created_by', 'full_name');
+    );
 
     if (!course) {
       return res.status(404).json({
