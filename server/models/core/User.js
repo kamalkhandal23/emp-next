@@ -86,6 +86,14 @@ const userSchema = new mongoose.Schema(
     passwordResetExpires: Date,
     emailVerified: { type: Boolean, default: false },
     emailVerificationToken: String,
+    // assingned courses
+    assignedCourses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "NG_Courses",
+      }
+    ],
+
   },
   {
     timestamps: true,

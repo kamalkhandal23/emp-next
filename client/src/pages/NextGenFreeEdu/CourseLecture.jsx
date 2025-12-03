@@ -21,15 +21,27 @@ function CourseLecture() {
     const loadCourses = async () => {
       setLoadingCourses(true);
       try {
-        const response = await apiClient.getNextGenCourses();
-        if (response.success) {
-          setCourses(response.data.courses || []);
-          const a = courses 
-          
+          const token = localStorage.getItem("authToken");
+
+          const response = await fetch("http://localhost:5002/api/nextgen/courses/my-courses", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const res = await response.json();
+
+          if (res.success) {
+            console.log(res)
+            setCourses(res.data.courses)
+            // setCourses(data.data.courses);
+          }
+
+            
+        }catch (e) {
+          console.log("Error fetching courses", e);
+          alert("error in fetching courses",e.message)
         }
-      } catch (e) {
-        console.log("Error fetching courses", e);
-      }
       setLoadingCourses(false);
     };
 
