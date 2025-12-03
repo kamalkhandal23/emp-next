@@ -1,11 +1,12 @@
 // javascript
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "../../components/cssComonents/leaderBoard.css";
 import ApiClient from "../../utils/api";
 import { useNavigate } from 'react-router-dom';
 
 export default function Leaderboard() {
     const navigate = useNavigate();
+    const didFetch = useRef(false);
     const [students, setStudents] = useState([]);
     const [page, setPage] = useState(1);
     const pageSize = 7;
@@ -19,58 +20,56 @@ export default function Leaderboard() {
 
     // Fetch API (fixed: parse localStorage and normalize API response)
     useEffect(() => {
-        async function loadData() {
+    if (didFetch.current) return; // Already fetched → skip
+    didFetch.current = true;      // Mark as fetched
+
+    async function loadData() {
+        try {
+            const raw = localStorage.getItem("studentInfo");
+            let studentInfo = null;
             try {
-                const raw = localStorage.getItem("studentInfo");
-                let studentInfo = null;
-                try {
-                    studentInfo = raw ? JSON.parse(raw) : null;
-                } catch (err) {
-                    console.warn("Failed to parse studentInfo from localStorage", err);
-                    studentInfo = null;
-                }
-
-                //Checking token existence
-                const token = localStorage.getItem('authToken');
-                if (!token ) {
-                    console.warn('⚠️ Redirecting to login - missing token or studentInfo');
-                    navigate('/nextgen/login');
-                    return;
-                }
-
-                const studentId = studentInfo?.student_id ?? studentInfo?.id;
-                const courseId = studentInfo?.course?._id;
-
-                const apiRes = await ApiClient.getNextGenLeaderboard(studentId, courseId, token);
-
-                // If ApiClient returns a fetch Response, parse JSON; otherwise use as-is
-                const resJson = apiRes && typeof apiRes.json === "function"
-                    ? await apiRes.json()
-                    : apiRes;
-                console.log(resJson, "raw api response");
-
-                console.log("api response (normalized):", resJson);
-
-                // Normalize possible shapes: { players: [...] }, { students: [...] }, or direct array
-                let dataArray = resJson?.players[0] ?? resJson?.students ?? resJson;
-
-                // If still an object, try to extract common nested fields
-                if (dataArray && !Array.isArray(dataArray) && typeof dataArray === "object") {
-                    dataArray = dataArray.data ?? dataArray.players ?? dataArray.students ?? null;
-                }
-
-                if (!Array.isArray(dataArray) || dataArray.length === 0) {
-                    throw new Error("No players array in API response");
-                }
-
-                setStudents(dataArray);
-            } catch (e) {
-                console.error("Failed to load leaderboard:", e);
-                setStudents(demoStudents); // Fallback
+                studentInfo = raw ? JSON.parse(raw) : null;
+            } catch (err) {
+                console.warn("Failed to parse studentInfo from localStorage", err);
+                studentInfo = null;
             }
+
+            const token = localStorage.getItem('authToken');
+            if (!token ) {
+                console.warn('⚠️ Redirecting to login - missing token or studentInfo');
+                navigate('/nextgen/login');
+                return;
+            }
+
+            const studentId = studentInfo?.student_id ?? studentInfo?.id;
+            const courseId = studentInfo?.course?._id;
+
+            const apiRes = await ApiClient.getNextGenLeaderboard(studentId, courseId, token);
+
+            const resJson = apiRes && typeof apiRes.json === "function"
+                ? await apiRes.json()
+                : apiRes;
+
+            let dataArray = resJson?.players[0] ?? resJson?.students ?? resJson;
+
+            if (dataArray && !Array.isArray(dataArray) && typeof dataArray === "object") {
+                dataArray = dataArray.data ?? dataArray.players ?? dataArray.students ?? null;
+            }
+
+            if (!Array.isArray(dataArray) || dataArray.length === 0) {
+                throw new Error("No players array in API response");
+            }
+
+            setStudents(dataArray);
+        } catch (e) {
+            console.error("Failed to load leaderboard:", e);
+            setStudents(demoStudents); // Fallback
         }
-        loadData();
-    }, []);
+    }
+
+    loadData();
+}, []); // still empty dependency array
+
 
     // Sort highest score → lowest
     const sorted = [...students].sort((a, b) => b.score - a.score);
