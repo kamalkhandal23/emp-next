@@ -759,6 +759,14 @@ class ApiClient {
     }
     return response;
   }
+  // Inquiry endpoints
+  async createInquiry(inquiryData) {
+    return this.request('/inquiry', {
+      method: 'POST',
+      body: inquiryData,
+    });
+  }
+
   // NextGen Notification Endpoints
   async createNotification(notificationData) {
     return this.request('/nextgen/notifications', {
@@ -768,7 +776,7 @@ class ApiClient {
   }
   async getAllNotifications() {
     return this.request('/nextgen/notifications');
-  } 
+  }
 
 }
 
