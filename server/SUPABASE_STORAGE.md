@@ -1,4 +1,4 @@
-# Supabase Storage Integration
+<!-- # Supabase Storage Integration
 
 This project uses Supabase Storage for file uploads (assignment submissions).
 
@@ -124,90 +124,90 @@ To migrate existing local files to Supabase:
 
 ```javascript
 // scripts/migrateFilesToSupabase.js
-import fs from 'fs';
-import path from 'path';
-import { uploadFile } from '../services/uploadService.js';
-import AssignmentSubmission from '../models/nextgen/education/AssignmentSubmission.js';
+// import fs from 'fs';
+// import path from 'path';
+// import { uploadFile } from '../services/uploadService.js';
+// import AssignmentSubmission from '../models/nextgen/education/AssignmentSubmission.js';
 
-async function migrateFiles() {
-  const submissions = await AssignmentSubmission.find({
-    'fileSubmissions.path': { $regex: /^server\/uploads/ },
-  });
+// async function migrateFiles() {
+//   const submissions = await AssignmentSubmission.find({
+//     'fileSubmissions.path': { $regex: /^server\/uploads/ },
+//   });
 
-  for (const submission of submissions) {
-    for (const file of submission.fileSubmissions) {
-      if (file.path.startsWith('server/uploads')) {
-        const localPath = path.join(process.cwd(), file.path);
+//   for (const submission of submissions) {
+//     for (const file of submission.fileSubmissions) {
+//       if (file.path.startsWith('server/uploads')) {
+//         const localPath = path.join(process.cwd(), file.path);
 
-        if (fs.existsSync(localPath)) {
-          const fileBuffer = fs.readFileSync(localPath);
-          const fileObj = {
-            buffer: fileBuffer,
-            originalname: file.originalName,
-            mimetype: file.mimetype,
-            size: file.size,
-          };
+//         if (fs.existsSync(localPath)) {
+//           const fileBuffer = fs.readFileSync(localPath);
+//           const fileObj = {
+//             buffer: fileBuffer,
+//             originalname: file.originalName,
+//             mimetype: file.mimetype,
+//             size: file.size,
+//           };
 
-          const folder = `student-${submission.student_id}/assignment-${submission.assignment_id}`;
-          const result = await uploadFile(fileObj, folder);
+//           const folder = `student-${submission.student_id}/assignment-${submission.assignment_id}`;
+//           const result = await uploadFile(fileObj, folder);
 
-          if (result.success) {
-            file.path = result.path;
-            file.url = result.url;
-            console.log(`Migrated: ${file.originalName}`);
-          }
-        }
-      }
-    }
+//           if (result.success) {
+//             file.path = result.path;
+//             file.url = result.url;
+//             console.log(`Migrated: ${file.originalName}`);
+//           }
+//         }
+//       }
+//     }
 
-    await submission.save();
-  }
+//     await submission.save();
+//   }
 
-  console.log('Migration complete!');
-}
+//   console.log('Migration complete!');
+// }
 
-migrateFiles();
-```
+// migrateFiles();
+// ```
 
-## Troubleshooting
+// ## Troubleshooting
 
-### Bucket not created automatically
+// ### Bucket not created automatically
 
-If the bucket isn't created on server startup:
+// If the bucket isn't created on server startup:
 
-1. Check your Supabase credentials in `.env`
-2. Manually create the bucket in Supabase Dashboard → Storage
-3. Set it to "Private" and configure the file size limit
+// 1. Check your Supabase credentials in `.env`
+// 2. Manually create the bucket in Supabase Dashboard → Storage
+// 3. Set it to "Private" and configure the file size limit
 
-### File upload fails
+// ### File upload fails
 
-Common issues:
+// Common issues:
 
-- Check file size (max 10MB)
-- Verify file type is allowed
-- Ensure Supabase credentials are correct
-- Check internet connection to Supabase
+// - Check file size (max 10MB)
+// - Verify file type is allowed
+// - Ensure Supabase credentials are correct
+// - Check internet connection to Supabase
 
-### Cannot access uploaded files
+// ### Cannot access uploaded files
 
-For private buckets:
+// For private buckets:
 
-- Use `getSignedUrl()` to generate temporary access URLs
-- Signed URLs expire after 1 hour by default
-- Adjust expiration time as needed
+// - Use `getSignedUrl()` to generate temporary access URLs
+// - Signed URLs expire after 1 hour by default
+// - Adjust expiration time as needed
 
-## Benefits of Supabase Storage
+// ## Benefits of Supabase Storage
 
-✅ **Scalability**: No server disk space limitations  
-✅ **CDN**: Fast file delivery globally  
-✅ **Security**: Built-in authentication and RLS policies  
-✅ **Reliability**: Automatic backups and redundancy  
-✅ **Cost-effective**: Pay only for what you use  
-✅ **Easy management**: Web dashboard for file browsing
+// ✅ **Scalability**: No server disk space limitations  
+// ✅ **CDN**: Fast file delivery globally  
+// ✅ **Security**: Built-in authentication and RLS policies  
+// ✅ **Reliability**: Automatic backups and redundancy  
+// ✅ **Cost-effective**: Pay only for what you use  
+// ✅ **Easy management**: Web dashboard for file browsing
 
-## Support
+// ## Support
 
-For issues or questions:
+// For issues or questions:
 
-- Supabase Docs: https://supabase.com/docs/guides/storage
-- Project Issues: Create a GitHub issue
+// - Supabase Docs: https://supabase.com/docs/guides/storage
+// - Project Issues: Create a GitHub issue -->
