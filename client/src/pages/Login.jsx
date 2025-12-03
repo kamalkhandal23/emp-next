@@ -8,7 +8,9 @@ export default function Login() {
   const [err, setErr] = useState('');
   const navigate = useNavigate();
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+  const base = import.meta.env.VITE_API_URL || 'http://localhost:5002';
+  const API_BASE = `${base}/api`;
+
 
   // 🔹 Helper function to decide redirect path
   const portalPath = (role) => {
