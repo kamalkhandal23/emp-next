@@ -33,7 +33,7 @@ import examRoutes from './routes/exams.js';
 import resultRoutes from './routes/results.js';
 import adminRoutes from './routes/admin.js';
 import inquiryRoutes from './routes/inquiry.js';
-
+import codingPracticeRoutes from "./routes/nextgenCodingPractice.js";
 import employeePortalRoutes from './routes/employeePortal.js';
 import nextgenStudentRoutes from './routes/nextgenStudentRoutes.js';
 import unifiedAuthLogin from './routes/auth.login.unified.js';
@@ -162,7 +162,7 @@ app.use('/api/nextgen/lectureVideo', lectureRoutes);
 //  NextGen routes (last, to avoid overlap)
 app.use('/api/nextgen', nextgenSystemRoutes);
 app.use('/api/nextgen', nextgenStudentRoutes);
-
+app.use('/api/nextgen', codingPracticeRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {
