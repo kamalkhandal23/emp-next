@@ -11,7 +11,6 @@ const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Ye hamesha root ka docker folder point karega: /emp-new-1/docker
 const dockerDir = path.resolve(__dirname, '../../docker');
 
 const dockerfilePython = path.join(dockerDir, 'Dockerfile.python');
@@ -25,7 +24,7 @@ const executeCode = async (code, language, inputs, expectedOutputs, isHidden = f
   try {
     const tempDir = path.join(__dirname, '../../temp');
     if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
+      /* removed mkdir for Vercel compatibility */
     }
 
     const containerId = `code-exec-${Date.now()}-${Math.random()

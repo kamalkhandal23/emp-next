@@ -117,7 +117,7 @@ const connectDB = async () => {
     );
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 
-    // Initialize Supabase Storage bucket
+    // Initialize local upload directory
     await initializeBucket();
   } catch (error) {
     console.error('Database connection error:', error);

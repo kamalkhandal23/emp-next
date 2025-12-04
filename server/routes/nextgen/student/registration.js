@@ -34,26 +34,14 @@ if (process.env.VERCEL) {
 
 // Create directory if not exists
 if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  /* removed mkdir for Vercel compatibility */
 }
 
 
 // ----------------------------------------------------
 // Multer setup (disk storage)
 // ----------------------------------------------------
-const storage = multer.diskStorage({
-  destination: function (_req, _file, cb) {
-    cb(null, UPLOAD_DIR);
-  },
-  filename: function (_req, file, cb) {
-    const ext = path.extname(file.originalname || '');
-    const safeBase = (file.originalname || 'file')
-      .replace(/\s+/g, '-')
-      .replace(/[^a-zA-Z0-9_.-]/g, '')
-      .slice(0, 40);
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}-${safeBase}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   // passport_photo -> only images; documents -> allow common types
