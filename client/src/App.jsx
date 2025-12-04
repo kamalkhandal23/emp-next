@@ -35,7 +35,8 @@ function DynamicTitle() {
       '/nextgen/results': 'Results - NextGenFreedu',
       '/nextgen/coding-exams': 'Coding Exams - NextGenFreedu',
       '/nextgen/assignments': 'Assignments - NextGenFreedu',
-      '/nextgen/privacy-policy': 'Privacy Policy - NextGenFreedu',
+      '/nextgen/privacy-policy': 'Privacy Policy',
+      '/nextgen/terms-of-service': 'Terms of Service',
       '/portal/admin': 'Admin Portal - Lifebox NextGen',
       '/portal/hr': 'HR Portal - Lifebox NextGen',
       '/portal/team-lead': 'Team Lead Portal - Lifebox NextGen',
@@ -66,7 +67,7 @@ import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-
+import CodingPractice from "././pages/NextGenFreeEdu/CodingPractice";
 import Home from './pages/Home';
 import About from './pages/About';
 import Services from './pages/Services';
@@ -83,7 +84,7 @@ import StudentProfile from './pages/NextGenFreeEdu/StudentProfile';
 import Exam from './pages/NextGenFreeEdu/Exam';
 import Results from './pages/NextGenFreeEdu/Results';
 import PrivacyPolicy from './pages/NextGenFreeEdu/PrivacyPolicy';
-
+import TermsOfService from './pages/NextGenFreeEdu/Termsofservice';
 import StudentAssignments from './pages/NextGenFreeEdu/StudentAssignments';
 import AssignmentDetails from './pages/NextGenFreeEdu/AssignmentDetails';
 import StudentExams from './pages/NextGenFreeEdu/StudentExams';
@@ -214,10 +215,10 @@ function AppRoutes() {
         <Route path='profile' element={<StudentProfile />} />
         <Route path='exam' element={<Exam />} />
         <Route path='exams' element={<StudentExams />} />
-        {/* ✅ yahi important */}
         <Route path='results' element={<Results />} />
         <Route path='coding-exams' element={<CodingExamsList />} />
         <Route path='coding-exam/:id' element={<CodingExam />} />
+        <Route path="coding-practice" element={<CodingPractice />} />
         <Route path='assignments' element={<StudentAssignments />} />
         <Route
           path='assignments/:assignmentId'
@@ -228,6 +229,7 @@ function AppRoutes() {
           element={<SubmitAssignment />}
         />
         <Route path='privacy-policy' element={<PrivacyPolicy />} />
+        <Route path='terms-of-service' element={<TermsOfService />} />
       </Route>
 
       {/* Portals */}
@@ -295,6 +297,7 @@ export default function App() {
               <Route path='results' element={<Results />} />
               <Route path='coding-exams' element={<CodingExamsList />} />
               <Route path='coding-exam/:id' element={<CodingExam />} />
+              <Route path='coding-practice' element={<CodingPractice />} />
               <Route path='assignments' element={<StudentAssignments />} />
               <Route path='lectures' element={<AvailableLectures />} />
                 <Route path='class-link' element={<ClassLink />} />
@@ -304,6 +307,7 @@ export default function App() {
                 element={<SubmitAssignment />}
               />
               <Route path='privacy-policy' element={<PrivacyPolicy />} />
+              <Route path='terms-of-service' element={<TermsOfService />} />
             </Route>
             <Route path='portal/admin' element={<AdminPortal />} />
             <Route path='portal/hr' element={<HRPortal />} />

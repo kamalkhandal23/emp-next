@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import apiClient from '../utils/api'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    company: '',
     subject: '',
     message: '',
     inquiryType: 'general'
@@ -26,21 +26,30 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    
-    // Simulate form submission
-    setTimeout(() => {
+    setSubmitStatus(null)
+
+    try {
+      const response = await apiClient.createInquiry(formData)
+
+      if (response.success) {
+        setSubmitStatus('success')
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: '',
+          inquiryType: 'general'
+        })
+      } else {
+        setSubmitStatus('error')
+      }
+    } catch (error) {
+      console.error('Error submitting inquiry:', error)
+      setSubmitStatus('error')
+    } finally {
       setIsSubmitting(false)
-      setSubmitStatus('success')
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        subject: '',
-        message: '',
-        inquiryType: 'general'
-      })
-    }, 2000)
+    }
   }
 
   const contactMethods = [
@@ -174,6 +183,25 @@ export default function Contact() {
               </div>
             )}
 
+            {submitStatus === 'error' && (
+              <div style={{
+                background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
+                border: '2px solid #dc2626',
+                borderRadius: '0.5rem',
+                padding: '1rem',
+                marginBottom: '2rem',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>❌</div>
+                <div style={{ fontWeight: '600', color: '#991b1b' }}>
+                  Failed to send message
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#7f1d1d', marginTop: '0.25rem' }}>
+                  Please try again or contact us directly.
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="contact-form">
               <div className="form-row">
                 <div className="form-group">
@@ -212,17 +240,6 @@ export default function Contact() {
                     onChange={handleInputChange}
                     className="form-input"
                     placeholder="+91 XXXXX XXXXX"
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Company</label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleInputChange}
-                    className="form-input"
-                    placeholder="Your organization"
                   />
                 </div>
               </div>

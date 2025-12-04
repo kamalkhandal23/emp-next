@@ -63,7 +63,7 @@ export default function CourseCard({ course }) {
           }}>
           {course.title}
         </h3>
-        <span
+        {/* <span
           style={{
             background: 'linear-gradient(135deg, #10b981, #059669)',
             color: 'white',
@@ -75,7 +75,7 @@ export default function CourseCard({ course }) {
             boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)',
           }}>
           {course.price}
-        </span>
+        </span> */}
       </div>
 
       {/* Description */}

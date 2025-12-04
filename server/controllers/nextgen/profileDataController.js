@@ -32,9 +32,8 @@ export const getProfileData = async (req, res) => {
                     completedAssignments: completedAssignments,
                     course: course,
                     recentActivity: recentActivity,
-                    if(classAttenended){
-                        noOfClassAttended: classAttenended.attendance.length ||0
-                    }
+                    noOfClassAttended: classAttenended.attendance.length ||0
+                    
                     
                 }
             

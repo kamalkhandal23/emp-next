@@ -19,10 +19,24 @@ import { sendEmail, emailTemplates } from '../../../config/email.js';
 // ----------------------------------------------------
 // Ensure uploads directory exists
 // ----------------------------------------------------
-const UPLOAD_DIR = path.join(process.cwd(), 'server', 'uploads');
+// ----------------------------------------------------
+// Vercel-safe Upload Directory
+// ----------------------------------------------------
+let UPLOAD_DIR;
+
+if (process.env.VERCEL) {
+  // Running on Vercel → only /tmp is writable
+  UPLOAD_DIR = "/tmp/uploads";
+} else {
+  // Local development → use normal folder
+  UPLOAD_DIR = path.join(process.cwd(), "server", "uploads");
+}
+
+// Create directory if not exists
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
+
 
 // ----------------------------------------------------
 // Multer setup (disk storage)

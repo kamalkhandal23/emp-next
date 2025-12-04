@@ -14,6 +14,41 @@ export default function StudentLogin() {
     const [loginError, setLoginError] = useState('');
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [codingStats, setCodingStats] = useState({
+        streak: 0,
+        total_solved: 0,
+      });
+
+      useEffect(() => {
+        try {
+          const stored = localStorage.getItem("studentInfo");
+          if (!stored) return;
+      
+          const student = JSON.parse(stored);
+          const studentId = student?._id || student?.id;
+          if (!studentId) return;
+      
+          const baseUrl =
+            import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+      
+          fetch(`${baseUrl}/nextgen/coding/stats/${studentId}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && data.data) {
+                setCodingStats({
+                  streak: data.data.streak || 0,
+                  total_solved: data.data.total_solved || 0,
+                });
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching coding stats:", err);
+            });
+        } catch (err) {
+          console.error("Error parsing studentInfo:", err);
+        }
+      }, []);
+      
 
     // Check if user is already logged in on component mount
     useEffect(() => {
@@ -56,8 +91,7 @@ export default function StudentLogin() {
 
         try {
             const response = await fetch(
-                `${
-                    import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+                `${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
                 }/nextgen/student/login`,
                 {
                     method: 'POST',
@@ -166,20 +200,16 @@ export default function StudentLogin() {
                 const studentId = studentData?.student_id || studentData?.id;
                 console.log('Student ID:', studentId);
                 const courseId = studentData?.course?._id;
-                console.log('Course ID:', courseId);
         
                 const token = localStorage.getItem('authToken');
-                console.log('Auth Token:', token);
                 const response = await apiClient.getNextGenStudentProfileData(studentId, courseId, token);
                 setAssignmentPending(response.Data.course.assignments.length - response.Data.completedAssignments);
                 setProfileDataView(response.Data);
                 setRecentActivities(response.Data.recentActivity.activities);
 
                 const NoOfClassAttended=response.Data.noOfClassAttended;
-                if(noOfClassAttended){
-                    setOverAll(0);
-                }
-                else if(NoOfClassAttended/38 <=1){
+                console.log(response.Data);
+                 if(NoOfClassAttended/38 <=1){
                     setOverAll(Math.round(NoOfClassAttended/38*100));
                 }
                 else{
@@ -293,7 +323,7 @@ export default function StudentLogin() {
                                             color: '#111827',
                                         }}
                                     >{/*{studentRank || 1}*/1}
-                          </span>
+                                    </span>
                                 </div>
 
                                 <button
@@ -543,8 +573,8 @@ export default function StudentLogin() {
                                     📚 Class Lecture
                                 </Link>
                                 <Link to={`/nextgen/lectures`}
-                                      className='btn-outline'
-                                      style={{ justifyContent: 'flex-start' }}>
+                                    className='btn-outline'
+                                    style={{ justifyContent: 'flex-start' }}>
                                     🎥 Video Lectures
                                 </Link>
                                 <Link
@@ -669,8 +699,8 @@ export default function StudentLogin() {
                                 onChange={handleInputChange}
                             />
                             <span style={{ fontSize: '0.875rem', color: '#374151' }}>
-                Remember me
-              </span>
+                                Remember me
+                            </span>
                         </label>
                         <button
                             type='button'

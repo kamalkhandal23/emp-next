@@ -645,7 +645,7 @@ export default function NextGenLanding() {
           Privacy Policy
         </Link>{' '}
         |
-        <Link to='/terms-of-service' style={{ margin: '0 1rem' }}>
+        <Link to='terms-of-service' style={{ margin: '0 1rem' }}>
           Terms of Service
         </Link>{' '}
         |

@@ -6,7 +6,8 @@ import {
   createCourse,
   updateCourse,
   deleteCourse,
-  getCourseStatistics
+  getCourseStatistics,
+  getMyCourses
 } from '../../controllers/nextgenCourseController.js';
 import { auth, authorize } from '../../middleware/auth.js';
 
@@ -22,6 +23,10 @@ const courseValidation = [
   body('visibility').optional().isIn(['draft', 'published', 'archived']).withMessage('Invalid visibility status')
 ];
 
+// @route : /api/nextgen/courses/my-courses
+// @des : get particular id  course from Ng_Courses
+// @method : Get
+router.get('/my-courses', auth, authorize(['admin', 'course_manager']), getMyCourses);
 // Public routes
 
 // @route : /api/nextgen/courses/
@@ -37,6 +42,7 @@ router.get('/:id', getCourseById);
 // Protected routes (Admin/Course Manager)
 router.use(auth);
 router.use(authorize(['admin', 'course_manager']));
+
 
 
 router.post('/', courseValidation, createCourse);
