@@ -13,6 +13,41 @@ export default function StudentLogin() {
     const [loginError, setLoginError] = useState('');
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [codingStats, setCodingStats] = useState({
+        streak: 0,
+        total_solved: 0,
+      });
+
+      useEffect(() => {
+        try {
+          const stored = localStorage.getItem("studentInfo");
+          if (!stored) return;
+      
+          const student = JSON.parse(stored);
+          const studentId = student?._id || student?.id;
+          if (!studentId) return;
+      
+          const baseUrl =
+            import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+      
+          fetch(`${baseUrl}/nextgen/coding/stats/${studentId}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && data.data) {
+                setCodingStats({
+                  streak: data.data.streak || 0,
+                  total_solved: data.data.total_solved || 0,
+                });
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching coding stats:", err);
+            });
+        } catch (err) {
+          console.error("Error parsing studentInfo:", err);
+        }
+      }, []);
+      
 
     // Check if user is already logged in on component mount
     useEffect(() => {
@@ -51,8 +86,7 @@ export default function StudentLogin() {
 
         try {
             const response = await fetch(
-                `${
-                    import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+                `${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
                 }/nextgen/student/login`,
                 {
                     method: 'POST',
@@ -194,17 +228,17 @@ export default function StudentLogin() {
                                         justifyContent: 'space-between',
                                         marginBottom: '0.5rem',
                                     }}>
-                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                    Overall Progress
-                  </span>
+                                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                        Overall Progress
+                                    </span>
                                     <span
                                         style={{
                                             fontSize: '0.875rem',
                                             fontWeight: '600',
                                             color: '#374151',
                                         }}>
-                    0%
-                  </span>
+                                        0%
+                                    </span>
                                 </div>
                                 <div
                                     style={{
@@ -245,7 +279,7 @@ export default function StudentLogin() {
                                             color: '#111827',
                                         }}
                                     >{/*{studentRank || 1}*/1}
-                          </span>
+                                    </span>
                                 </div>
 
                                 <button
@@ -311,44 +345,45 @@ export default function StudentLogin() {
                         </div>
 
                         {/* Recent Activity */}
-                        <div className='service-card'>
-                            <h3 className='service-title'>Recent Activity</h3>
-                            <div
+                        <div className="service-card">
+                            <h3 className="service-title">Coding Practice</h3>
+
+                            <p style={{ fontSize: "0.9rem", color: "#6b7280", marginBottom: "1rem" }}>
+                                Improve your coding by solving interactive challenges using live compiler.
+                            </p>
+
+                            <button
+                                onClick={() => navigate("/nextgen/coding-practice")}
                                 style={{
-                                    fontSize: '0.875rem',
-                                    color: '#6b7280',
-                                    lineHeight: '1.6',
-                                }}>
-                                <div
-                                    style={{
-                                        marginBottom: '0.75rem',
-                                        paddingBottom: '0.75rem',
-                                        borderBottom: '1px solid #f3f4f6',
-                                    }}>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Completed: JavaScript Basics
-                                    </div>
-                                    <div>Score: 92% • 2 days ago</div>
-                                </div>
-                                <div
-                                    style={{
-                                        marginBottom: '0.75rem',
-                                        paddingBottom: '0.75rem',
-                                        borderBottom: '1px solid #f3f4f6',
-                                    }}>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Submitted: Portfolio Project
-                                    </div>
-                                    <div>Status: Under Review • 3 days ago</div>
+                                    width: "100%",
+                                    background: "#2563eb",
+                                    color: "white",
+                                    padding: "10px",
+                                    fontSize: "1rem",
+                                    borderRadius: "8px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
+                                    transition: "0.2s",
+                                }}
+                                onMouseEnter={e => (e.target.style.background = "#1d4ed8")}
+                                onMouseLeave={e => (e.target.style.background = "#2563eb")}
+                            >
+                                Start Coding Practice 🚀
+                            </button>
+
+
+                            <div style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
+                                <div style={{ marginBottom: "0.5rem" }}>
+                                    🔥 <strong>Streak:</strong> {codingStats.streak} days
                                 </div>
                                 <div>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Attended: Live Session
-                                    </div>
-                                    <div>Topic: React Hooks • 5 days ago</div>
+                                    🧠 <strong>Total Problems Solved:</strong> {codingStats.total_solved}
                                 </div>
                             </div>
                         </div>
+
+
 
                         {/* Upcoming Events */}
                         <div className='service-card'>
@@ -469,8 +504,8 @@ export default function StudentLogin() {
                                     📚 Class Lecture
                                 </Link>
                                 <Link to={`/nextgen/lectures`}
-                                      className='btn-outline'
-                                      style={{ justifyContent: 'flex-start' }}>
+                                    className='btn-outline'
+                                    style={{ justifyContent: 'flex-start' }}>
                                     🎥 Video Lectures
                                 </Link>
                                 <Link
@@ -595,8 +630,8 @@ export default function StudentLogin() {
                                 onChange={handleInputChange}
                             />
                             <span style={{ fontSize: '0.875rem', color: '#374151' }}>
-                Remember me
-              </span>
+                                Remember me
+                            </span>
                         </label>
                         <button
                             type='button'
