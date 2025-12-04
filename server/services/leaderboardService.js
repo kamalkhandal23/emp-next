@@ -3,65 +3,49 @@
 import ng_student from "../models/nextgen/core/NG_ApprovedStudents.js";
 import ng_student_leaderboard from "../models/nextgen/education/ng_student_leaderboard.js";
 import ng_course from "../models/nextgen/education/Course.js";
+import { studentAuth } from "../middleware/studentAuth.js";
 
-export const updateScoreAndSort = async (courseId, studentId, grade) => {
+export const updateScoreAndSort = async (courseId) => {
     try {
-        const course = await ng_course.findById(courseId);
-                if (!course) {
-                    console.log("Course not found with the given ID.");
-                    return null;
-                }
-        const student = await ng_student.findOne({student_id: studentId});
-        if (!student) {
-            console.log("Student not found");
-            
-        }
-        student.leaderboardValue = {
-            score: (student.leaderboardValue?.score || 0) + grade,
-        };
-        await student.save();
-        // Fetch course
-        const students = await ng_student.find({ course: course._id });
+        
+        // 1. Find all approved students of this course
+        const students = await ng_student.find({ course: courseId });
 
-        if (students.length === 0) {
-            console.log("No students found for the specified course.");
-            return null;
+        if (!students.length) {
+            return { success: false, message: "No students found for this course" };
         }
 
-        // 3. Sort all students by score DESC
-        const sorted = [...students].sort(
-            (a, b) =>
-                (b.leaderboardValue?.score || 0) -
-                (a.leaderboardValue?.score || 0)
-        );
+        // 2. Check if leaderboard already exists
+        let leaderboard = await ng_student_leaderboard.findOne({ course: courseId });
 
-        // 4. Assign ranks
-        sorted.forEach((s, index) => {
-            s.leaderboardValue.rank = index + 1;
-            s.save();
-        });
-
-        // 5. Prepare leaderboard entries
-        const leaderboardEntries = sorted.map(s => ({
-            student: s._id,               // ✔ Correct key for schema
-            name:
-                s.fullName ||
-                s.name ||
-                `${s.firstName ?? ""} ${s.lastName ?? ""}`.trim(),
-            score: s.leaderboardValue.score || 0,
-            rank: s.leaderboardValue.rank || 1
+        const updatedStudentsArray = students.map((s) => ({
+            student: s._id,
+            name: s.fullName,
+            score: s.leaderboardValue.score || 0,   // change field if your score is stored differently
+            rank: s.leaderboardValue.rank || 1,
         }));
 
-        // 6. Update leaderboard collection
-        const updatedLeaderboard = await ng_student_leaderboard.findOneAndUpdate(
-            { course: courseId },
-            { students: leaderboardEntries, updatedAt: Date.now() },
-            { new: true }
-        );
+        // 3. Sort students by score descending
+        updatedStudentsArray.sort((a, b) => b.score - a.score);
 
-        return updatedLeaderboard;
+        // 4. Apply ranks
+        updatedStudentsArray.forEach((stud, index) => {
+            stud.rank = index + 1;
+        });
 
+        // 5. If leaderboard exists → update it
+        
+            leaderboard.students = updatedStudentsArray;
+            leaderboard.updatedAt = Date.now();
+            await leaderboard.save();
+
+            return {
+                success: true,
+                message: "Leaderboard updated with latest student data",
+                leaderboard
+            };
     } catch (error) {
-        throw new Error(`Error updating leaderboard: ${error.message}`);
+        console.error("Error updating leaderboard:", error);
+        return { success: false, message: "Internal server error" };
     }
 };
