@@ -22,7 +22,7 @@
   "author": "Lifebox NextGen Pvt. Ltd.",
   "license": "MIT",
   "dependencies": {
-    "@supabase/supabase-js": "^2.84.0",
+    "@supabase/supabase-js": "^2.86.0",
     "axios": "^1.13.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.8.0",

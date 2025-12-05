@@ -52,6 +52,9 @@ import { initializeBucket } from './services/uploadService.js';
 dotenv.config();
 
 const app = express();
+app.get(['/favicon.ico', '/favicon.png', '/favicon.svg'], (req, res) => {
+  return res.status(204).end();
+});
 const PORT = process.env.PORT || 5000;
 app.use(
   '/uploads',
@@ -90,6 +93,7 @@ app.use(
   })
 );
 
+
 // Rate limiter
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 min
@@ -118,7 +122,7 @@ const connectDB = async () => {
     );
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 
-    // Initialize Supabase Storage bucket
+    // Initialize local upload directory
     await initializeBucket();
   } catch (error) {
     console.error('Database connection error:', error);

@@ -8,37 +8,42 @@ import Ticket from '../models/nextgen/support/Ticket.js';
 import Certificate from '../models/nextgen/education/Certificate.js';
 import HRDocRequest from '../models/nextgen/support/HRRequest.js';
 import NG_Courses from '../models/education/NG_Courses.js';
-import { Result } from 'express-validator';
 
-import path from 'path';
-import fs from 'fs';
 import multer from 'multer';
-import { fileURLToPath } from 'url';
 
-/* ------------------------ Upload Setup ------------------------ */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+/* ---------------------------------------------------------
+   Multer Memory Storage (Vercel Compatible)
+----------------------------------------------------------- */
+const storage = multer.memoryStorage();
 
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  },
+export const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 }
 });
 
-export const upload = multer({ storage });
+/* ---------------------------------------------------------
+   Convert File Buffer to Base64
+----------------------------------------------------------- */
+function fileToBase64(file) {
+  return {
+    name: file.originalname,
+    type: file.mimetype,
+    size: file.size,
+    data: file.buffer.toString("base64")
+  };
+}
 
-/* ------------------------ Utility ------------------------ */
+/* ---------------------------------------------------------
+   Generate Student ID
+----------------------------------------------------------- */
 async function generateNextStudentId() {
   const count = await Student.countDocuments();
   return `STU${String(count + 1).padStart(6, '0')}`;
 }
 
-/* ------------------------ Registration with Docs ------------------------ */
+/* ---------------------------------------------------------
+   Registration with Base64 Documents
+----------------------------------------------------------- */
 export const registerWithDocs = async (req, res) => {
   try {
     const {
@@ -53,12 +58,11 @@ export const registerWithDocs = async (req, res) => {
     } = req.body;
 
     if (!full_name || !email || !course_id) {
-      return res
-        .status(400)
-        .json({ message: 'full_name, email, and course_id are required' });
+      return res.status(400).json({
+        message: 'full_name, email, and course_id are required'
+      });
     }
 
-    // Base registration
     const registration = new Registration({
       full_name,
       email: email.toLowerCase(),
@@ -69,32 +73,22 @@ export const registerWithDocs = async (req, res) => {
       experience,
       motivation,
       status: 'submitted',
+      documents: []
     });
 
-    // ✅ Handle uploads
-    if (req.files && Object.keys(req.files).length > 0) {
-      registration.documents = [];
-
-      // Passport photo
-      if (req.files.passport_photo && req.files.passport_photo[0]) {
+    /* ---------------------- Uploads in Base64 ---------------------- */
+    if (req.files) {
+      // Passport Photo
+      if (req.files.passport_photo?.[0]) {
         const file = req.files.passport_photo[0];
-        registration.passport_photo = `/uploads/${file.filename}`;
-        registration.documents.push({
-          name: 'Passport Size Photo',
-          url: `/uploads/${file.filename}`,
-          type: file.mimetype,
-        });
+        registration.passport_photo = fileToBase64(file);
       }
 
-      // Additional documents
-      if (req.files.documents && req.files.documents.length > 0) {
-        req.files.documents.forEach((file) => {
-          registration.documents.push({
-            name: file.originalname,
-            url: `/uploads/${file.filename}`,
-            type: file.mimetype,
-          });
-        });
+      // Additional Documents
+      if (req.files.documents?.length > 0) {
+        for (const file of req.files.documents) {
+          registration.documents.push(fileToBase64(file));
+        }
       }
     }
 
@@ -112,15 +106,19 @@ export const registerWithDocs = async (req, res) => {
         documentCount: registration.documents?.length || 0,
       },
     });
+
   } catch (err) {
     console.error('Registration error:', err);
-    return res
-      .status(500)
-      .json({ message: 'Error creating registration', error: err.message });
+    return res.status(500).json({
+      message: 'Error creating registration',
+      error: err.message
+    });
   }
 };
 
-/* ------------------------ Existing Controllers ------------------------ */
+/* ---------------------------------------------------------
+   Existing Controllers (unchanged)
+----------------------------------------------------------- */
 
 export const getAllRegistrations = async (req, res) => {
   try {
@@ -141,7 +139,6 @@ export const enroll = async (req, res) => {
         .json({ message: 'fullName, email and course are required' });
     }
 
-    // Check if course exists and validate timing
     const courseDoc = await NG_Courses.findOne({
       $or: [{ slug: course }, { _id: course }],
     });
@@ -150,7 +147,6 @@ export const enroll = async (req, res) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    // Check course visibility
     if (courseDoc.visibility !== 'published') {
       return res.status(400).json({
         message: 'This course is not available for enrollment',
@@ -158,30 +154,22 @@ export const enroll = async (req, res) => {
       });
     }
 
-    // Check registration timing
     const now = new Date();
 
-    if (
-      courseDoc.registration_start &&
-      now < new Date(courseDoc.registration_start)
-    ) {
+    if (courseDoc.registration_start && now < new Date(courseDoc.registration_start)) {
       return res.status(400).json({
         message: 'Registration has not started yet',
         registrationStarts: courseDoc.registration_start,
       });
     }
 
-    if (
-      courseDoc.registration_end &&
-      now > new Date(courseDoc.registration_end)
-    ) {
+    if (courseDoc.registration_end && now > new Date(courseDoc.registration_end)) {
       return res.status(400).json({
         message: 'Registration period has ended',
         registrationEnded: courseDoc.registration_end,
       });
     }
 
-    // Check if course has ended
     if (courseDoc.end_date && now > new Date(courseDoc.end_date)) {
       return res.status(400).json({
         message: 'This course has already ended',
@@ -199,6 +187,7 @@ export const enroll = async (req, res) => {
       password && String(password).trim().length >= 6
         ? password
         : Math.random().toString(36).slice(-10);
+
     const passwordHash = await bcrypt.hash(rawPassword, 10);
 
     const student = await Student.create({
@@ -221,10 +210,12 @@ export const enroll = async (req, res) => {
       },
       tempPassword: password ? undefined : rawPassword,
     });
+
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: 'Error enrolling student', error: err.message });
+    return res.status(500).json({
+      message: 'Error enrolling student',
+      error: err.message
+    });
   }
 };
 
@@ -240,6 +231,7 @@ export const login = async (req, res) => {
     const query = identifier.includes('@')
       ? { email: identifier.toLowerCase() }
       : { studentId: identifier };
+
     const student = await Student.findOne(query);
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
@@ -267,6 +259,7 @@ export const login = async (req, res) => {
         course: student.course,
       },
     });
+
   } catch (err) {
     return res.status(500).json({ message: 'Login error', error: err.message });
   }
@@ -276,6 +269,7 @@ export const me = async (req, res) => {
   try {
     const student = await Student.findById(req.user.sid);
     if (!student) return res.status(404).json({ message: 'Student not found' });
+
     return res.status(200).json({
       student: {
         id: student._id,
@@ -287,10 +281,12 @@ export const me = async (req, res) => {
         onboarding: student.onboarding,
       },
     });
+
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: 'Error fetching profile', error: err.message });
+    return res.status(500).json({
+      message: 'Error fetching profile',
+      error: err.message
+    });
   }
 };
 
@@ -307,12 +303,19 @@ export const approve = async (req, res) => {
       },
       { new: true }
     );
+
     if (!student) return res.status(404).json({ message: 'Student not found' });
-    return res.json({ message: 'Approved', studentId: student.studentId });
+
+    return res.json({
+      message: 'Approved',
+      studentId: student.studentId
+    });
+
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: 'Approval error', error: err.message });
+    return res.status(500).json({
+      message: 'Approval error',
+      error: err.message
+    });
   }
 };
 
@@ -320,25 +323,33 @@ export const setPassword = async (req, res) => {
   try {
     const { identifier, password } = req.body;
     if (!identifier || !password)
-      return res
-        .status(400)
-        .json({ message: 'identifier and password required' });
+      return res.status(400).json({
+        message: 'identifier and password required'
+      });
+
     const query = identifier.includes('@')
       ? { email: identifier.toLowerCase() }
       : { studentId: identifier };
+
     const student = await Student.findOne(query);
-    if (!student) return res.status(404).json({ message: 'Student not found' });
+    if (!student)
+      return res.status(404).json({ message: 'Student not found' });
+
     student.passwordHash = await bcrypt.hash(password, 10);
     student.onboarding = {
       ...(student.onboarding || {}),
       status: 'password_set',
       passwordSetAt: new Date(),
     };
+
     await student.save();
+
     return res.json({ message: 'Password set' });
+
   } catch (err) {
-    return res
-      .status(500)
-      .json({ message: 'Set password error', error: err.message });
+    return res.status(500).json({
+      message: 'Set password error',
+      error: err.message
+    });
   }
 };
