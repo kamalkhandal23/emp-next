@@ -93,18 +93,3 @@ const NG_Approved_Students = model(
 );
 
 export default NG_Approved_Students;
-
-// --------------------------------------------
-// ⭐ Update existing documents (run only once!)
-// --------------------------------------------
-(async () => {
-  try {
-    await NG_Approved_Students.updateMany(
-      {},
-      { $set: { assignments: [], noOfCompletedAssignments: 0 } }
-    );
-    console.log("Assignments field added to existing documents!");
-  } catch (err) {
-    console.error("Error updating students:", err);
-  }
-})();

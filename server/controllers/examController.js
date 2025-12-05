@@ -3,6 +3,7 @@ import Result from '../models/education/resultModel.js';
 import Student from '../models/education/studentModel.js';
 import NG_Courses from '../models/education/NG_Courses.js';
 import { validationResult } from 'express-validator';
+import ng_student from "../models/nextgen/core/NG_ApprovedStudents.js";
 import mongoose from 'mongoose';
 import addActivity from '../services/addActivityServiceImpl.js';
 
@@ -295,6 +296,12 @@ export const submitExam = async (req, res) => {
       return res.status(403).json({ message: 'Maximum attempts exceeded' });
     }
     await addActivity(studentId, "exam_submission", `Submitted exam ${exam.title} `, {Date: new Date()});
+      const studentProf = await ng_student.findOne({ student_id: studentId });
+        if (!student) {
+            return res.status(404).json({ error: "Student not found" });
+        }
+    studentProf.leaderboardValue.score += 20;
+    studentProf.save();
     // Generate result ID
     const resultCount = await Result.countDocuments();
     const resultId = `RES${String(resultCount + 1).padStart(8, '0')}`;

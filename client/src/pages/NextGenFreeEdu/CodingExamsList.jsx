@@ -38,6 +38,13 @@ export default function CodingExamsList() {
       setLoading(false)
     }
   }
+  const enterFullscreen = () => {
+          const elem = document.documentElement;
+          if (elem.requestFullscreen) elem.requestFullscreen();
+          else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+          else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+      };
+  
 
   if (loading) {
     return (
@@ -128,6 +135,7 @@ export default function CodingExamsList() {
 
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <Link
+                    onClick={enterFullscreen}
                     to={`/nextgen/coding-exam/${exam._id}`}
                     className="btn-primary"
                     style={{ flex: 1, textAlign: 'center' }}
