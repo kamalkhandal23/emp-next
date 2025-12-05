@@ -51,6 +51,9 @@ import { initializeBucket } from './services/uploadService.js';
 dotenv.config();
 
 const app = express();
+app.get(['/favicon.ico', '/favicon.png', '/favicon.svg'], (req, res) => {
+  return res.status(204).end();
+});
 const PORT = process.env.PORT || 5000;
 app.use(
   '/uploads',
@@ -88,6 +91,7 @@ app.use(
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
+
 
 // Rate limiter
 const limiter = rateLimit({
