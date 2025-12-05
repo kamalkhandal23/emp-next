@@ -1,11 +1,12 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import bcrypt from 'bcryptjs';
 import Student from '../../../models/nextgen/student-management/Student.js';
 import User from '../../../models/nextgen/core/User.js';
 import NG_Approved_Students from '../../../models/nextgen/core/NG_ApprovedStudents.js';
 import { auth } from '../../../middleware/auth.js';
 import { studentAuth } from '../../../middleware/studentAuth.js';
-import { decrypt } from '../../../utils/crypto.js';
+import { encrypt, decrypt } from '../../../utils/crypto.js';
 
 const router = express.Router();
 
@@ -17,15 +18,35 @@ router.get('/', studentAuth, async (req, res) => {
     // Student is already attached by studentAuth middleware
     const student = req.student;
 
+    // Decrypt phone if it exists and is encrypted
+    let decryptedPhone = student.phone;
+    if (student.phone) {
+      try {
+        const phoneObj = JSON.parse(student.phone);
+        decryptedPhone = decrypt(phoneObj);
+      } catch (e) {
+        // If decryption fails, phone might not be encrypted or invalid format
+        decryptedPhone = student.phone;
+      }
+    }
+
+    // Get date_of_birth from registrationRef if available
+    let dateOfBirth = student.date_of_birth;
+    if (student.registrationRef?.date_of_birth) {
+      dateOfBirth = student.registrationRef.date_of_birth;
+    }
+
     const profileData = {
       _id: student._id,
       student_id: student.student_id,
       fullName: student.fullName,
       email: student.email,
-      phone: student.phone,
-      date_of_birth: student.date_of_birth,
+      phone: decryptedPhone,
+      date_of_birth: dateOfBirth,
       status: student.status,
       enrollment_date: student.enrollment_date,
+      registeredAt: student.registeredAt,
+      createdAt: student.createdAt,
       course: student.course,
       address: student.address || {},
       emergency_contact: student.emergency_contact || {},
@@ -165,7 +186,11 @@ router.put('/', studentAuth, async (req, res) => {
     const student = req.student;
 
     // Update allowed fields
-    if (phone) student.phone = phone;
+    if (phone) {
+      // Encrypt phone before storing (stringify the encrypted object)
+      const encryptedPhone = encrypt(phone);
+      student.phone = JSON.stringify(encryptedPhone);
+    }
     if (address) student.address = { ...student.address, ...address };
     if (emergency_contact) {
       student.emergency_contact = {
@@ -176,10 +201,21 @@ router.put('/', studentAuth, async (req, res) => {
 
     await student.save();
 
+    // Return decrypted phone for display
+    const responseStudent = student.toObject();
+    if (responseStudent.phone) {
+      try {
+        const phoneObj = JSON.parse(responseStudent.phone);
+        responseStudent.phone = decrypt(phoneObj);
+      } catch (e) {
+        responseStudent.phone = '';
+      }
+    }
+
     res.json({
       success: true,
       message: 'Profile updated successfully',
-      data: { student },
+      data: { student: responseStudent },
     });
   } catch (error) {
     console.error('Update student profile error:', error);
@@ -189,6 +225,99 @@ router.put('/', studentAuth, async (req, res) => {
     });
   }
 });
+
+// @desc    Change Password for NextGen Student
+// @route   PUT /api/nextgen/student/profile/change-password
+// @access  Private (Student)
+router.put(
+  '/change-password',
+  studentAuth,
+  [
+    body('currentPassword')
+      .notEmpty()
+      .withMessage('Current password is required'),
+    body('newPassword'),
+    /*   .isLength({ min: 8 })
+      .withMessage('New password must be at least 8 characters')
+      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+      .withMessage(
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      ) */ body('confirmPassword')
+      .notEmpty()
+      .withMessage('Please confirm your new password')
+      .custom((value, { req }) => {
+        if (value !== req.body.newPassword) {
+          throw new Error('Passwords do not match');
+        }
+        return true;
+      }),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation failed',
+          errors: errors.array(),
+        });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      // Fetch student with password field (middleware excludes it)
+      const studentWithPassword = await NG_Approved_Students.findById(
+        req.student._id
+      );
+
+      if (!studentWithPassword) {
+        return res.status(404).json({
+          success: false,
+          message: 'Student not found.',
+        });
+      }
+
+      // Check if student has a password set
+      if (!studentWithPassword.password) {
+        return res.status(400).json({
+          success: false,
+          message: 'No password set for this account. Please contact support.',
+        });
+      }
+
+      // Verify current password
+      const isMatch = await bcrypt.compare(
+        currentPassword,
+        studentWithPassword.password
+      );
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is incorrect',
+        });
+      }
+
+      // Hash new password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      // Update password
+      studentWithPassword.password = hashedPassword;
+      await studentWithPassword.save();
+
+      res.json({
+        success: true,
+        message: 'Password changed successfully',
+      });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Server error changing password',
+      });
+    }
+  }
+);
 
 // ========================================================================
 // LEGACY ROUTES BELOW (for Student model, not NG_Approved_Students)

@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 function normalizeStudent(raw) {
   if (!raw) return null;
 
-  const course = raw.course_id || raw.course || {};
+  const course = raw.course_id || raw.course;
   const progress = raw.progress || {};
   const performance = raw.performance || {};
   return {
@@ -15,12 +15,25 @@ function normalizeStudent(raw) {
     phone: raw.phone || '',
     date_of_birth: raw.date_of_birth || raw.dateOfBirth || '',
     status: raw.status || 'active',
-    enrollment_date: raw.enrollment_date || raw.enrollmentDate || '',
-    course_id: {
-      title: course.title || course.name || '',
-      duration_weeks: course.duration_weeks || course.durationWeeks || '',
-      slug: course.slug || '',
-    },
+    enrollment_date:
+      raw.enrollment_date ||
+      raw.enrollmentDate ||
+      raw.registeredAt ||
+      raw.createdAt ||
+      '',
+    course_id: course
+      ? {
+          _id: course._id || course.id || '',
+          title: course.title || course.name || 'Not Assigned',
+          duration_weeks:
+            course.duration_weeks ||
+            course.durationWeeks ||
+            course.duration ||
+            '',
+          slug: course.slug || '',
+          subtitle: course.subtitle || '',
+        }
+      : null,
     progress: {
       overall_percentage:
         progress.overall_percentage || progress.overallPercentage || 0,
@@ -49,6 +62,15 @@ export default function StudentProfile() {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     fetchStudentProfile();
@@ -59,17 +81,6 @@ export default function StudentProfile() {
     try {
       const token = localStorage.getItem('authToken');
       const storedInfo = localStorage.getItem('studentInfo');
-
-      // Debug logging
-      console.log(
-        '🔍 StudentProfile - authToken:',
-        token ? 'exists' : 'missing'
-      );
-      console.log(
-        '🔍 StudentProfile - studentInfo:',
-        storedInfo ? 'exists' : 'missing'
-      );
-
       // agar login hi nahi hai
       if (!token || !storedInfo) {
         console.warn('⚠️ Redirecting to login - missing token or studentInfo');
@@ -96,6 +107,7 @@ export default function StudentProfile() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log(data);
         const apiStudent = normalizeStudent(data.data.student);
         if (apiStudent) {
           setStudent(apiStudent);
@@ -186,6 +198,90 @@ export default function StudentProfile() {
     localStorage.removeItem('userRole');
     localStorage.removeItem('studentInfo');
     navigate('/nextgen/login');
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setPasswordError('');
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    // Validation
+    if (
+      !passwordData.currentPassword ||
+      !passwordData.newPassword ||
+      !passwordData.confirmPassword
+    ) {
+      setPasswordError('All fields are required');
+      return;
+    }
+
+    /* if (passwordData.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters');
+      return;
+    } */
+
+    /* if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.newPassword)) {
+      setPasswordError(
+        'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+      );
+      return;
+    } */
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const baseUrl =
+        import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+
+      const response = await fetch(
+        `${baseUrl}/nextgen/student/profile/change-password`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(passwordData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPasswordSuccess('Password changed successfully!');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        setTimeout(() => {
+          setShowPasswordModal(false);
+          setPasswordSuccess('');
+        }, 2000);
+      } else {
+        setPasswordError(data.message || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      setPasswordError('Failed to change password. Please try again later.');
+    } finally {
+      setChangingPassword(false);
+    }
   };
 
   if (loading) {
@@ -316,7 +412,10 @@ export default function StudentProfile() {
                   <strong>Email:</strong> {student.email}
                 </div>
                 <div>
-                  <strong>Course:</strong> {student.course_id?.title}
+                  <strong>Course:</strong>{' '}
+                  {student.course_id?.title || (
+                    <span style={{ color: '#f59e0b' }}>Not Assigned</span>
+                  )}
                 </div>
                 <div>
                   <strong>Status:</strong>
@@ -508,50 +607,99 @@ export default function StudentProfile() {
           {/* Course Information */}
           <div className='service-card'>
             <h3 className='service-title'>Course Information</h3>
-            <div
-              style={{
-                fontSize: '0.875rem',
-                color: '#6b7280',
-                lineHeight: '1.6',
-              }}>
-              <div style={{ marginBottom: '0.75rem' }}>
-                <strong style={{ color: '#374151' }}>Course:</strong>{' '}
-                {student.course_id?.title}
-              </div>
-              <div style={{ marginBottom: '0.75rem' }}>
-                <strong style={{ color: '#374151' }}>Duration:</strong>{' '}
-                {student.course_id?.duration_weeks} weeks
-              </div>
-              <div style={{ marginBottom: '0.75rem' }}>
-                <strong style={{ color: '#374151' }}>Current Module:</strong>{' '}
-                {student.progress?.current_module || 'N/A'}
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <strong style={{ color: '#374151' }}>Progress:</strong>
+            {!student.course_id ? (
+              <div
+                style={{
+                  padding: '2rem',
+                  textAlign: 'center',
+                  background: '#fef3c7',
+                  borderRadius: '0.5rem',
+                  border: '1px solid #fbbf24',
+                }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+                  📚
+                </div>
+                <div style={{ color: '#92400e', fontWeight: '600' }}>
+                  No Course Assigned
+                </div>
                 <div
                   style={{
-                    width: '100%',
-                    height: '8px',
-                    background: '#e5e7eb',
-                    borderRadius: '4px',
+                    fontSize: '0.875rem',
+                    color: '#78350f',
                     marginTop: '0.5rem',
-                    overflow: 'hidden',
                   }}>
-                  <div
-                    style={{
-                      width: `${student.progress?.overall_percentage || 0}%`,
-                      height: '100%',
-                      background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
-                      transition: 'width 0.3s ease',
-                    }}
-                  />
-                </div>
-                <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                  {student.progress?.completed_modules || 0} of{' '}
-                  {student.progress?.total_modules || 0} modules completed
+                  Please contact support to get enrolled in a course
                 </div>
               </div>
-            </div>
+            ) : (
+              <div
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#6b7280',
+                  lineHeight: '1.6',
+                }}>
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <strong style={{ color: '#374151' }}>Course:</strong>{' '}
+                  {student.course_id.title}
+                </div>
+                {student.course_id.subtitle && (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <strong style={{ color: '#374151' }}>Subtitle:</strong>{' '}
+                    {student.course_id.subtitle}
+                  </div>
+                )}
+                {/* {student.course_id._id && (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <strong style={{ color: '#374151' }}>Course ID:</strong>{' '}
+                    <code
+                      style={{
+                        background: '#f3f4f6',
+                        padding: '0.125rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.8125rem',
+                        fontFamily: 'monospace',
+                      }}>
+                      {student.course_id._id}
+                    </code>
+                  </div>
+                )} */}
+                {student.course_id.duration_weeks && (
+                  <div style={{ marginBottom: '0.75rem' }}>
+                    <strong style={{ color: '#374151' }}>Duration:</strong>{' '}
+                    {student.course_id.duration_weeks} weeks
+                  </div>
+                )}
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <strong style={{ color: '#374151' }}>Current Module:</strong>{' '}
+                  {student.progress?.current_module || 'N/A'}
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <strong style={{ color: '#374151' }}>Progress:</strong>
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '8px',
+                      background: '#e5e7eb',
+                      borderRadius: '4px',
+                      marginTop: '0.5rem',
+                      overflow: 'hidden',
+                    }}>
+                    <div
+                      style={{
+                        width: `${student.progress?.overall_percentage || 0}%`,
+                        height: '100%',
+                        background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
+                        transition: 'width 0.3s ease',
+                      }}
+                    />
+                  </div>
+                  <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                    {student.progress?.completed_modules || 0} of{' '}
+                    {student.progress?.total_modules || 0} modules completed
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Performance Stats */}
@@ -605,24 +753,207 @@ export default function StudentProfile() {
         <div className='service-card' style={{ marginTop: '2rem' }}>
           <h3 className='service-title'>Quick Actions</h3>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <Link to='/nextgen/exam' className='btn-primary'>
+            <Link to='/nextgen/exams' className='btn-primary'>
               Take Exam
             </Link>
-            <Link to='/nextgen/results' className='btn-secondary'>
-              View Results
-            </Link>
-            <button
+            {/* <button
               onClick={() => alert('Feature coming soon!')}
               className='btn-outline'>
               Download Certificate
-            </button>
+            </button> */}
             <button
-              onClick={() => alert('Feature coming soon!')}
+              onClick={() => setShowPasswordModal(true)}
               className='btn-outline'>
               Change Password
             </button>
           </div>
         </div>
+        {/* Change Password Modal */}
+        {showPasswordModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '1rem',
+            }}
+            onClick={() => {
+              setShowPasswordModal(false);
+              setPasswordError('');
+              setPasswordSuccess('');
+              setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: '',
+              });
+            }}>
+            <div
+              className='service-card'
+              style={{
+                maxWidth: '500px',
+                width: '100%',
+                margin: 0,
+              }}
+              onClick={(e) => e.stopPropagation()}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1.5rem',
+                }}>
+                <h3 className='service-title' style={{ margin: 0 }}>
+                  Change Password
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordError('');
+                    setPasswordSuccess('');
+                    setPasswordData({
+                      currentPassword: '',
+                      newPassword: '',
+                      confirmPassword: '',
+                    });
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: '#6b7280',
+                  }}>
+                  ×
+                </button>
+              </div>
+
+              {passwordError && (
+                <div
+                  style={{
+                    background: '#fee2e2',
+                    border: '1px solid #ef4444',
+                    color: '#dc2626',
+                    padding: '0.75rem',
+                    borderRadius: '0.5rem',
+                    marginBottom: '1rem',
+                    fontSize: '0.875rem',
+                  }}>
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div
+                  style={{
+                    background: '#dcfce7',
+                    border: '1px solid #22c55e',
+                    color: '#15803d',
+                    padding: '0.75rem',
+                    borderRadius: '0.5rem',
+                    marginBottom: '1rem',
+                    fontSize: '0.875rem',
+                  }}>
+                  {passwordSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleChangePassword}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label
+                    className='form-label'
+                    style={{ marginRight: '6.4rem' }}>
+                    Current Password
+                  </label>
+                  <input
+                    type='password'
+                    name='currentPassword'
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    className='form-input'
+                    placeholder='Enter current password'
+                    required
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label
+                    className='form-label'
+                    style={{ marginRight: '7.7rem' }}>
+                    New Password
+                  </label>
+                  <input
+                    type='password'
+                    name='newPassword'
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className='form-input'
+                    placeholder='Enter new password'
+                    required
+                  />
+                  {/*  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      color: '#6b7280',
+                      marginTop: '0.25rem',
+                    }}>
+                    Must be at least 8 characters with uppercase, lowercase, and
+                    number
+                  </div> */}
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label
+                    className='form-label'
+                    style={{ marginRight: '4.1rem' }}>
+                    Confirm New Password
+                  </label>
+                  <input
+                    type='password'
+                    name='confirmPassword'
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className='form-input'
+                    placeholder='Confirm new password'
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button
+                    type='submit'
+                    disabled={changingPassword}
+                    className='btn-primary'
+                    style={{ flex: 1 }}>
+                    {changingPassword ? 'Changing...' : 'Change Password'}
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      setPasswordError('');
+                      setPasswordSuccess('');
+                      setPasswordData({
+                        currentPassword: '',
+                        newPassword: '',
+                        confirmPassword: '',
+                      });
+                    }}
+                    className='btn-secondary'
+                    style={{ flex: 1 }}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
