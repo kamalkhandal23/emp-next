@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
-import RecentActivity from '../../../../server/models/education/recentActivity';
 
 export default function StudentLogin() {
     const [loginData, setLoginData] = useState({
@@ -203,7 +202,12 @@ export default function StudentLogin() {
         
                 const token = localStorage.getItem('authToken');
                 const response = await apiClient.getNextGenStudentProfileData(studentId, courseId, token);
-                setAssignmentPending(response.Data.course.assignments.length - response.Data.completedAssignments);
+                if(response.Data.course.assignments.length - response.Data.completedAssignments>=0){
+                    setAssignmentPending(response.Data.course.assignments.length - response.Data.completedAssignments);
+                }
+                else{
+                    setAssignmentPending(0);
+                }
                 setProfileDataView(response.Data);
                 setRecentActivities(response.Data.recentActivity.activities);
 
@@ -322,7 +326,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#111827',
                                         }}
-                                    >{/*{studentRank || 1}*/1}
+                                    >{profileDataView?.studentRank || 1}
                                     </span>
                                 </div>
 
@@ -389,6 +393,45 @@ export default function StudentLogin() {
                         </div>
 
                         {/* Recent Activity */}
+                        <div className="service-card">
+                            <h3 className="service-title">Coding Practice</h3>
+
+                            <p style={{ fontSize: "0.9rem", color: "#6b7280", marginBottom: "1rem" }}>
+                                Improve your coding by solving interactive challenges using live compiler.
+                            </p>
+
+                            <button
+                                onClick={() => navigate("/nextgen/coding-practice")}
+                                style={{
+                                    width: "100%",
+                                    background: "#2563eb",
+                                    color: "white",
+                                    padding: "10px",
+                                    fontSize: "1rem",
+                                    borderRadius: "8px",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    fontWeight: "600",
+                                    transition: "0.2s",
+                                }}
+                                onMouseEnter={e => (e.target.style.background = "#1d4ed8")}
+                                onMouseLeave={e => (e.target.style.background = "#2563eb")}
+                            >
+                                Start Coding Practice 🚀
+                            </button>
+
+
+                            <div style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
+                                <div style={{ marginBottom: "0.5rem" }}>
+                                    🔥 <strong>Streak:</strong> {codingStats.streak} days
+                                </div>
+                                <div>
+                                    🧠 <strong>Total Problems Solved:</strong> {codingStats.total_solved}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/*Recent Events */}
                         <div
                             className="service-card"
                             style={{
@@ -453,46 +496,6 @@ export default function StudentLogin() {
             }
         `}</style>
     </div>
-
-                        {/* Upcoming Events */}
-                        <div className='service-card'>
-                            <h3 className='service-title'>Upcoming Events</h3>
-                            <div
-                                style={{
-                                    fontSize: '0.875rem',
-                                    color: '#6b7280',
-                                    lineHeight: '1.6',
-                                }}>
-                                <div
-                                    style={{
-                                        marginBottom: '0.75rem',
-                                        paddingBottom: '0.75rem',
-                                        borderBottom: '1px solid #f3f4f6',
-                                    }}>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Live Session: Redux Deep Dive
-                                    </div>
-                                    <div>Tomorrow, 7:00 PM IST</div>
-                                </div>
-                                <div
-                                    style={{
-                                        marginBottom: '0.75rem',
-                                        paddingBottom: '0.75rem',
-                                        borderBottom: '1px solid #f3f4f6',
-                                    }}>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Assignment Due: API Integration
-                                    </div>
-                                    <div>In 3 days</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Mid-term Assessment
-                                    </div>
-                                    <div>Next week</div>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* Performance Stats */}
                         <div className='service-card'>

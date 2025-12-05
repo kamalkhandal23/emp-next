@@ -21,7 +21,8 @@ export const getProfileData = async (req, res) => {
 
         const recentActivity = await RecentActivity.findOne({ studentId: student._id });
 
-        const completedAssignments = student.noOfCompletedAssignments || 0;
+        const completedAssignments = student.assignments.length;
+        console.log(student);
         const classAttenended = await NGStudentAttencendance.findOne({student : student._id});
 
         return res.status(200).json({
@@ -32,7 +33,7 @@ export const getProfileData = async (req, res) => {
                     completedAssignments: completedAssignments,
                     course: course,
                     recentActivity: recentActivity,
-                    noOfClassAttended: classAttenended.attendance.length ||0
+                    noOfClassAttended: classAttenended?.attendance?.length ||0
                     
                     
                 }

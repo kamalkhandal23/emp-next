@@ -125,9 +125,27 @@ export const submitAssignment = async (req, res) => {
     await addActivity(studentId, "Assignment submission", `Submitted assignment ${assignment.assignmentName}`, {Date: new Date()});
     const student = await NG_Approved_Students.findById(studentId);
     if (student) {
-      student.leaderboardValue.score += 20; // Example: increment leaderboard value by 20
-      await student.save();
-    }
+  // 👉 Check if assignment already exists
+        const alreadyExists = student.assignments.some(
+          (a) => a.assignment_id.toString() === assignmentId
+        );
+
+        if (!alreadyExists) {
+          student.leaderboardValue.score += 20;
+          // 👉 Add new assignment
+          student.noOfCompletedAssignments++;
+          student.assignments.push({
+            assignment_id: assignmentId,
+            isSubmitted: false,
+          });
+
+          
+        } else {
+          console.log("Assignment already exists for this student!");
+        }
+
+        await student.save();
+      }
 
     res.status(200).json({
       success: true,

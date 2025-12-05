@@ -15,6 +15,13 @@ export default function CodingExam() {
   const [running, setRunning] = useState(false)
   const [runResult, setRunResult] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [examSubmitted, setExamSubmitted] = useState(false);
+  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
+    //Full screen mode handler
+  const [showTopMessage, setShowTopMessage] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [countdown, setCountdown] = useState(30);
 
   const languages = [
     { value: 'c', label: 'C' },
@@ -168,6 +175,81 @@ int main() {
       setCurrentQuestion(currentQuestion - 1)
     }
   }
+  // ENTER FULLSCREEN
+      const enterFullscreen = () => {
+          const elem = document.documentElement;
+          if (elem.requestFullscreen) elem.requestFullscreen();
+          else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+          else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+      };
+  
+      // EXIT FULLSCREEN
+      const exitFullscreen = () => {
+          if (document.fullscreenElement) {
+              document.exitFullscreen().catch(() => {});
+          }
+      };
+  
+      // BLUR + FULLSCREEN EXIT DETECT
+      useEffect(() => {
+          const handleBlur = () => {
+              if(!showPopup){
+                  console.log(showPopup);
+                  setShowTopMessage(true);
+                  setShowPopup(true);
+                  setCountdown(30);
+              }
+          };
+  
+          const handleFullscreenChange = () => {
+              if (!document.fullscreenElement && !showPopup) {
+                  setShowTopMessage(true);
+                  setShowPopup(true);
+                  setCountdown(30);
+              }
+          };
+  
+          window.addEventListener("blur", handleBlur);
+          document.addEventListener("fullscreenchange", handleFullscreenChange);
+  
+          return () => {
+              window.removeEventListener("blur", handleBlur);
+              document.removeEventListener("fullscreenchange", handleFullscreenChange);
+          };
+      }, []);
+      // COUNTDOWN LOGIC
+      useEffect(() => {
+          let interval;
+  
+          if (showPopup && countdown > 0) {
+              interval = setInterval(() => setCountdown((c) => c - 1), 1000);
+          }
+  
+          if (countdown === 0 && showPopup) {
+              setExamSubmitted(true);
+              submitExam();
+              setShowPopup(false);
+          }
+  
+          return () => clearInterval(interval);
+      }, [showPopup, countdown]);
+  
+      // PROCEED BUTTON → RE-ENTER FULLSCREEN
+      const handleOk = () => {
+          enterFullscreen();
+          setShowPopup(false);
+          setShowTopMessage(false);
+          setCountdown(30);
+      };
+      const handleCancel = () => {
+          if (document.fullscreenElement) exitFullscreen();  // only exit if fullscreen
+          setExamSubmitted(true);
+          submitExam();
+          setShowPopup(false);
+          setShowTopMessage(false);
+      };
+  
+  
 
   if (loading) {
     return (
@@ -217,7 +299,40 @@ int main() {
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        {showTopMessage && !examSubmitted && (
+              <div style={{ ...styles.topWarning, ...styles.slideDown }}>
+                  ⚠️ You exited fullscreen or switched the tab!
+              </div>
+          )}
+
+          {/* POPUP */}
+          {showPopup && !examSubmitted && (
+              <div style={styles.overlay}>
+                  <div style={styles.popup}>
+                      <div style={styles.iconCircle}>⚠️</div>
+                      <h2 style={styles.title}>WARNING!</h2>
+                      <p style={styles.text}>
+                          You must stay in fullscreen mode. Return within {countdown} seconds or the exam will auto-submit.
+                      </p>
+
+                      <div style={styles.buttonRow}>
+                          <button style={styles.cancelBtn} onClick={handleCancel}>CANCEL</button>
+                          <button style={styles.proceedBtn} onClick={handleOk}>PROCEED</button>
+                      </div>
+
+                      <div style={styles.bottomStripe}></div>
+                  </div>
+              </div>
+          )}
+
+          {/* AUTO SUBMIT */}
+          {examSubmitted && (
+              <div style={styles.autoSubmit}>Exam Auto-Submitted ❗</div>
+          )}
+
+        
         {/* Header */}
+        
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#111827', marginBottom: '0.5rem' }}>
             {exam.examName}
@@ -488,3 +603,113 @@ int main() {
     </div>
   )
 }
+/* ------------------ Warning CSS ------------------ */
+              const styles = {
+              page: {
+              width: "100%",
+              height: "100vh",
+              background: "#e8ffe8",
+              position: "relative",
+              fontFamily: "Arial",
+          },
+              topWarning: {
+              width: "100%",
+              background: "#ff4d4d",
+              padding: "12px",
+              textAlign: "center",
+              color: "white",
+              fontWeight: "bold",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              zIndex: 50,
+          },
+              slideDown: {
+              animation: "slideDown 0.4s ease forwards",
+          },
+              overlay: {
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.5)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 100,
+          },
+              popup: {
+              width: "350px",
+              background: "white",
+              borderRadius: "10px",
+              padding: "20px",
+              textAlign: "center",
+          },
+              iconCircle: {
+              width: "70px",
+              height: "70px",
+              borderRadius: "50%",
+              background: "#ff7043",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+              fontSize: "32px",
+              margin: "10px auto",
+          },
+                  title: { fontSize: "22px", fontWeight: "bold" },
+                  text: { fontSize: "14px", color: "#555", margin: "10px 0 20px" },
+                  buttonRow: { display: "flex", gap: "10px" },
+                  cancelBtn: {
+                      width: "50%",
+                      padding: "10px",
+                      border: "1px solid black",
+                      background: "black",
+                      color: "white",     // FIX
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                  },
+
+                  proceedBtn: {
+              width: "50%",
+              padding: "10px",
+              background: "#ff5722",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+          },
+              bottomStripe: {
+              width: "100%",
+              height: "12px",
+              marginTop: "15px",
+              background: "repeating-linear-gradient(45deg, #ff5722, #ff5722 10px, white 10px, white 20px)",
+              borderRadius: "0 0 10px 10px",
+          },
+              autoSubmit: {
+              position: "fixed",
+              inset: 0,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+              background: "rgba(0,0,0,0.7)",
+              fontSize: "28px",
+              zIndex: 200,
+          },
+              content: { textAlign: "center", marginTop: "100px" },
+              startBtn: {
+              padding: "12px 25px",
+              background: "green",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "18px",
+          },
+          };
+
+              /* Inject KEYFRAME animation */
+              const style = document.createElement("style");
+              style.innerHTML = `@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }`;
+              document.head.appendChild(style);
+
+
