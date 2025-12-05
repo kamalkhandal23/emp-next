@@ -263,13 +263,18 @@ export default function CourseManagerPortal() {
   }, []);
 
   // Fetch registrations from API
-  const fetchRegistrations = async () => {
+  const fetchRegistrations = async (status = 'all') => {
     try {
-      const response = await apiClient.getRegistrations();
-      setStudentRegistrations(response);
+      const response = await apiClient.getRegistrations(status);
       console.log('Fetched registrations:', response);
+      if (response.success && response.data) {
+        setStudentRegistrations(response.data.registrations || []);
+      } else {
+        setStudentRegistrations([]);
+      }
     } catch (error) {
       console.error('Error fetching registrations:', error);
+      setStudentRegistrations([]);
     }
   };
 
@@ -457,8 +462,8 @@ export default function CourseManagerPortal() {
     if (action === 'Add Lectures to Course') {
       navigate('/portal/coursemanager/courselecture');
     }
-    if (action === "Manage Lecture"){
-      navigate("/portal/coursemanager/managelecture")
+    if (action === 'Manage Lecture') {
+      navigate('/portal/coursemanager/managelecture');
     }
   };
 
@@ -478,8 +483,13 @@ export default function CourseManagerPortal() {
     try {
       // Prepare data for update, converting empty date strings to null
       const updateData = { ...editCourse };
-      const dateFields = ['start_date', 'end_date', 'registration_start', 'registration_end'];
-      dateFields.forEach(field => {
+      const dateFields = [
+        'start_date',
+        'end_date',
+        'registration_start',
+        'registration_end',
+      ];
+      dateFields.forEach((field) => {
         if (updateData[field] === '') {
           updateData[field] = null;
         }
@@ -1033,7 +1043,7 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Assignments' style={{color: 'black'}}>
+                <Card title='Assignments' style={{ color: 'black' }}>
                   <ActionList
                     actions={[
                       'Create Assignments',
