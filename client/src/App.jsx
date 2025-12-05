@@ -67,7 +67,7 @@ import { AuthProvider } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-
+import CodingPractice from "././pages/NextGenFreeEdu/CodingPractice";
 import Home from './pages/Home';
 import About from './pages/About';
 import Services from './pages/Services';
@@ -84,7 +84,7 @@ import StudentProfile from './pages/NextGenFreeEdu/StudentProfile';
 import Exam from './pages/NextGenFreeEdu/Exam';
 import Results from './pages/NextGenFreeEdu/Results';
 import PrivacyPolicy from './pages/NextGenFreeEdu/PrivacyPolicy';
-import TermsOfService from './pages/NextGenFreeEdu/Termsofservice';
+import TermsOfService from './pages/NextGenFreeEdu/TermsOfService';
 import StudentAssignments from './pages/NextGenFreeEdu/StudentAssignments';
 import AssignmentDetails from './pages/NextGenFreeEdu/AssignmentDetails';
 import StudentExams from './pages/NextGenFreeEdu/StudentExams';
@@ -215,10 +215,10 @@ function AppRoutes() {
         <Route path='profile' element={<StudentProfile />} />
         <Route path='exam' element={<Exam />} />
         <Route path='exams' element={<StudentExams />} />
-        {/* ✅ yahi important */}
         <Route path='results' element={<Results />} />
         <Route path='coding-exams' element={<CodingExamsList />} />
         <Route path='coding-exam/:id' element={<CodingExam />} />
+        <Route path="coding-practice" element={<CodingPractice />} />
         <Route path='assignments' element={<StudentAssignments />} />
         <Route
           path='assignments/:assignmentId'
@@ -297,6 +297,7 @@ export default function App() {
               <Route path='results' element={<Results />} />
               <Route path='coding-exams' element={<CodingExamsList />} />
               <Route path='coding-exam/:id' element={<CodingExam />} />
+              <Route path='coding-practice' element={<CodingPractice />} />
               <Route path='assignments' element={<StudentAssignments />} />
               <Route path='lectures' element={<AvailableLectures />} />
                 <Route path='class-link' element={<ClassLink />} />

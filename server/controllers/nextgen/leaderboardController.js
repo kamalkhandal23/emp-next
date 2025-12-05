@@ -24,6 +24,10 @@ export const getLeaderboard = async (req, res) => {
             leaderboard = await createLeaderboardImpl(courseId);
             return res.status(200).json({players: [{id: "mockPlayers", leaderboard}]});
         }
+        else{
+            console.log("Leaderboard exists:", leaderboard);
+            updateScoreAndSort(courseId);
+        }
         //Leaderboard exists, return it
         const students = leaderboard.students;
         console.log(students);
