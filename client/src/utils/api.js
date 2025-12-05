@@ -217,6 +217,22 @@ class ApiClient {
             }
         );
     }
+    async getNextGenClass(studentId, courseId, token) {
+      // ALWAYS load inside function
+
+        console.log("HEADER SENT:", `Bearer ${token}`);
+
+        return this.request(
+            `/nextgen/class/student?studentId=${studentId}&courseId=${courseId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    }
 
 
 
@@ -407,26 +423,6 @@ class ApiClient {
   // NextGen Education endpoints
   async getNextGenCourses() {
     return this.request('/nextgen/courses');
-  }
-
-  async createCourse(courseData) {
-    return this.request('/nextgen/courses', {
-      method: 'POST',
-      body: courseData,
-    });
-  }
-
-  async updateCourse(id, courseData) {
-    return this.request(`/nextgen/courses/${id}`, {
-      method: 'PUT',
-      body: courseData,
-    });
-  }
-
-  async deleteCourse(id) {
-    return this.request(`/nextgen/courses/${id}`, {
-      method: 'DELETE',
-    });
   }
 
   async enrollInCourse(courseData) {
@@ -790,14 +786,6 @@ class ApiClient {
     }
     return response;
   }
-  // Inquiry endpoints
-  async createInquiry(inquiryData) {
-    return this.request('/inquiry', {
-      method: 'POST',
-      body: inquiryData,
-    });
-  }
-
   // NextGen Notification Endpoints
   async createNotification(notificationData) {
     return this.request('/nextgen/notifications', {
@@ -807,7 +795,7 @@ class ApiClient {
   }
   async getAllNotifications() {
     return this.request('/nextgen/notifications');
-  }
+  } 
 
 }
 

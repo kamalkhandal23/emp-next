@@ -21,8 +21,7 @@ export const getProfileData = async (req, res) => {
 
         const recentActivity = await RecentActivity.findOne({ studentId: student._id });
 
-        const completedAssignments = student.assignments.length;
-        console.log(student);
+        const completedAssignments = student?.noOfCompletedAssignments;
         const classAttenended = await NGStudentAttencendance.findOne({student : student._id});
 
         return res.status(200).json({

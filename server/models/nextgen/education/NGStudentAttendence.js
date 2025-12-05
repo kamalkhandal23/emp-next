@@ -25,7 +25,7 @@ const attendanceEntrySchema = new mongoose.Schema({
 const studentAttendanceSchema = new mongoose.Schema({
     student: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "NG_Student",
+        ref: "NG_Approved_Students",
         required: true,
     },
     course: {
