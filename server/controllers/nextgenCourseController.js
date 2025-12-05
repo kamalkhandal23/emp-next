@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import NG_Courses from '../models/education/NG_Courses.js';
+import User from '../models/core/User.js';
 import Registration from '../models/nextgen/core/Registration.js';
 import { validationResult } from 'express-validator';
 
@@ -284,6 +285,41 @@ export const getCourseStatistics = async (req, res) => {
   }
 };
 
+export const getMyCourses =  (async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findById(userId).select("assignedCourses role");
+
+    // Admin / Super Admin get all courses
+    if (user.role === "admin" || user.role === "super_admin") {
+      const courses = await NG_Courses.find({});
+      return res.json({
+        success: true,
+        data: { courses },
+      });
+    }
+
+    // Course Manager only sees assigned
+    const courses = await NG_Courses.find({
+      _id: { $in: user.assignedCourses },
+    });
+
+    return res.json({
+      success: true,
+      data: { courses },
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching allowed courses",
+    });
+  }
+});
+
+
 export default {
   getAllCourses,
   getCourseById,
@@ -291,4 +327,5 @@ export default {
   updateCourse,
   deleteCourse,
   getCourseStatistics,
+  getMyCourses
 };

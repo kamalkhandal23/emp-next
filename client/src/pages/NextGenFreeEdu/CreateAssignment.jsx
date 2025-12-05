@@ -22,14 +22,37 @@ function CreateAssignment() {
     const fetchCourses = async () => {
       setLoadingCourses(true);
       try {
-        const response = await apiClient.getNextGenCourses();
-        if (response.success && response.data) {
-          const coursesArray = response.data.courses || [];
-          setCourses(coursesArray);
+          const token = localStorage.getItem("authToken");
+
+          const response = await fetch("http://localhost:5002/api/nextgen/courses/my-courses", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const res = await response.json();
+
+          if (res.success) {
+            console.log(res)
+            setCourses(res.data.courses)
+            // setCourses(data.data.courses);
+          }
+
+            
+        }catch (e) {
+          console.log("Error fetching courses", e);
+          alert("error in fetching courses",e.message)
         }
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      } finally {
+      // try {
+      //   const response = await apiClient.getNextGenCourses();
+      //   if (response.success && response.data) {
+      //     console.log("response",response)
+      //     const coursesArray = response.data.courses || [];
+      //     setCourses(coursesArray);
+      //   }
+      // } catch (error) {
+      //   console.error('Error fetching courses:', error);
+       finally {
         setLoadingCourses(false);
       }
     };
@@ -121,7 +144,7 @@ function CreateAssignment() {
     try {
       const assignmentData = {
         assignmentName: assignmentName.trim(),
-        courseName: courseName.trim(),
+        courseName: courseName,
         totalQuestions: parseInt(totalQuestions),
         questionData: questionData,
       };
@@ -221,11 +244,11 @@ function CreateAssignment() {
                 <option value='' disabled>
                   {loadingCourses ? 'Loading courses...' : 'Select a course'}
                 </option>
-                {courses.map((course, index) => (
-                  <option key={index} value={course.title}>
+                {courses.map((course) => (
+                    <option key={course._id} value={course.title}>
                     {course.title}
-                  </option>
-                ))}
+                    </option>
+                  ))}
               </select>
 
               <label className='text-lg text-gray-700 font-medium text-left'>

@@ -3,6 +3,8 @@ import NGAssignmentWithQuestions from '../../models/nextgen/education/NGAssignme
 import Student from '../../models/nextgen/student-management/Student.js';
 import { sendGradedAssignmentEmail } from '../../services/emailService.js';
 import { uploadMultipleFiles } from '../../services/uploadService.js';
+import NG_Approved_Students from '../../models/nextgen/core/NG_ApprovedStudents.js';
+import addActivity from '../../services/addActivityServiceImpl.js';
 
 // Create or update submission
 export const submitAssignment = async (req, res) => {
@@ -120,6 +122,12 @@ export const submitAssignment = async (req, res) => {
     }
 
     await submission.save();
+    await addActivity(studentId, "Assignment submission", `Submitted assignment ${assignment.assignmentName}`, {Date: new Date()});
+    const student = await NG_Approved_Students.findById(studentId);
+    if (student) {
+      student.leaderboardValue.score += 20; // Example: increment leaderboard value by 20
+      await student.save();
+    }
 
     res.status(200).json({
       success: true,

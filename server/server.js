@@ -12,6 +12,44 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Import routes
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/users.js';
+import employeeRoutes from './routes/employees.js';
+import attendanceRoutes from './routes/attendance.js';
+import taskRoutes from './routes/tasks.js';
+import projectRoutes from './routes/projects.js';
+import teamRoutes from './routes/teams.js';
+import leaveRoutes from './routes/leaves.js';
+import meetingRoutes from './routes/meetings.js';
+import dashboardRoutes from './routes/dashboard.js';
+import nextgenSystemRoutes from './routes/nextgen/index.js';
+import lectureRoutes from './routes/nextgen/lecture.js';
+import leaderboard from "./routes/nextgen/leaderboard.js";
+import profileDataRoute from "./routes/nextgen/profileDataRoute.js"
+
+import uploadRoutes from './routes/upload.js';
+import studentRoutes from './routes/students.js';
+import courseRoutes from './routes/courses.js';
+import examRoutes from './routes/exams.js';
+import resultRoutes from './routes/results.js';
+import adminRoutes from './routes/admin.js';
+import inquiryRoutes from './routes/inquiry.js';
+import codingPracticeRoutes from "./routes/nextgenCodingPractice.js";
+import employeePortalRoutes from './routes/employeePortal.js';
+import nextgenStudentRoutes from './routes/nextgenStudentRoutes.js';
+import unifiedAuthLogin from './routes/auth.login.unified.js';
+
+// Middleware
+import { errorHandler } from './middleware/errorHandler.js';
+import { notFound } from './middleware/notFound.js';
+
+// Jobs
+import { startAttendanceJobs } from './jobs/attendanceJobs.js';
+
+// Services
+import { initializeBucket } from './services/uploadService.js';
+
 dotenv.config();
 
 const app = express();
@@ -170,10 +208,17 @@ app.use('/api/nextgen/admin', adminRoutes);
 app.use('/api/nextgen/leaderboard', leaderboard);
 app.use('/api/nextgen/lectureVideo', lectureRoutes);
 // NextGen system routes (last to avoid overlap)
-app.use('/api/nextgen', nextgenSystemRoutes);
-app.use('/api/nextgen', nextgenStudentRoutes);
+//app.use('/api/nextgen', nextgenSystemRoutes);
+//app.use('/api/nextgen', nextgenStudentRoutes);
 
 /* ------------------- Root --------------------------------------------- */
+app.use('/api/nextgen/studentData', profileDataRoute);
+//  NextGen routes (last, to avoid overlap)
+app.use('/api/nextgen', nextgenSystemRoutes);
+app.use('/api/nextgen', nextgenStudentRoutes);
+app.use('/api/nextgen', codingPracticeRoutes);
+
+// Root endpoint
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to Lifebox NextGen API 🚀',

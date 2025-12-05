@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
+import RecentActivity from '../../../../server/models/education/recentActivity';
 
 export default function StudentLogin() {
     const [loginData, setLoginData] = useState({
@@ -13,6 +14,41 @@ export default function StudentLogin() {
     const [loginError, setLoginError] = useState('');
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [codingStats, setCodingStats] = useState({
+        streak: 0,
+        total_solved: 0,
+      });
+
+      useEffect(() => {
+        try {
+          const stored = localStorage.getItem("studentInfo");
+          if (!stored) return;
+      
+          const student = JSON.parse(stored);
+          const studentId = student?._id || student?.id;
+          if (!studentId) return;
+      
+          const baseUrl =
+            import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+      
+          fetch(`${baseUrl}/nextgen/coding/stats/${studentId}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && data.data) {
+                setCodingStats({
+                  streak: data.data.streak || 0,
+                  total_solved: data.data.total_solved || 0,
+                });
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching coding stats:", err);
+            });
+        } catch (err) {
+          console.error("Error parsing studentInfo:", err);
+        }
+      }, []);
+      
 
     // Check if user is already logged in on component mount
     useEffect(() => {
@@ -22,6 +58,10 @@ export default function StudentLogin() {
             setIsLoggedIn(true);
         }
     }, []);
+    const [profileDataView, setProfileDataView] = useState(null);
+    const [recentActivities, setRecentActivities] = useState([]);
+    const[assignmentPending,setAssignmentPending]=useState(0);
+    const[overallProgress,setOverAll]=useState(0);
     const [assignments, setAssignments] = useState([]);
     const [showAssignments, setShowAssignments] = useState(false);
     const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -51,8 +91,7 @@ export default function StudentLogin() {
 
         try {
             const response = await fetch(
-                `${
-                    import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+                `${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
                 }/nextgen/student/login`,
                 {
                     method: 'POST',
@@ -113,7 +152,7 @@ export default function StudentLogin() {
             setIsLoggingIn(false);
         }
     };
-
+    
     const handleForgotPassword = (e) => {
         e.preventDefault();
         setShowForgotPassword(true);
@@ -153,6 +192,45 @@ export default function StudentLogin() {
             setAssignmentsLoading(false);
         }
     };
+    const profileData = async () => {
+        if (isLoggedIn) {
+            try {
+                const studentData = getStudentData();
+                console.log('Student Data:', studentData);
+                const studentId = studentData?.student_id || studentData?.id;
+                console.log('Student ID:', studentId);
+                const courseId = studentData?.course?._id;
+        
+                const token = localStorage.getItem('authToken');
+                const response = await apiClient.getNextGenStudentProfileData(studentId, courseId, token);
+                setAssignmentPending(response.Data.course.assignments.length - response.Data.completedAssignments);
+                setProfileDataView(response.Data);
+                setRecentActivities(response.Data.recentActivity.activities);
+
+                const NoOfClassAttended=response.Data.noOfClassAttended;
+                console.log(response.Data);
+                 if(NoOfClassAttended/38 <=1){
+                    setOverAll(Math.round(NoOfClassAttended/38*100));
+                }
+                else{
+                    setOverAll(100);
+                }
+                
+
+                console.log('Profile Data Response:', recentActivities);
+                if (response.success) {
+                    setStudentRank(response.data.rank);
+
+                }
+
+            } catch (err) {
+                console.error('Error fetching profile data:', err);
+            }
+        }
+    }
+    useEffect(() => {
+        profileData();
+    }, [isLoggedIn]);
 
     if (isLoggedIn) {
         return (
@@ -194,7 +272,7 @@ export default function StudentLogin() {
                                         justifyContent: 'space-between',
                                         marginBottom: '0.5rem',
                                     }}>
-                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
                     Overall Progress
                   </span>
                                     <span
@@ -203,7 +281,7 @@ export default function StudentLogin() {
                                             fontWeight: '600',
                                             color: '#374151',
                                         }}>
-                    0%
+                    {overallProgress}%
                   </span>
                                 </div>
                                 <div
@@ -216,7 +294,7 @@ export default function StudentLogin() {
                                     }}>
                                     <div
                                         style={{
-                                            width: `0%`,
+                                            width: `${overallProgress}%`,
                                             height: '100%',
                                             background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
                                             transition: 'width 0.3s ease',
@@ -245,7 +323,7 @@ export default function StudentLogin() {
                                             color: '#111827',
                                         }}
                                     >{/*{studentRank || 1}*/1}
-                          </span>
+                                    </span>
                                 </div>
 
                                 <button
@@ -311,44 +389,70 @@ export default function StudentLogin() {
                         </div>
 
                         {/* Recent Activity */}
-                        <div className='service-card'>
-                            <h3 className='service-title'>Recent Activity</h3>
-                            <div
-                                style={{
-                                    fontSize: '0.875rem',
-                                    color: '#6b7280',
-                                    lineHeight: '1.6',
-                                }}>
-                                <div
-                                    style={{
-                                        marginBottom: '0.75rem',
-                                        paddingBottom: '0.75rem',
-                                        borderBottom: '1px solid #f3f4f6',
-                                    }}>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Completed: JavaScript Basics
-                                    </div>
-                                    <div>Score: 92% • 2 days ago</div>
-                                </div>
-                                <div
-                                    style={{
-                                        marginBottom: '0.75rem',
-                                        paddingBottom: '0.75rem',
-                                        borderBottom: '1px solid #f3f4f6',
-                                    }}>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Submitted: Portfolio Project
-                                    </div>
-                                    <div>Status: Under Review • 3 days ago</div>
-                                </div>
-                                <div>
-                                    <div style={{ fontWeight: '500', color: '#374151' }}>
-                                        Attended: Live Session
-                                    </div>
-                                    <div>Topic: React Hooks • 5 days ago</div>
-                                </div>
-                            </div>
-                        </div>
+                        <div
+                            className="service-card"
+                            style={{
+                             padding: '1rem',
+                            background: '#fff',
+                            borderRadius: '0.7rem',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            maxHeight: '350px',
+                            overflowY: 'auto',
+                            scrollbarWidth: 'thin', // for Firefox
+                            scrollbarColor: 'transparent transparent', // hide scrollbar in Firefox
+                            }}
+                    >
+                    <h3
+                        className="service-title"
+                        style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: '700' }}
+                    >
+                    Recent Activity
+                    </h3>
+
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', lineHeight: '1.6' }}>
+                        {recentActivities.map((activity, index) => (
+                    <div
+                    key={index}
+                    style={{
+                    marginBottom: '0.75rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom:
+                    index !== recentActivities.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    }}
+                    >
+                    <div style={{ fontWeight: '500', color: '#374151' }}>
+                    {activity.activityType}: {activity.description}
+                </div>
+                <div>
+            {activity.extraData?.score !== undefined &&
+                `Score: ${activity.extraData.score}% • `}
+            {new Date(activity.timestamp).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+            })}
+            </div>
+            </div>
+         ))}  
+        </div>
+
+        {/* Custom scrollbar for Webkit browsers */}
+            <style jsx>{`
+            .service-card::-webkit-scrollbar {
+                width: 6px;
+            }
+            .service-card::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .service-card::-webkit-scrollbar-thumb {
+                background-color: rgba(107, 114, 128, 0.5);
+                border-radius: 3px;
+                transition: background-color 0.2s;
+            }
+            .service-card::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(107, 114, 128, 0.8);
+            }
+        `}</style>
+    </div>
 
                         {/* Upcoming Events */}
                         <div className='service-card'>
@@ -406,7 +510,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#22c55e',
                                         }}>
-                                        92%
+                                        {profileDataView?.studentScore || 0}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Avg. Score
@@ -419,7 +523,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#3b82f6',
                                         }}>
-                                        15
+                                        {profileDataView?.completedAssignments || 0}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Completed
@@ -432,7 +536,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#f59e0b',
                                         }}>
-                                        3
+                                        { assignmentPending || 0}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Pending
@@ -445,7 +549,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#8b5cf6',
                                         }}>
-                                        8
+                                        {profileDataView?.studentRank || 1}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Rank
@@ -469,8 +573,8 @@ export default function StudentLogin() {
                                     📚 Class Lecture
                                 </Link>
                                 <Link to={`/nextgen/lectures`}
-                                      className='btn-outline'
-                                      style={{ justifyContent: 'flex-start' }}>
+                                    className='btn-outline'
+                                    style={{ justifyContent: 'flex-start' }}>
                                     🎥 Video Lectures
                                 </Link>
                                 <Link
@@ -595,8 +699,8 @@ export default function StudentLogin() {
                                 onChange={handleInputChange}
                             />
                             <span style={{ fontSize: '0.875rem', color: '#374151' }}>
-                Remember me
-              </span>
+                                Remember me
+                            </span>
                         </label>
                         <button
                             type='button'

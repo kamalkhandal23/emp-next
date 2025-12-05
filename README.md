@@ -1,6 +1,6 @@
 # LifeBox NextGen - Employee Management & Education Platform
 
-A comprehensive full-stack application combining employee management system with an integrated education platform.
+A comprehensive full-stack application combining employee management system with an integrated education platform.  
 
 ## 🚀 Features
 

@@ -168,7 +168,21 @@ class ApiClient {
             }
         );
     }
+    async getNextGenLectureVideos(studentId, courseId, token) {
+        console.log(studentId, courseId, "api lecture student & course id");
 
+        return this.request(
+            `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    }
+    
     //get student leader board
     async getNextGenLeaderboard(studentId, courseId,token) {
       // ALWAYS load inside function
@@ -177,6 +191,23 @@ class ApiClient {
 
         return this.request(
             `/nextgen/leaderboard/student?studentId=${studentId}&courseId=${courseId}`,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    }
+    //get student info with profile data
+    async getNextGenStudentProfileData(studentId, courseId, token) {
+      // ALWAYS load inside function
+
+        console.log("HEADER SENT:", `Bearer ${token}`);
+
+        return this.request(
+            `/nextgen/studentData/student?studentId=${studentId}&courseId=${courseId}`,
             {
                 method: "GET",
                 headers: {
