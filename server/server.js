@@ -24,8 +24,8 @@ import meetingRoutes from './routes/meetings.js';
 import dashboardRoutes from './routes/dashboard.js';
 import nextgenSystemRoutes from './routes/nextgen/index.js';
 import lectureRoutes from './routes/nextgen/lecture.js';
-import leaderboard from "./routes/nextgen/leaderboard.js";
-import profileDataRoute from "./routes/nextgen/profileDataRoute.js"
+import leaderboard from './routes/nextgen/leaderboard.js';
+import profileDataRoute from './routes/nextgen/profileDataRoute.js';
 
 import uploadRoutes from './routes/upload.js';
 import studentRoutes from './routes/students.js';
@@ -33,8 +33,9 @@ import courseRoutes from './routes/courses.js';
 import examRoutes from './routes/exams.js';
 import resultRoutes from './routes/results.js';
 import adminRoutes from './routes/admin.js';
+import nextgenAdminRoutes from './routes/nextgen/admin/index.js';
 import inquiryRoutes from './routes/inquiry.js';
-import codingPracticeRoutes from "./routes/nextgenCodingPractice.js";
+import codingPracticeRoutes from './routes/nextgenCodingPractice.js';
 import employeePortalRoutes from './routes/employeePortal.js';
 import nextgenStudentRoutes from './routes/nextgenStudentRoutes.js';
 import unifiedAuthLogin from './routes/auth.login.unified.js';
@@ -92,7 +93,6 @@ app.use(
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
-
 
 // Rate limiter
 const limiter = rateLimit({
@@ -161,7 +161,7 @@ app.use('/api/results', resultRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/inquiry', inquiryRoutes);
 app.use('/api/employee-portal', employeePortalRoutes);
-app.use('/api/nextgen/admin', adminRoutes);
+app.use('/api/nextgen/admin', nextgenAdminRoutes);
 app.use('/api/nextgen/leaderboard', leaderboard);
 app.use('/api/nextgen/lectureVideo', lectureRoutes);
 app.use('/api/nextgen/studentData', profileDataRoute);
