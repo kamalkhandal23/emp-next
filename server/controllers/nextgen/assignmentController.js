@@ -3,6 +3,7 @@ import AssignmentSubmission from '../../models/nextgen/education/AssignmentSubmi
 import Student from '../../models/nextgen/student-management/Student.js';
 import { sendNewAssignmentEmail } from '../../services/emailService.js';
 import NGSubmissionAssignment from '../../models/nextgen/education/NGSubmissionAssignment.js';
+import NG_Courses from '../../models/nextgen/education/Course.js';
 
 // Create a new assignment with all questions
 export const createAssignment = async (req, res) => {
@@ -18,6 +19,15 @@ export const createAssignment = async (req, res) => {
           'Missing required fields: assignmentName, courseName, totalQuestions, and questionData are required',
       });
     }
+    const courseId = req.body.courseName;
+    const course = await NG_Courses.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found',
+      });
+    }
+
 
     // Validate that assignmentName is not empty
     if (assignmentName.trim() === '') {
@@ -136,7 +146,11 @@ export const createAssignment = async (req, res) => {
       console.error('Error sending assignment notifications:', emailError);
       // Don't fail the assignment creation if emails fail
     }
-
+    course.assignments.push({
+      assignment_id: assignment._id,
+      assignmentName: assignment.assignmentName
+    });
+    await course.save();
     // Return success response
     res.status(201).json({
       success: true,

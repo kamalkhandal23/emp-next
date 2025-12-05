@@ -12,7 +12,21 @@ const courseSchema = new mongoose.Schema({
   banner_url: String,
   courseCode: { type: String, required: true, unique: true, uppercase: true },
   created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'NG_User' },
+  assignments: {
+      type: [
+        {
+          assignment_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'NG_Assignment',
+          },
+          assignmentName: { type: String, required: true },
+        },
+      ],
+      default: [],
+    },
+
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
 const Course = mongoose.models.NG_Course || mongoose.model('NG_Course', courseSchema);
+
 export default Course;

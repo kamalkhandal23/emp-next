@@ -40,6 +40,7 @@ export default function AvailableLectures() {
                 if (data?.courses?.length > 0) {
                     setCourses(data.courses);
                 }
+                console.log("Fetched Lectures:", data);
             } catch (err) {
                 console.error("Error fetching lectures:", err);
             }
@@ -47,6 +48,47 @@ export default function AvailableLectures() {
 
         fetchLectures();
     }, [id]);
+    const updateActivity = async (lectureTitle) => {
+    try {
+        const raw = localStorage.getItem("studentInfo");
+        let studentInfo = null;
+
+        try {
+            studentInfo = raw ? JSON.parse(raw) : null;
+        } catch {
+            studentInfo = null;
+        }
+
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            navigate("/nextgen/login");
+            return;
+        }
+
+        const studentId = studentInfo?.student_id ?? studentInfo?.id;
+        const courseId = studentInfo?.course?._id;
+
+        const response = await fetch(`/api/nextgen/studentData/add-activity?studentId=${studentId}&courseId=${courseId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+                activityType: 'Watched Lecture Video',
+                description: `Watched a lecture video of ${lectureTitle}`,
+            }),
+        });
+
+        const result = await response.json();
+        console.log("Activity Updated:", result);
+
+    } catch (err) {
+        console.error("Error updating activity:", err);
+    }
+};
+
+
 
     // Group by topic
     const groupByTopic = (lectures = []) => {
@@ -173,7 +215,7 @@ export default function AvailableLectures() {
 
                             <button
                                 style={styles.btn}
-                                onClick={() => window.open(lec.videoURL, "_blank")}
+                                onClick={() => { updateActivity(lec.title); window.open(lec.videoURL, "_blank"); }}
                             >
                                 ▶ Watch Video
                             </button>

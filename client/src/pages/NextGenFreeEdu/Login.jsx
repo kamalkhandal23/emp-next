@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
+import RecentActivity from '../../../../server/models/education/recentActivity';
 
 export default function StudentLogin() {
     const [loginData, setLoginData] = useState({
@@ -57,6 +58,10 @@ export default function StudentLogin() {
             setIsLoggedIn(true);
         }
     }, []);
+    const [profileDataView, setProfileDataView] = useState(null);
+    const [recentActivities, setRecentActivities] = useState([]);
+    const[assignmentPending,setAssignmentPending]=useState(0);
+    const[overallProgress,setOverAll]=useState(0);
     const [assignments, setAssignments] = useState([]);
     const [showAssignments, setShowAssignments] = useState(false);
     const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -147,7 +152,7 @@ export default function StudentLogin() {
             setIsLoggingIn(false);
         }
     };
-
+    
     const handleForgotPassword = (e) => {
         e.preventDefault();
         setShowForgotPassword(true);
@@ -187,6 +192,45 @@ export default function StudentLogin() {
             setAssignmentsLoading(false);
         }
     };
+    const profileData = async () => {
+        if (isLoggedIn) {
+            try {
+                const studentData = getStudentData();
+                console.log('Student Data:', studentData);
+                const studentId = studentData?.student_id || studentData?.id;
+                console.log('Student ID:', studentId);
+                const courseId = studentData?.course?._id;
+        
+                const token = localStorage.getItem('authToken');
+                const response = await apiClient.getNextGenStudentProfileData(studentId, courseId, token);
+                setAssignmentPending(response.Data.course.assignments.length - response.Data.completedAssignments);
+                setProfileDataView(response.Data);
+                setRecentActivities(response.Data.recentActivity.activities);
+
+                const NoOfClassAttended=response.Data.noOfClassAttended;
+                console.log(response.Data);
+                 if(NoOfClassAttended/38 <=1){
+                    setOverAll(Math.round(NoOfClassAttended/38*100));
+                }
+                else{
+                    setOverAll(100);
+                }
+                
+
+                console.log('Profile Data Response:', recentActivities);
+                if (response.success) {
+                    setStudentRank(response.data.rank);
+
+                }
+
+            } catch (err) {
+                console.error('Error fetching profile data:', err);
+            }
+        }
+    }
+    useEffect(() => {
+        profileData();
+    }, [isLoggedIn]);
 
     if (isLoggedIn) {
         return (
@@ -229,16 +273,16 @@ export default function StudentLogin() {
                                         marginBottom: '0.5rem',
                                     }}>
                                     <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                                        Overall Progress
-                                    </span>
+                    Overall Progress
+                  </span>
                                     <span
                                         style={{
                                             fontSize: '0.875rem',
                                             fontWeight: '600',
                                             color: '#374151',
                                         }}>
-                                        0%
-                                    </span>
+                    {overallProgress}%
+                  </span>
                                 </div>
                                 <div
                                     style={{
@@ -250,7 +294,7 @@ export default function StudentLogin() {
                                     }}>
                                     <div
                                         style={{
-                                            width: `0%`,
+                                            width: `${overallProgress}%`,
                                             height: '100%',
                                             background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
                                             transition: 'width 0.3s ease',
@@ -345,45 +389,70 @@ export default function StudentLogin() {
                         </div>
 
                         {/* Recent Activity */}
-                        <div className="service-card">
-                            <h3 className="service-title">Coding Practice</h3>
+                        <div
+                            className="service-card"
+                            style={{
+                             padding: '1rem',
+                            background: '#fff',
+                            borderRadius: '0.7rem',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                            maxHeight: '350px',
+                            overflowY: 'auto',
+                            scrollbarWidth: 'thin', // for Firefox
+                            scrollbarColor: 'transparent transparent', // hide scrollbar in Firefox
+                            }}
+                    >
+                    <h3
+                        className="service-title"
+                        style={{ marginBottom: '1rem', fontSize: '1.25rem', fontWeight: '700' }}
+                    >
+                    Recent Activity
+                    </h3>
 
-                            <p style={{ fontSize: "0.9rem", color: "#6b7280", marginBottom: "1rem" }}>
-                                Improve your coding by solving interactive challenges using live compiler.
-                            </p>
+                    <div style={{ fontSize: '0.875rem', color: '#6b7280', lineHeight: '1.6' }}>
+                        {recentActivities.map((activity, index) => (
+                    <div
+                    key={index}
+                    style={{
+                    marginBottom: '0.75rem',
+                    paddingBottom: '0.75rem',
+                    borderBottom:
+                    index !== recentActivities.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    }}
+                    >
+                    <div style={{ fontWeight: '500', color: '#374151' }}>
+                    {activity.activityType}: {activity.description}
+                </div>
+                <div>
+            {activity.extraData?.score !== undefined &&
+                `Score: ${activity.extraData.score}% • `}
+            {new Date(activity.timestamp).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+            })}
+            </div>
+            </div>
+         ))}  
+        </div>
 
-                            <button
-                                onClick={() => navigate("/nextgen/coding-practice")}
-                                style={{
-                                    width: "100%",
-                                    background: "#2563eb",
-                                    color: "white",
-                                    padding: "10px",
-                                    fontSize: "1rem",
-                                    borderRadius: "8px",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    fontWeight: "600",
-                                    transition: "0.2s",
-                                }}
-                                onMouseEnter={e => (e.target.style.background = "#1d4ed8")}
-                                onMouseLeave={e => (e.target.style.background = "#2563eb")}
-                            >
-                                Start Coding Practice 🚀
-                            </button>
-
-
-                            <div style={{ marginTop: "1.5rem", fontSize: "0.85rem", color: "#6b7280" }}>
-                                <div style={{ marginBottom: "0.5rem" }}>
-                                    🔥 <strong>Streak:</strong> {codingStats.streak} days
-                                </div>
-                                <div>
-                                    🧠 <strong>Total Problems Solved:</strong> {codingStats.total_solved}
-                                </div>
-                            </div>
-                        </div>
-
-
+        {/* Custom scrollbar for Webkit browsers */}
+            <style jsx>{`
+            .service-card::-webkit-scrollbar {
+                width: 6px;
+            }
+            .service-card::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .service-card::-webkit-scrollbar-thumb {
+                background-color: rgba(107, 114, 128, 0.5);
+                border-radius: 3px;
+                transition: background-color 0.2s;
+            }
+            .service-card::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(107, 114, 128, 0.8);
+            }
+        `}</style>
+    </div>
 
                         {/* Upcoming Events */}
                         <div className='service-card'>
@@ -441,7 +510,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#22c55e',
                                         }}>
-                                        92%
+                                        {profileDataView?.studentScore || 0}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Avg. Score
@@ -454,7 +523,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#3b82f6',
                                         }}>
-                                        15
+                                        {profileDataView?.completedAssignments || 0}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Completed
@@ -467,7 +536,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#f59e0b',
                                         }}>
-                                        3
+                                        { assignmentPending || 0}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Pending
@@ -480,7 +549,7 @@ export default function StudentLogin() {
                                             fontWeight: '700',
                                             color: '#8b5cf6',
                                         }}>
-                                        8
+                                        {profileDataView?.studentRank || 1}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                                         Rank

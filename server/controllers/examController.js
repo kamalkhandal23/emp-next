@@ -4,6 +4,7 @@ import Student from '../models/education/studentModel.js';
 import NG_Courses from '../models/education/NG_Courses.js';
 import { validationResult } from 'express-validator';
 import mongoose from 'mongoose';
+import addActivity from '../services/addActivityServiceImpl.js';
 
 // Get all exams
 export const getAllExams = async (req, res) => {
@@ -293,7 +294,7 @@ export const submitExam = async (req, res) => {
     if (attemptNumber > exam.settings.attemptsAllowed) {
       return res.status(403).json({ message: 'Maximum attempts exceeded' });
     }
-
+    await addActivity(studentId, "exam_submission", `Submitted exam ${exam.title} `, {Date: new Date()});
     // Generate result ID
     const resultCount = await Result.countDocuments();
     const resultId = `RES${String(resultCount + 1).padStart(8, '0')}`;
