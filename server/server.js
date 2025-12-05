@@ -65,7 +65,14 @@ app.use(
 //  CORS CONFIGURATION
 app.use(
   cors({
-    origin:process.env.CORS_ORIGIN || '*',
+    origin: [
+      'https://nextgenfreeedu.netlify.app' || 'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:5001',
+      'http://localhost:5002',
+      'https://lifeboxnextgen.com',
+      'https://www.lifeboxnextgen.com',
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
