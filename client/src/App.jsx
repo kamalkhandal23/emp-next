@@ -84,7 +84,7 @@ import StudentProfile from './pages/NextGenFreeEdu/StudentProfile';
 import Exam from './pages/NextGenFreeEdu/Exam';
 import Results from './pages/NextGenFreeEdu/Results';
 import PrivacyPolicy from './pages/NextGenFreeEdu/PrivacyPolicy';
-import TermsOfService from './pages/NextGenFreeEdu/Termsofservice';
+import TermsOfService from './pages/NextGenFreeEdu/TermsOfService';
 import StudentAssignments from './pages/NextGenFreeEdu/StudentAssignments';
 import AssignmentDetails from './pages/NextGenFreeEdu/AssignmentDetails';
 import StudentExams from './pages/NextGenFreeEdu/StudentExams';
