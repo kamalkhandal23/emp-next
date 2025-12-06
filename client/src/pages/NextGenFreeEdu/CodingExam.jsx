@@ -152,6 +152,7 @@ int main() {
 
       if (response.success) {
         // Navigate to results page
+        exitFullscreen();
         navigate('/nextgen/results')
       } else {
         throw new Error(response.message || 'Failed to submit exam')
@@ -298,38 +299,6 @@ int main() {
 
   return (
     <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-      
-        {showTopMessage && !examSubmitted && (
-              <div style={{ ...styles.topWarning, ...styles.slideDown }}>
-                  ⚠️ You exited fullscreen or switched the tab!
-              </div>
-          )}
-
-          {/* POPUP */}
-          {showPopup && !examSubmitted && (
-              <div style={styles.overlay}>
-                  <div style={styles.popup}>
-                      <div style={styles.iconCircle}>⚠️</div>
-                      <h2 style={styles.title}>WARNING!</h2>
-                      <p style={styles.text}>
-                          You must stay in fullscreen mode. Return within {countdown} seconds or the exam will auto-submit.
-                      </p>
-
-                      <div style={styles.buttonRow}>
-                          <button style={styles.cancelBtn} onClick={handleCancel}>CANCEL</button>
-                          <button style={styles.proceedBtn} onClick={handleOk}>PROCEED</button>
-                      </div>
-
-                      <div style={styles.bottomStripe}></div>
-                  </div>
-              </div>
-          )}
-
-          {/* AUTO SUBMIT */}
-          {examSubmitted && (
-              <div style={styles.autoSubmit}>Exam Auto-Submitted ❗</div>
-          )}
-
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {showTopMessage && !examSubmitted && (
               <div style={{ ...styles.topWarning, ...styles.slideDown }}>

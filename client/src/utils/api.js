@@ -154,87 +154,69 @@ class ApiClient {
   }
 
   // Get lecture videos for NextGen Education
-    async getNextGenLectureVideos(studentId, courseId, token) {
-        console.log(studentId, courseId, "api lecture student & course id");
+  async getNextGenLectureVideos(studentId, courseId, token) {
+    console.log(studentId, courseId, 'api lecture student & course id');
 
-        return this.request(
-            `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-    }
-    async getNextGenLectureVideos(studentId, courseId, token) {
-        console.log(studentId, courseId, "api lecture student & course id");
+    return this.request(
+      `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
+  async getNextGenLectureVideos(studentId, courseId, token) {
+    console.log(studentId, courseId, 'api lecture student & course id');
 
-        return this.request(
-            `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-    }
-    
-    //get student leader board
-    async getNextGenLeaderboard(studentId, courseId,token) {
-      // ALWAYS load inside function
+    return this.request(
+      `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
 
-        console.log("HEADER SENT:", `Bearer ${token}`);
+  //get student leader board
+  async getNextGenLeaderboard(studentId, courseId, token) {
+    // ALWAYS load inside function
 
-        return this.request(
-            `/nextgen/leaderboard/student?studentId=${studentId}&courseId=${courseId}`,
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-    }
-    //get student info with profile data
-    async getNextGenStudentProfileData(studentId, courseId, token) {
-      // ALWAYS load inside function
+    console.log('HEADER SENT:', `Bearer ${token}`);
 
-        console.log("HEADER SENT:", `Bearer ${token}`);
+    return this.request(
+      `/nextgen/leaderboard/student?studentId=${studentId}&courseId=${courseId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
+  //get student info with profile data
+  async getNextGenStudentProfileData(studentId, courseId, token) {
+    // ALWAYS load inside function
 
-        return this.request(
-            `/nextgen/studentData/student?studentId=${studentId}&courseId=${courseId}`,
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-    }
-    async getNextGenClass(studentId, courseId, token) {
-      // ALWAYS load inside function
+    console.log('HEADER SENT:', `Bearer ${token}`);
 
-        console.log("HEADER SENT:", `Bearer ${token}`);
-
-        return this.request(
-            `/nextgen/class/student?studentId=${studentId}&courseId=${courseId}`,
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-    }
-
-
+    return this.request(
+      `/nextgen/studentData/student?studentId=${studentId}&courseId=${courseId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
 
   // Tasks endpoints
   async getTasks(params = {}) {
@@ -423,6 +405,26 @@ class ApiClient {
   // NextGen Education endpoints
   async getNextGenCourses() {
     return this.request('/nextgen/courses');
+  }
+
+  async createCourse(courseData) {
+    return this.request('/nextgen/courses', {
+      method: 'POST',
+      body: courseData,
+    });
+  }
+
+  async updateCourse(id, courseData) {
+    return this.request(`/nextgen/courses/${id}`, {
+      method: 'PUT',
+      body: courseData,
+    });
+  }
+
+  async deleteCourse(id) {
+    return this.request(`/nextgen/courses/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   async enrollInCourse(courseData) {
@@ -786,6 +788,39 @@ class ApiClient {
     }
     return response;
   }
+  // Inquiry endpoints
+  async createInquiry(inquiryData) {
+    return this.request('/inquiry', {
+      method: 'POST',
+      body: inquiryData,
+    });
+  }
+
+  // NextGen Registration endpoints
+  async getRegistrations(status = null) {
+    const queryString = status && status !== 'all' ? `?status=${status}` : '';
+    return this.request(`/nextgen/admin/registrations${queryString}`);
+  }
+
+  async approveRegistration(registrationId) {
+    return this.request(
+      `/nextgen/admin/registrations/${registrationId}/approve`,
+      {
+        method: 'PUT',
+      }
+    );
+  }
+
+  async rejectRegistration(registrationId, reason) {
+    return this.request(
+      `/nextgen/admin/registrations/${registrationId}/reject`,
+      {
+        method: 'PUT',
+        body: { reason },
+      }
+    );
+  }
+
   // NextGen Notification Endpoints
   async createNotification(notificationData) {
     return this.request('/nextgen/notifications', {
@@ -795,8 +830,7 @@ class ApiClient {
   }
   async getAllNotifications() {
     return this.request('/nextgen/notifications');
-  } 
-
+  }
 }
 
 export const apiClient = new ApiClient();
