@@ -31,6 +31,7 @@ export default function CourseManagerPortal() {
   // Data state
   const [studentRegistrations, setStudentRegistrations] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [courseManagerData, setCourseManagerData] = useState(null);
 
   // Filter state
   const [courseFilter, setCourseFilter] = useState({
@@ -209,59 +210,17 @@ export default function CourseManagerPortal() {
     []
   );
 
-  // Admin stats (static)
-  const adminStats = {
-    totalStudents: 45,
-    activeProjects: 12,
-    pendingTasks: 28,
-    completedTasks: 156,
-    totalRevenue: '₹2,45,000',
-    monthlyGrowth: '+12%',
-  };
-
-  const recentActivities = [
-    {
-      id: 1,
-      action: 'New student onboarded',
-      user: 'Priya Sharma',
-      time: '2 hours ago',
-      type: 'success',
-    },
-    {
-      id: 2,
-      action: 'Fullstack course batch 3 completed',
-      user: 'Team Alpha',
-      time: '4 hours ago',
-      type: 'info',
-    },
-    {
-      id: 3,
-      action: 'New Course added',
-      user: 'System',
-      time: '6 hours ago',
-      type: 'success',
-    },
-    {
-      id: 4,
-      action: 'Digital marketing batch 3 completed',
-      user: 'IT Team',
-      time: '8 hours ago',
-      type: 'warning',
-    },
-  ];
-
-  const systemHealth = {
-    serverUptime: '99.9%',
-    databaseStatus: 'Healthy',
-    backupStatus: 'Completed',
-    securityStatus: 'Secure',
-  };
-
   useEffect(() => {
     fetchRegistrations();
     fetchCourses();
   }, []);
 
+  useEffect(() => {
+    if (courses.length > 0) {
+      fetchCourseManagerData();
+    }
+  }, [courses]);
+  
   // Fetch registrations from API
   const fetchRegistrations = async (status = 'all') => {
     try {
@@ -294,6 +253,89 @@ export default function CourseManagerPortal() {
       setCourses([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCourseManagerData = async () => {
+    try {
+      // Get current user data from API
+      const userResponse = await apiClient.getCurrentUser();
+      console.log('Fetched user data:', userResponse);
+
+      let user = userResponse.success && userResponse.data ? userResponse.user || userResponse.data : null;
+
+      // If API fails, try to get from localStorage
+      if (!user) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          user = JSON.parse(storedUser);
+        }
+      }
+
+      // Default fallback
+      if (!user) {
+        user = { full_name: 'Course Manager', assignedCourses: [] };
+      }
+
+      // If user doesn't have assignedCourses, try to fetch from ng_users using username
+      if (!user.assignedCourses && user.username) {
+        try {
+          const fullUserResponse = await apiClient.getUserByUsername(user.username);
+          console.log('Fetched full user data:', fullUserResponse);
+          if (fullUserResponse.success && fullUserResponse.data) {
+            user = { ...user, ...fullUserResponse.data };
+          }
+        } catch (e) {
+          console.error('Error fetching full user data:', e);
+        }
+      }
+
+      // Debug logging
+      console.log('User', user);
+      console.log('User assignedCourses:', user.assignedCourses);
+      console.log('Available courses:', courses.map(c => ({ id: c._id, title: c.title })));
+
+      // Filter courses assigned to this course manager
+      const assignedCourses = (user.assignedCourses && Array.isArray(user.assignedCourses))
+        ? courses
+            .filter(course => {
+              const isAssigned = user.assignedCourses.includes(course._id);
+              console.log(`Checking course ${course.title} (${course._id}): ${isAssigned}`);
+              return isAssigned;
+            })
+            .map(course => course.title)
+            .join(', ') || 'No courses assigned'
+        : 'No courses assigned';
+
+      console.log('Final assignedCourses:', assignedCourses);
+
+      const courseManagerInfo = {
+        ...user,
+        assignedCourses: assignedCourses
+      };
+
+      setCourseManagerData(courseManagerInfo);
+    } catch (error) {
+      console.error('Error fetching course manager data:', error);
+      // Try localStorage as fallback
+      const storedUser = localStorage.getItem('user');
+      let user = { full_name: 'Course Manager', assignedCourses: [] };
+      if (storedUser) {
+        try {
+          user = JSON.parse(storedUser);
+        } catch (e) {
+          console.error('Error parsing stored user:', e);
+        }
+      }
+
+      const courseManagerInfo = {
+        ...user,
+        assignedCourses: courses
+          .filter(course => user.assignedCourses?.includes(course._id))
+          .map(course => course.title)
+          .join(', ') || 'No courses assigned'
+      };
+      setCourseManagerData(courseManagerInfo);
     }
   };
 
@@ -508,6 +550,20 @@ export default function CourseManagerPortal() {
     }
   };
 
+  const handleChangePassword = async (newPassword) => {
+    try {
+      const response = await apiClient.updatePassword({ password: newPassword });
+      if (response.success) {
+        alert('Password updated successfully!');
+      } else {
+        alert('Failed to update password');
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert('Error changing password: ' + error.message);
+    }
+  };
+
   /* ---------------- UI Sections ---------------- */
 
   const safeRender = (val) => {
@@ -554,7 +610,7 @@ export default function CourseManagerPortal() {
       <div className='portal-nav'>
         <div className='portal-nav-links'>
           {[
-            // ['dashboard', 'Dashboard'],
+            ['dashboard', 'Dashboard'],
             ['employees', 'Student Management'],
             ['projects', 'Course Overview'],
             ['system', 'Assignments and exams'],
@@ -575,6 +631,59 @@ export default function CourseManagerPortal() {
 
       <div className='portal-content'>
         <div className='container'>
+           {/* DASHBOARD */}
+          {activeTab === 'dashboard' && (
+            <section>
+              <h2 style={{ marginBottom: '2rem', color: 'black' }}>
+                Course Manager Dashboard
+              </h2>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1fr',
+                  gap: '2rem',
+                }}>
+                <div className='portal-card'>
+                  <div
+                    className='portal-card-header'
+                    style={{ padding: '1rem 1.5rem' }}>
+                    <h3 className='portal-card-title' style={{color:''}}>Course Manager Profile</h3>
+                  </div>
+                  <div style={{ padding: '1rem' }}>
+                    {courseManagerData ? (
+                      <div style={{ display: 'grid', gap: '1rem' }}>
+                        <div>
+                          <strong>Full Name:</strong> {courseManagerData.full_name || courseManagerData.fullName || 'N/A'}
+                        </div>
+                        <div>
+                          <strong>Assigned Course:</strong> {courseManagerData.assignedCourses}
+                        </div>
+                        <div>
+                          <strong>Password:</strong> {courseManagerData.password || courseManagerData.password_hash ? '••••••••' : 'Not set'}
+                        </div>
+                        <button
+                          className='btn-primary'
+                          onClick={() => {
+                            const newPassword = prompt('Enter new password:');
+                            if (newPassword) {
+                              handleChangePassword(newPassword);
+                            }
+                          }}
+                          style={{ marginTop: '1rem' }}>
+                          Change Password
+                        </button>
+                      </div>
+                    ) : (
+                      <div>Loading profile data...</div>
+                    )}
+                  </div>
+                </div>
+
+                
+              </div>
+            </section>
+          )}
          
           {/* STUDENT MANAGEMENT */}
           {activeTab === 'employees' && (

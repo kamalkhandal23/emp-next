@@ -99,7 +99,18 @@ class ApiClient {
 
   async getCurrentUser() {
     const response = await this.request('/auth/me');
-    return response.data ? response.data.user : response;
+    return response;
+  }
+
+  // async getUserByUsername(username) {
+  //   return this.request(`/users/${username}`);
+  // }
+
+  async updatePassword(passwordData) {
+    return this.request('/auth/update-password', {
+      method: 'PUT',
+      body: passwordData,
+    });
   }
 
   // Employee endpoints
