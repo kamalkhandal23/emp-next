@@ -348,6 +348,7 @@ export default function Exam() {
       }
 
       setIsSubmitting(true);
+      exitFullscreen();
       setSubmitError(null);
 
       const score = calculateScore();
@@ -1356,5 +1357,4 @@ export default function Exam() {
               const style = document.createElement("style");
               style.innerHTML = `@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }`;
               document.head.appendChild(style);
-
 

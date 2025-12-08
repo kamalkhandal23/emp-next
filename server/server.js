@@ -39,6 +39,7 @@ import codingPracticeRoutes from './routes/nextgenCodingPractice.js';
 import employeePortalRoutes from './routes/employeePortal.js';
 import nextgenStudentRoutes from './routes/nextgenStudentRoutes.js';
 import unifiedAuthLogin from './routes/auth.login.unified.js';
+import studentattendanceRoutes from "./routes/nextgen/studentAttendence.js";
 
 // Middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -169,6 +170,7 @@ app.use('/api/nextgen/studentData', profileDataRoute);
 app.use('/api/nextgen', nextgenSystemRoutes);
 app.use('/api/nextgen', nextgenStudentRoutes);
 app.use('/api/nextgen', codingPracticeRoutes);
+app.use("/api/attendance", studentattendanceRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

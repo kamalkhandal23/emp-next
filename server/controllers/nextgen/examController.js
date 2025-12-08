@@ -1,5 +1,6 @@
 import NGExamWithQuestions from '../../models/nextgen/education/NGExamWithQuestions.js';
 import NGSubmissionExams from '../../models/nextgen/education/NGSubmissionExams.js';
+import User from '../../models/core/User.js';
 
 // Create a new exam with all questions
 export const createExam = async (req, res) => {
@@ -688,6 +689,40 @@ export const gradeSubmission = async (req, res) => {
   }
 };
 
+export const getMyExams = async (req, res) => {
+  try {
+    const courseManager = req.user;  
+    const assignedCourses = courseManager.assignedCourses;
+
+    if (!assignedCourses || assignedCourses.length === 0) {
+      return res.json({
+        success: true,
+        data: { exams: [] }
+      });
+    }
+
+    const exams = await NGExamWithQuestions.find({
+      courseId: { $in: assignedCourses }
+    });
+
+    return res.json({
+      success: true,
+      data: { exams }
+    });
+
+  } catch (err) {
+    console.error("Get my exams error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch exams",
+    });
+  }
+};
+
+
+
+
+
 export default {
   createExam,
   getAllExams,
@@ -699,4 +734,5 @@ export default {
   getSubmissionsForExam,
   submitExam,
   gradeSubmission,
+  getMyExams
 };

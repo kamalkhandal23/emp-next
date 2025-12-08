@@ -48,9 +48,20 @@ export default function ManageCodingExams() {
   const fetchExams = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.getAllNextGenCodingExams();
-      if (response.success) {
-        setExams(response.data.exams || []);
+      const token = localStorage.getItem("authToken")
+      const response = await fetch("http://localhost:5002/api/nextgen/codingExams/my-codingexam",{
+        method : "GET",
+        headers :{
+          "Content-Type" : "application/json",
+          "Authorization" : `Bearer ${token}`
+        }
+      });
+      
+      const res = await response.json()
+      
+      
+      if (res.success) {
+        setExams(res.data.exams || []);
       } else {
         throw new Error(response.message || "Failed to fetch coding exams");
       }

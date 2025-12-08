@@ -17,7 +17,7 @@ export default function GradeAssignments() {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/assignments`, {
+            const res = await fetch(`http://localhost:5002/api/nextgen/assignments//my-assignments`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",

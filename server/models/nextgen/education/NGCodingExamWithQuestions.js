@@ -1,89 +1,110 @@
 import mongoose from 'mongoose';
 
-// Schema for storing complete coding exam with all questions in one document
-const ngCodingExamWithQuestionsSchema = new mongoose.Schema({
-  examName: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-    index: true
-  },
-  courseName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  totalQuestions: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  questions: {
-    type: Map,
-    of: {
-      type: {
-        type: String,
-        enum: ['Coding'],
-        required: true
-      },
-      question: {
-        type: String,
-        required: true
-      },
-      options: {
-        type: [String],
-        default: []
-      },
-      answer: {
-        type: String,
-        default: ''
-      },
-      testCase: {
-        type: String,
-        default: ''
-      },
-      sampleInputs: {
-        type: [String],
-        default: []
-      },
-      sampleOutputs: {
-        type: [String],
-        default: []
-      },
-      hiddenInputs: {
-        type: [String],
-        default: []
-      },
-      hiddenOutputs: {
-        type: [String],
-        default: []
-      }
+// Schema for Coding Exam with all questions inside one document
+const ngCodingExamWithQuestionsSchema = new mongoose.Schema(
+  {
+    examName: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      index: true,
     },
-    required: true
-  },
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  },
-  status: {
-    type: String,
-    enum: ['draft', 'published', 'archived'],
-    default: 'draft'
-  }
-}, {
-  timestamps: true,
-  collection: 'ng_coding_exam' // Explicitly set collection name
-});
 
-// Index for faster queries
+    // NEW — Correct relation with courses
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Ng_Courses",
+      required: true,
+      index: true,
+    },
+
+    totalQuestions: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+
+    // Questions stored as Map
+    questions: {
+      type: Map,
+      of: {
+        type: new mongoose.Schema(
+          {
+            type: {
+              type: String,
+              enum: ["Coding"],
+              required: true,
+            },
+            question: {
+              type: String,
+              required: true,
+            },
+            options: {
+              type: [String],
+              default: [],
+            },
+            answer: {
+              type: String,
+              default: "",
+            },
+            testCase: {
+              type: String,
+              default: "",
+            },
+            sampleInputs: {
+              type: [String],
+              default: [],
+            },
+            sampleOutputs: {
+              type: [String],
+              default: [],
+            },
+            hiddenInputs: {
+              type: [String],
+              default: [],
+            },
+            hiddenOutputs: {
+              type: [String],
+              default: [],
+            },
+          },
+          { _id: false }
+        ),
+      },
+      required: true,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    status: {
+      type: String,
+      enum: ["draft", "published", "archived"],
+      default: "draft",
+      index: true,
+    },
+  },
+  {
+    timestamps: true,
+    collection: "ng_coding_exam",
+  }
+);
+
+/** -------------------------------
+ * INDEXES FOR PERFORMANCE
+ --------------------------------*/
 ngCodingExamWithQuestionsSchema.index({ examName: 1 });
-ngCodingExamWithQuestionsSchema.index({ courseName: 1 });
+ngCodingExamWithQuestionsSchema.index({ courseId: 1 });
 ngCodingExamWithQuestionsSchema.index({ status: 1 });
 ngCodingExamWithQuestionsSchema.index({ createdAt: -1 });
 
-// Method to get coding exam with questions as object
-ngCodingExamWithQuestionsSchema.methods.getCodingExamData = function() {
+/** -------------------------------
+ * INSTANCE METHOD — Return clean exam object
+ --------------------------------*/
+ngCodingExamWithQuestionsSchema.methods.getCodingExamData = function () {
   const questionsObj = {};
   this.questions.forEach((value, key) => {
     questionsObj[key] = value;
@@ -92,34 +113,45 @@ ngCodingExamWithQuestionsSchema.methods.getCodingExamData = function() {
   return {
     _id: this._id,
     examName: this.examName,
-    courseName: this.courseName,
+    courseId: this.courseId,
     totalQuestions: this.totalQuestions,
     questions: questionsObj,
     status: this.status,
     createdAt: this.createdAt,
-    updatedAt: this.updatedAt
+    updatedAt: this.updatedAt,
   };
 };
 
-// Static method to create coding exam from frontend data
-ngCodingExamWithQuestionsSchema.statics.createFromFrontend = async function(examName, courseName, totalQuestions, questionData) {
+/** -------------------------------
+ * STATIC METHOD — Create from frontend
+ --------------------------------*/
+ngCodingExamWithQuestionsSchema.statics.createFromFrontend = async function (
+  examName,
+  courseId,
+  totalQuestions,
+  questionData
+) {
   const questionsMap = new Map();
 
-  // Convert questionData object to Map
-  Object.keys(questionData).forEach(key => {
+  Object.keys(questionData).forEach((key) => {
     questionsMap.set(key, questionData[key]);
   });
 
   const exam = new this({
     examName,
-    courseName,
+    courseId,
     totalQuestions,
-    questions: questionsMap
+    questions: questionsMap,
   });
 
   return await exam.save();
 };
 
-const NGCodingExamWithQuestions = mongoose.model('NG_CodingExamWithQuestions', ngCodingExamWithQuestionsSchema);
+const NGCodingExamWithQuestions = mongoose.model(
+  "NG_CodingExamWithQuestions",
+  ngCodingExamWithQuestionsSchema
+);
 
 export default NGCodingExamWithQuestions;
+
+

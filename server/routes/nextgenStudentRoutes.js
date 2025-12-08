@@ -17,6 +17,10 @@ import NgExamSubmission from "../models/nextgen/education/NGSubmissionExams.js";
 import Student from "../models/nextgen/core/NG_ApprovedStudents.js";
 import CodingPracticeStats from "../models/education/ng_coding_practice_stats.js";
 import { executeCode } from "../services/codeExecutionService.js";
+import ngApprovedStudent from "../models/nextgen/core/NG_ApprovedStudents.js";
+import addActivity from "../services/addActivityServiceImpl.js";
+import ng_exams from "../models/nextgen/education/ng_exams.js";
+
 const router = express.Router();
 // 🔥 Helper: streak + total_solved update
 // 🧠 NEW FINAL VERSION: streak logic exact rules
@@ -99,12 +103,9 @@ router.get("/registrations", getAllRegistrations);
  */
 router.get("/student/exams", async (req, res) => {
   try {
-    const { courseName } = req.query;
+    const { courseName } = req.params;
 
-    const query = {};
-    if (courseName) {
-      query.courseName = courseName; // sirf ussi course ke exams
-    }
+    const query = courseName;
 
     // Testing ke liye: saare status allow
     // Agar sirf published dikhana ho to: query.status = "published";
@@ -128,7 +129,6 @@ router.post("/student/exams/:examId/submit", async (req, res) => {
   try {
     const { examId } = req.params;
     const { studentId, answers, score, feedback } = req.body;
-
     if (!studentId || !answers) {
       return res.status(400).json({
         success: false,
@@ -172,6 +172,12 @@ router.post("/student/exams/:examId/submit", async (req, res) => {
         setDefaultsOnInsert: true,
       }
     );
+    //Update score and recent Activity
+    const student = await ngApprovedStudent.findById(studentId);
+    const examForUpdate = await ng_exams.findById(examId);
+    student.leaderboardValue.score +=25;
+    student.save();
+    await addActivity(student._id, "Exam submission", `Submited ${examForUpdate.examName} exam`, {Date: new Date()});
 
     return res.status(201).json({
       success: true,
