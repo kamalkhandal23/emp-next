@@ -17,7 +17,7 @@ export default function GradeExams() {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/nextgen/exams`, {
+            const res = await fetch(`http://localhost:5002/api/nextgen/exams/my-exams`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",

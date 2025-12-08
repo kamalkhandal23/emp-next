@@ -1,4 +1,5 @@
 import express from 'express';
+import { auth, authorize } from '../../middleware/auth.js';
 import {
   createAssignment,
   getAllAssignments,
@@ -10,10 +11,14 @@ import {
   getAssignmentsWithLockStatus,
   getSubmissionsForAssignment,
   submitAssignment,
-  gradeSubmission
+  gradeSubmission,
+  getMyAssignments
 } from '../../controllers/nextgen/assignmentController.js';
 
 const router = express.Router();
+// get assingement on the basis of course
+router.get("/my-assignments", auth, authorize(["course_manager", "admin"]), getMyAssignments);
+
 
 // Get assignments with lock status for a student
 router.get('/student/:studentId', getAssignmentsWithLockStatus);

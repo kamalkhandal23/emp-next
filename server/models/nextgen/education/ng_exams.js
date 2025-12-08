@@ -14,11 +14,11 @@ const examSchema = new mongoose.Schema(
     },
 
      
-     courseName: {
-        type: String,
-        required: false, 
-        trim: true,
-      },
+     courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Ng_Courses",     // reference to course collection
+      required: true
+    },
     // questions ka type tumhare data ke hisaab se array / object ho sakta hai
     // abhi loose rakhte hain:
     questions: {

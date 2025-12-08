@@ -4,6 +4,7 @@ import Student from '../../models/nextgen/student-management/Student.js';
 import { sendNewAssignmentEmail } from '../../services/emailService.js';
 import NGSubmissionAssignment from '../../models/nextgen/education/NGSubmissionAssignment.js';
 import NG_Courses from '../../models/nextgen/education/Course.js';
+import User from '../../models/core/User.js';
 
 // Create a new assignment with all questions
 export const createAssignment = async (req, res) => {
@@ -790,6 +791,42 @@ export const gradeSubmission = async (req, res) => {
   }
 };
 
+export const getMyAssignments = async (req, res) => {
+  try {
+    const courseManagerId = req.user._id;
+
+    // 1️⃣ Fetch course manager from DB to get assignedCourses
+    const manager = await User.findById(courseManagerId).select("assignedCourses");
+
+    if (!manager) {
+      return res.status(404).json({
+        success: false,
+        message: "Course manager not found"
+      });
+    }
+
+    const assignedCourseIds = manager.assignedCourses; // array of ObjectIds
+
+    // 2️⃣ Fetch assignments where courseId matches assignedCourses
+    const assignments = await NGAssignmentWithQuestions.find({
+      courseId: { $in: assignedCourseIds }
+    });
+
+    return res.json({
+      success: true,
+      data: { assignments }
+    });
+
+  } catch (error) {
+    console.error("Get my assignments error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch assignments"
+    });
+  }
+};
+
+
 export default {
   createAssignment,
   getAllAssignments,
@@ -798,4 +835,5 @@ export default {
   updateAssignmentStatus,
   updateAssignment,
   deleteAssignment,
+  getMyAssignments
 };
