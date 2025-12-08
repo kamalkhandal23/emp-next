@@ -1,6 +1,7 @@
 import NGCodingExamWithQuestions from '../../models/nextgen/education/NGCodingExamWithQuestions.js';
 import NGSubmissionCodingExams from '../../models/nextgen/education/NGSubmissionCodingExams.js';
 import { executeCodeMultipleTests } from '../../services/codeExecutionService.js';
+import User from '../../models/core/User.js';
 
 // Create a new coding exam with all questions
 export const createCodingExam = async (req, res) => {
@@ -673,6 +674,42 @@ export const submitCodingExam = async (req, res) => {
   }
 };
 
+// GET /api/nextgen/codingExams/my-codingexam
+export const getCodingExamsForManager = async (req, res) => {
+  try {
+    const managerId = req.user.id; // from JWT middleware
+    console.log("managerId",managerId)
+
+    // 1. Get manager with assigned course list
+    const manager = await User.findById(managerId).select("assignedCourses");
+
+    if (!manager) {
+      return res.status(404).json({ success: false, message: "Manager not found" });
+    }
+
+    // 2. Fetch exams only for those courses
+    const exams = await NGCodingExamWithQuestions.find({
+      courseId: { $in: manager.assignedCourses }
+    })
+    .populate("courseId", "name") // optional
+    .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: { exams }
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch exams",
+      error: error.message
+    });
+  }
+};
+
+
 export default {
   createCodingExam,
   getAllCodingExams,
@@ -682,5 +719,6 @@ export default {
   updateCodingExam,
   deleteCodingExam,
   runCode,
-  submitCodingExam
+  submitCodingExam,
+  getCodingExamsForManager
 };

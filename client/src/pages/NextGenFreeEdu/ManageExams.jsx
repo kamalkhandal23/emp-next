@@ -54,21 +54,37 @@ export default function ManageExams() {
   }, []);
 
   const fetchExams = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.getAllNextGenExams();
-      if (response.success) {
-        setExams(response.data.exams || []);
-      } else {
-        throw new Error(response.message || "Failed to fetch exams");
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("authToken");
+
+    const response = await fetch(
+      "http://localhost:5002/api/nextgen/exams/my-exams",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
       }
-    } catch (err) {
-      console.error("Error fetching exams:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    );
+
+    const data = await response.json();  // IMPORTANT
+
+    if (data.success) {
+      setExams(data.data.exams || []);
+    } else {
+      throw new Error(data.message || "Failed to fetch exams");
     }
-  };
+
+  } catch (err) {
+    console.error("Error fetching exams:", err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleEditExam = async (exam) => {
     try {

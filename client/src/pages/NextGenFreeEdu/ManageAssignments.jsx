@@ -66,21 +66,36 @@ export default function ManageAssignments() {
   }, []);
 
   const fetchAssignments = async () => {
-    try {
-      setLoading(true);
-      const response = await apiClient.getAllNextGenAssignments();
-      if (response.success) {
-        setAssignments(response.data.assignments || []);
-      } else {
-        throw new Error(response.message || 'Failed to fetch assignments');
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("authToken");
+
+    const response = await fetch(
+      "http://localhost:5002/api/nextgen/assignments/my-assignments",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
       }
-    } catch (err) {
-      console.error('Error fetching assignments:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      setAssignments(data.data.assignments || []);
+    } else {
+      throw new Error(data.message || "Failed to fetch assignments");
     }
-  };
+  } catch (err) {
+    console.error("Error fetching assignments:", err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleEditAssignment = async (assignment) => {
     try {

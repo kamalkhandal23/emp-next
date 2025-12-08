@@ -1,4 +1,5 @@
 import express from 'express';
+import { auth,authorize } from '../../middleware/auth.js';
 import {
   createCodingExam,
   getAllCodingExams,
@@ -8,10 +9,15 @@ import {
   updateCodingExam,
   deleteCodingExam,
   runCode,
-  submitCodingExam
+  submitCodingExam,
+  getCodingExamsForManager
 } from '../../controllers/nextgen/codingExamController.js';
 
 const router = express.Router();
+
+// geta coding exam on the basis of course assingned to the course manager
+
+router.get("/my-codingexam",auth,authorize(["course_manager","admin"]),getCodingExamsForManager)
 
 // Create a new coding exam
 router.post('/create', createCodingExam);

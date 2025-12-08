@@ -16,16 +16,25 @@ function CreateExam() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [exams, setExams] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loadingExams, setLoadingExams] = useState(false);
 
   useEffect(() => {
     const fetchExams = async () => {
       setLoadingExams(true);
       try {
-        const response = await apiClient.getAllNextGenExams();
-        if (response.success && response.data) {
-          setExams(response.data.exams || []);
+        const token = localStorage.getItem("authToken")
+        const response = await fetch("http://localhost:5002/api/nextgen/courses/my-courses",{
+          method : "GET",
+          headers : {
+            "Content-Type" : "application/json",
+            "Authorization" : `Bearer ${token}`
+          }
+        })
+        const res = await response.json()
+        console.log("res",res)
+        if (res.success && res.data) {
+          setCourses(res.data.courses || []);
         }
       } catch (error) {
         console.error('Error fetching exams:', error);
@@ -219,11 +228,11 @@ function CreateExam() {
                 }}
                 required>
                 <option value='' disabled>
-                  {loadingExams ? 'Loading exams...' : 'Select an exam'}
+                  {loadingExams ? 'Loading courses...' : 'Select a course'}
                 </option>
-                {exams.map((exam, index) => (
-                  <option key={index} value={exam.examName}>
-                    {exam.examName}
+                {courses.map((course, index) => (
+                  <option key={index} value={course.title}>
+                    {course.title}
                   </option>
                 ))}
               </select>

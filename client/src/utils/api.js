@@ -663,6 +663,11 @@ class ApiClient {
     );
   }
 
+  async getMyNextGenAssignments() {
+  return this.request("GET", "/api/nextgen/assignments/my-assignments");
+}
+
+
   async getNextGenAssignmentById(id) {
     return this.request(`/nextgen/assignments/id/${id}`);
   }
