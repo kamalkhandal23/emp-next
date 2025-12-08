@@ -116,6 +116,8 @@ import CodingExam from './pages/NextGenFreeEdu/CodingExam';
 import CourseLecture from "./pages/NextGenFreeEdu/CourseLecture";
 import ManageLecture from './pages/NextGenFreeEdu/ManageLecture';
 
+import CourseAttendance from './pages/Portal/CourseManagerStudentAtten';
+
 
 function MainLayout() {
   return (
@@ -358,6 +360,10 @@ export default function App() {
               path='/portal/coursemanager/managelecture'
               element={<ManageLecture />}
             />
+            <Route
+                path="/portal/coursemanager/attendance"
+                element={<CourseAttendance />}
+              />
             <Route path='test' element={<TestConnection />} />
           </Routes>
         </AuthProvider>

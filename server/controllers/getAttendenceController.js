@@ -8,20 +8,20 @@ export const getAttendanceByStudent = async (req, res) => {
     try {
         const { courseId, studentId } = req.params;
 
+        // FIX: studentId is roll number like "STU0019"
+        const studentInfo = await NG_Approved_Students.findOne({ student_id: studentId });
+
+        if (!studentInfo) {
+            return res.status(404).json({ success: false, message: "Student not found" });
+        }
+
+        // Use the actual ObjectId to fetch attendance
         const attendanceDoc = await studentAttendanceSchema
-            .findOne({ course: courseId, student: studentId })
+            .findOne({ course: courseId, student: studentInfo._id })
             .populate("course", "title classId");
 
         if (!attendanceDoc) {
             return res.status(404).json({ success: false, message: "Attendance not found" });
-        }
-
-        // Fetch student details from NG_Approved_Students
-        const studentInfo = await NG_Approved_Students.findById({studentId
-        }).select("student_id fullName email");
-
-        if (!studentInfo) {
-            return res.status(404).json({ success: false, message: "Student not found" });
         }
 
         const response = {
@@ -51,10 +51,7 @@ export const getAttendanceByDate = async (req, res) => {
         const { date } = req.query;
 
         if (!date) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Date query parameter is required" 
-            });
+            return res.status(400).json({ success: false, message: "Date query parameter is required" });
         }
 
         const targetDate = new Date(date);
@@ -67,16 +64,13 @@ export const getAttendanceByDate = async (req, res) => {
 
         for (const doc of attendanceDocs) {
             const filteredAttendance = doc.attendance.filter(entry => {
-                const entryDate = new Date(entry.date);
-                return entryDate.toDateString() === targetDate.toDateString();
+                return new Date(entry.date).toDateString() === targetDate.toDateString();
             });
 
             if (filteredAttendance.length === 0) continue;
 
-            // Fetch student details from NG Approved Students
-            const studentInfo = await NG_Approved_Students.findById(doc.student );
-            console.log(studentInfo);
-
+            // FIX: student field contains ObjectId
+            const studentInfo = await NG_Approved_Students.findById(doc.student);
 
             results.push({
                 studentId: studentInfo?.student_id,
@@ -96,11 +90,14 @@ export const getAttendanceByDate = async (req, res) => {
     }
 };
 
+
+/**
+ * Get all attendance for a course
+ */
 export const getAllAttendance = async (req, res) => {
     try {
         const { courseId } = req.params;
 
-        // Get all attendance records for this course
         const attendanceDocs = await studentAttendanceSchema
             .find({ course: courseId })
             .populate("course", "title classId");
@@ -108,8 +105,7 @@ export const getAllAttendance = async (req, res) => {
         const results = [];
 
         for (const doc of attendanceDocs) {
-            // Fetch student details from NG Approved Students
-            const studentInfo = await NG_Approved_Students.findById(doc.student).select("student_id fullName email");
+            const studentInfo = await NG_Approved_Students.findById(doc.student);
 
             if (!studentInfo) continue;
 
@@ -124,6 +120,7 @@ export const getAllAttendance = async (req, res) => {
         }
 
         res.status(200).json({ success: true, data: results });
+        return res;
 
     } catch (error) {
         console.error(error);
