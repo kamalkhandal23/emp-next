@@ -554,7 +554,7 @@ export default function CourseManagerPortal() {
       <div className='portal-nav'>
         <div className='portal-nav-links'>
           {[
-            ['dashboard', 'Dashboard'],
+            // ['dashboard', 'Dashboard'],
             ['employees', 'Student Management'],
             ['projects', 'Course Overview'],
             ['system', 'Assignments and exams'],
@@ -575,108 +575,7 @@ export default function CourseManagerPortal() {
 
       <div className='portal-content'>
         <div className='container'>
-          {/* DASHBOARD */}
-          {activeTab === 'dashboard' && (
-            <section>
-              <h2 style={{ marginBottom: '2rem', color: 'black' }}>
-                System Overview
-              </h2>
-
-              <div className='stats-grid'>
-                <StatCard
-                  value={adminStats.totalStudents}
-                  label='Total Students'
-                />
-                <StatCard
-                  value={adminStats.activeProjects}
-                  label='Active Projects'
-                />
-                <StatCard
-                  value={adminStats.pendingTasks}
-                  label='Pending Tasks'
-                />
-                <StatCard
-                  value={adminStats.totalRevenue}
-                  label='Monthly Revenue'
-                />
-              </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '2fr 1fr',
-                  gap: '2rem',
-                }}>
-                <div className='portal-card'>
-                  <div
-                    className='portal-card-header'
-                    style={{ padding: '1rem 1.5rem' }}>
-                    <h3 className='portal-card-title'>Recent Activities</h3>
-                  </div>
-                  <div>
-                    {recentActivities.map((a) => (
-                      <div
-                        key={a.id}
-                        className='table-row'
-                        style={{ gridTemplateColumns: '1fr auto auto' }}>
-                        <div>
-                          <div style={{ fontWeight: 500 }}>{a.action}</div>
-                          <div
-                            style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                            by {a.user}
-                          </div>
-                        </div>
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                          {a.time}
-                        </div>
-                        <div
-                          className={`status-badge status-${
-                            a.type === 'success'
-                              ? 'active'
-                              : a.type === 'warning'
-                              ? 'pending'
-                              : 'completed'
-                          }`}>
-                          {a.type}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className='portal-card'>
-                  <div
-                    className='portal-card-header'
-                    style={{ padding: '1rem' }}>
-                    <h3 className='portal-card-title' style={{}}>
-                      System Health
-                    </h3>
-                  </div>
-                  <KVRow
-                    label='Server Uptime'
-                    value={systemHealth.serverUptime}
-                    success
-                  />
-                  <KVRow
-                    label='Database'
-                    value={systemHealth.databaseStatus}
-                    success
-                  />
-                  <KVRow
-                    label='Backup Status'
-                    value={systemHealth.backupStatus}
-                    success
-                  />
-                  <KVRow
-                    label='Security'
-                    value={systemHealth.securityStatus}
-                    success
-                  />
-                </div>
-              </div>
-            </section>
-          )}
-
+         
           {/* STUDENT MANAGEMENT */}
           {activeTab === 'employees' && (
             <section>
@@ -1031,7 +930,7 @@ export default function CourseManagerPortal() {
             </section>
           )}
 
-          {/* SYSTEM */}
+          {/* Assignments and exams */}
           {activeTab === 'system' && (
             <section>
               <h2 style={{ marginBottom: '2rem', color: 'black' }}>
@@ -1064,7 +963,7 @@ export default function CourseManagerPortal() {
                     actions={[
                       'Create Coding exams',
                       'Manage Coding Exams',
-                      'Grade Coding exams',
+                      'Coding exams Results',
                     ]}
                     onActionClick={handleActionClick}
                   />
@@ -1523,30 +1422,23 @@ export default function CourseManagerPortal() {
                   <ActionList
                     actions={[
                       'Add Lectures to Course',
-                      'Manage Lecture',
-                      'Meeting',
-                      'Leave Report',
+                      'Manage Lecture'
                     ]}
                     onActionClick={handleActionClick}
                   />
                 </Card>
-                <Card title='Project Reports'>
+                <Card title='Online Classes'>
                   <ActionList
                     actions={[
-                      'Project Status',
-                      'Time Tracking',
-                      'Budget Analysis',
-                      'Client Reports',
+                      'Add Class Link',
+                      'Manage Class Links'
                     ]}
                   />
                 </Card>
-                <Card title='Financial Reports'>
+                <Card title='Attendances'>
                   <ActionList
                     actions={[
-                      'Revenue Report',
-                      'Expense Report',
-                      'Profit & Loss',
-                      'Tax Reports',
+                      'Student Attendance',
                     ]}
                   />
                 </Card>
