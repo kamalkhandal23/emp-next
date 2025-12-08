@@ -867,6 +867,9 @@ class ApiClient {
       body: classLinkData,
     });
   }
+  async getCourseById(courseId) {
+    return this.request(`/nextgen/courses/${courseId}`);
+  }
 }
 
 export const apiClient = new ApiClient();
