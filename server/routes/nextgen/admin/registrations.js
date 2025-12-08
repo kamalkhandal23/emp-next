@@ -4,6 +4,7 @@ import Registration from '../../../models/nextgen/core/Registration.js';
 import { auth } from '../../../middleware/auth.js';
 import { sendEmail } from '../../../config/email.js';
 import ngStudent from '../../../models/ng_student.js';
+import User from '../../../models/core/User.js';
 import NG_Approved_Students from '../../../models/nextgen/core/NG_ApprovedStudents.js';
 import ngRejectedStudent from '../../../models/ng_rejected_students.js';
 const router = express.Router();
@@ -216,18 +217,53 @@ router.get('/', auth, ensureAdminOrManager, async (req, res) => {
     } = req.query;
 
     const query = {};
+
+    // -------------------------------
+    // 1️⃣ Filter by assigned courses if role = course_manager
+    // -------------------------------
+    if (req.user.role === "course_manager") {
+      const manager = await User.findById(req.user.id).select("assignedCourses");
+
+      if (!manager) {
+        return res.status(404).json({
+          success: false,
+          message: "Course Manager not found",
+        });
+      }
+
+      if (!manager.assignedCourses || manager.assignedCourses.length === 0) {
+        return res.json({
+          success: true,
+          data: {
+            registrations: [],
+            pagination: { total: 0, page: 1, pages: 1 }
+          }
+        });
+      }
+
+      // filter based on assigned courses
+      query.course_id = { $in: manager.assignedCourses };
+    }
+
+    // -------------------------------
+    // 2️⃣ Optional filters
+    // -------------------------------
     if (status) query.status = status;
+
     if (search) {
       query.$or = [
-        { full_name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
+        { full_name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
       ];
     }
 
+    // -------------------------------
+    // 3️⃣ Fetch with pagination
+    // -------------------------------
     const registrations = await Registration.find(query)
-      .populate('course_id', 'title slug')
-      .populate('reviewed_by', 'full_name email role')
-      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+      .populate("course_id", "title slug")
+      .populate("reviewed_by", "full_name email role")
+      .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
       .limit(Number(limit))
       .skip((page - 1) * limit);
 
@@ -245,12 +281,16 @@ router.get('/', auth, ensureAdminOrManager, async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get registrations error:', error);
-    res
-      .status(500)
-      .json({ success: false, message: 'Server error fetching registrations' });
+    console.error("Get registrations error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching registrations",
+    });
   }
 });
+
+
+
 
 /* -------------------- DELETE REGISTRATION -------------------- */
 router.delete('/:id', auth, ensureAdminOrManager, async (req, res) => {

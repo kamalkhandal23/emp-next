@@ -268,6 +268,7 @@ export default function CourseManagerPortal() {
       const response = await apiClient.getRegistrations(status);
       console.log('Fetched registrations:', response);
       if (response.success && response.data) {
+        // console.log("registration",response.data.registrations)
         setStudentRegistrations(response.data.registrations || []);
       } else {
         setStudentRegistrations([]);
@@ -708,50 +709,37 @@ export default function CourseManagerPortal() {
                   <div>Actions</div>
                 </div>
 
-                {[
-                  {
-                    name: 'Priya Sharma',
-                    course: 'Full Stack Development',
-                    status: 'active',
-                    joinDate: '2024-01-15',
-                  },
-                  {
-                    name: 'Rahul Kumar',
-                    course: 'UI/UX Design',
-                    status: 'active',
-                    joinDate: '2024-01-20',
-                  },
-                  {
-                    name: 'Anita Patel',
-                    course: 'Data Science',
-                    status: 'active',
-                    joinDate: '2024-02-01',
-                  },
-                  {
-                    name: 'Vikram Singh',
-                    course: 'Cybersecurity',
-                    status: 'inactive',
-                    joinDate: '2024-01-10',
-                  },
-                ].map((s, i) => (
-                  <div
-                    key={i}
-                    className='table-row'
-                    style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
-                    <div style={{ fontWeight: 500 }}>{s.name}</div>
-                    <div>{s.course}</div>
-                    <div>
-                      <span className={`status-badge status-${s.status}`}>
-                        {s.status}
-                      </span>
-                    </div>
-                    <div>{s.joinDate}</div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button className='action-button'>Edit</button>
-                      <button className='action-button'>View</button>
-                    </div>
-                  </div>
-                ))}
+                {studentRegistrations.map((s, i) => {
+                  // 1. Create a Date object from the API string
+                  const date = new Date(s.updated_at); 
+
+                  // 2. Format the date using the Indian locale (en-IN)
+                  // This will output the date in DD/MM/YYYY format.
+                  const formattedDate = date.toLocaleDateString('en-IN'); 
+
+                  return (
+                      <div
+                          key={i}
+                          className='table-row'
+                          style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
+                          <div style={{ fontWeight: 500 }}>{s.full_name}</div>
+                          <div>{s.course_id.title}</div>
+                          <div>
+                              <span className={`status-badge status-${s.status}`}>
+                                  {s.status}
+                              </span>
+                          </div>
+                          
+                          {/* 3. Use the formatted date here */}
+                          <div>{formattedDate}</div> 
+                          
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                              <button className='action-button'>Edit</button>
+                              <button className='action-button'>View</button>
+                          </div>
+                      </div>
+                  );
+              })}
               </div>
             </section>
           )}
