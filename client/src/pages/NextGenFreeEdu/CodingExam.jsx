@@ -152,6 +152,7 @@ int main() {
 
       if (response.success) {
         // Navigate to results page
+        exitFullscreen();
         navigate('/nextgen/results')
       } else {
         throw new Error(response.message || 'Failed to submit exam')
@@ -711,5 +712,4 @@ int main() {
               const style = document.createElement("style");
               style.innerHTML = `@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }`;
               document.head.appendChild(style);
-
 
