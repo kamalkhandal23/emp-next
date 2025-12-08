@@ -7,15 +7,6 @@ export default function Results() {
   const [sortBy, setSortBy] = useState('date')
 
   // Mock student results data
-  const studentInfo = {
-    name: 'Priya Sharma',
-    studentId: 'NGE2024001',
-    course: 'Full Stack Development',
-    batch: 'Batch 2024-A',
-    overallGrade: 'A',
-    overallPercentage: 87.5
-  }
-
   // Check for coding exam result from navigation state
   useEffect(() => {
     if (location.state?.codingExamResult) {
@@ -677,30 +668,6 @@ export default function Results() {
           <p style={{ color: '#6b7280', fontSize: '1.125rem' }}>
             Track your progress and performance across all assessments
           </p>
-        </div>
-
-        {/* Student Overview */}
-        <div className="service-card" style={{ 
-          background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-          border: '2px solid #3b82f6',
-          marginBottom: '3rem'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h2 style={{ margin: 0, color: '#1e40af' }}>{studentInfo.name}</h2>
-              <p style={{ margin: '0.5rem 0', color: '#1e3a8a' }}>
-                {studentInfo.studentId} • {studentInfo.course} • {studentInfo.batch}
-              </p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: '700', color: '#1d4ed8' }}>
-                {studentInfo.overallGrade}
-              </div>
-              <div style={{ color: '#1e40af', fontWeight: '600' }}>
-                {studentInfo.overallPercentage}% Overall
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Filters and Sort */}

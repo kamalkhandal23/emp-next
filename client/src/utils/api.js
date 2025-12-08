@@ -102,10 +102,9 @@ class ApiClient {
     return response;
   }
 
-  // async getUserByUsername(username) {
-  //   return this.request(`/users/${username}`);
-  // }
-
+  async getCourseManagerData() {
+   
+  }
   async updatePassword(passwordData) {
     return this.request('/auth/update-password', {
       method: 'PUT',
@@ -786,7 +785,7 @@ class ApiClient {
       }`
     );
   }
-
+ 
   // NextGen Student Authentication
   async nextGenStudentLogin(credentials) {
     const response = await this.request('/nextgen/student/login', {
@@ -846,6 +845,27 @@ class ApiClient {
   }
   async getAllNotifications() {
     return this.request('/nextgen/notifications');
+  }
+
+  async getclassLinks(courseId) {
+    return this.request(`/nextgen/classLinks?courseId=${courseId}`);
+  }
+  async addClassLinks(payload) {
+    return this.request('/nextgen/addClassLink/add-class-links', {
+      method: 'POST',
+      body: payload,
+    });
+  }
+  async deleteClassLink(classLinkId) {
+    return this.request(`/nextgen/classLinks/${classLinkId}`, {
+      method: 'DELETE',
+    });
+  }
+  async updateClassLink(classLinkId, classLinkData) {
+    return this.request(`/nextgen/classLinks/${classLinkId}`, {
+      method: 'PUT',
+      body: classLinkData,
+    });
   }
 }
 

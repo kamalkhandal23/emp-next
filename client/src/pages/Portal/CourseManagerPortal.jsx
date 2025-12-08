@@ -508,6 +508,15 @@ export default function CourseManagerPortal() {
     if (action === 'Manage Lecture') {
       navigate('/portal/coursemanager/managelecture');
     }
+    if (action === 'Add Class Link') {
+      navigate('/portal/coursemanager/addclasslink');
+    }
+    if (action === 'Manage Class Links') {
+      navigate('/portal/coursemanager/manageclasslink');
+    }
+    if (action === 'Student Attendance') {
+      navigate('/portal/coursemanager/studentattendance');
+    }
   };
 
   const handleDeleteCourse = async (course) => {
@@ -1530,6 +1539,7 @@ export default function CourseManagerPortal() {
                       'Add Class Link',
                       'Manage Class Links'
                     ]}
+                    onActionClick={handleActionClick}
                   />
                 </Card>
                 <Card title='Attendances'>
@@ -1537,6 +1547,7 @@ export default function CourseManagerPortal() {
                     actions={[
                       'Student Attendance',
                     ]}
+                    onActionClick={handleActionClick}
                   />
                 </Card>
               </div>
