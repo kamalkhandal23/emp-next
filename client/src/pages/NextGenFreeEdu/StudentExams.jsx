@@ -1,6 +1,7 @@
 // src/pages/NextGenFreeEdu/StudentExams.jsx
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import StudentProfileNav from '../../components/StudentProfileNav';
 
 export default function StudentExams() {
   const navigate = useNavigate();
@@ -59,10 +60,7 @@ export default function StudentExams() {
           _id: exam._id,
           title: exam.title || exam.examName || 'Untitled Exam',
           courseName:
-            exam.courseName ||
-            exam.course?.title ||
-            studentCourse ||
-            'Course',
+            exam.courseName || exam.course?.title || studentCourse || 'Course',
           totalQuestions: exam.totalQuestions || exam.questions?.length || 0,
           duration: exam.duration || exam.durationMinutes || 0,
           totalMarks: exam.totalMarks || exam.maxMarks || 0,
@@ -137,6 +135,7 @@ export default function StudentExams() {
       className='container'
       style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <StudentProfileNav />
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <div
@@ -240,7 +239,7 @@ export default function StudentExams() {
           <div
             style={{
               background: '#fef2f2',
-              
+
               padding: '1rem',
               marginBottom: '2rem',
             }}>
@@ -507,7 +506,6 @@ export default function StudentExams() {
             marginTop: '3rem',
             padding: '1.5rem',
             background: '#f0f9ff',
-            
           }}>
           <h3
             style={{
@@ -526,16 +524,16 @@ export default function StudentExams() {
               margin: 0,
             }}>
             <li>
-              <strong>🔒 Progressive Access:</strong> Some exams may unlock
-              only after completing previous ones.
+              <strong>🔒 Progressive Access:</strong> Some exams may unlock only
+              after completing previous ones.
             </li>
             <li>
               <strong>⭐ Your Course:</strong> Exams marked with ⭐ are for your
               enrolled course.
             </li>
             <li>
-              <strong>✓ Track Progress:</strong> Completed exams show your
-              score and status.
+              <strong>✓ Track Progress:</strong> Completed exams show your score
+              and status.
             </li>
             <li>
               <strong>🔄 Retake:</strong> If enabled, you can retake exams to

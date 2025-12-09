@@ -34,11 +34,22 @@ class ApiClient {
 
     if (this.token) {
       config.headers.Authorization = `Bearer ${this.token}`;
+      console.log(
+        `🔑 Request to ${endpoint} with token:`,
+        this.token.substring(0, 20) + '...'
+      );
+    } else {
+      console.warn(`⚠️ No token found for request to ${endpoint}`);
     }
 
     if (config.body && typeof config.body === 'object') {
       config.body = JSON.stringify(config.body);
     }
+
+    console.log(`📤 Sending request to ${url}`, {
+      headers: config.headers,
+      method: config.method || 'GET',
+    });
 
     try {
       const response = await fetch(url, config);
@@ -696,9 +707,8 @@ async getStudentAttendanceByDate(courseId, date, token) {
   }
 
   async getMyNextGenAssignments() {
-  return this.request("GET", "/api/nextgen/assignments/my-assignments");
-}
-
+    return this.request('GET', '/api/nextgen/assignments/my-assignments');
+  }
 
   async getNextGenAssignmentById(id) {
     return this.request(`/nextgen/assignments/id/${id}`);
@@ -827,6 +837,20 @@ async getStudentAttendanceByDate(courseId, date, token) {
     }
     return response;
   }
+
+  // NextGen Student Results
+  async getStudentResults() {
+    return this.request('/nextgen/student/results');
+  }
+
+  async getExamResultDetail(submissionId) {
+    return this.request(`/nextgen/student/results/exam/${submissionId}`);
+  }
+
+  async getCodingExamResultDetail(examId) {
+    return this.request(`/nextgen/student/results/coding-exam/${examId}`);
+  }
+
   // Inquiry endpoints
   async createInquiry(inquiryData) {
     return this.request('/inquiry', {
