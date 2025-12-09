@@ -512,7 +512,7 @@ export default function CourseManagerPortal() {
       navigate('/portal/coursemanager/addclasslink');
     }
     if (action === 'Manage Class Links') {
-      navigate('/portal/coursemanager/manageclasslink');
+      navigate('/portal/coursemanager/manageclasslinks');
     }
     if (action === 'Student Attendance') {
       navigate('/portal/coursemanager/studentattendance');

@@ -417,6 +417,10 @@ class ApiClient {
     return this.request('/nextgen/courses');
   }
 
+  async getMyCourses() {
+    return this.request('/nextgen/courses/my-courses');
+  }
+
   async createCourse(courseData) {
     return this.request('/nextgen/courses', {
       method: 'POST',

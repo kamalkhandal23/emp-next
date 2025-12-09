@@ -1,8 +1,5 @@
 import NG_Courses from "../../models/education/NG_Courses.js"
 
-
-
-
 export const addLectureToCourse = async (req, res) => {
   try {
     const { courseId, lectures } = req.body;

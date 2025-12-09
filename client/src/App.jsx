@@ -116,7 +116,7 @@ import CodingExam from './pages/NextGenFreeEdu/CodingExam';
 import CourseLecture from "./pages/NextGenFreeEdu/CourseLecture";
 import ManageLecture from './pages/NextGenFreeEdu/ManageLecture';
 import ClassLinks from './pages/NextGenFreeEdu/ClassLinks';
-
+import ManageClassLinks from './pages/NextGenFreeEdu/ManageClassLinks';
 
 function MainLayout() {
   return (
@@ -362,6 +362,10 @@ export default function App() {
             <Route
               path='/portal/coursemanager/addclasslink'
               element={<ClassLinks />}
+            />
+            <Route
+              path='/portal/coursemanager/manageclasslinks'
+              element={<ManageClassLinks />}
             />
             <Route path='test' element={<TestConnection />} />
           </Routes>

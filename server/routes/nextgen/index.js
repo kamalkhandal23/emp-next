@@ -11,7 +11,7 @@ import addLectureRoutes from './addLecture.js';
 import addClassLink from './addClassLink.js';
 import notificationRoutes from './notificationRoutes.js';
 import editdeleteRoutes from './editdeleteLecture.js';
-
+import classLinksRoutes from './classLinks.js';
 const router = express.Router();
 
 // Mount NextGen routes
@@ -27,4 +27,5 @@ router.use("/addLecture",addLectureRoutes);
 router.use("/notifications",notificationRoutes);
 router.use("/lectures",editdeleteRoutes);
 router.use("/addClassLink",addClassLink);
+router.use("/classLinks",classLinksRoutes);
 export default router;
