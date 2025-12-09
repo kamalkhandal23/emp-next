@@ -34,11 +34,22 @@ class ApiClient {
 
     if (this.token) {
       config.headers.Authorization = `Bearer ${this.token}`;
+      console.log(
+        `🔑 Request to ${endpoint} with token:`,
+        this.token.substring(0, 20) + '...'
+      );
+    } else {
+      console.warn(`⚠️ No token found for request to ${endpoint}`);
     }
 
     if (config.body && typeof config.body === 'object') {
       config.body = JSON.stringify(config.body);
     }
+
+    console.log(`📤 Sending request to ${url}`, {
+      headers: config.headers,
+      method: config.method || 'GET',
+    });
 
     try {
       const response = await fetch(url, config);
@@ -163,21 +174,44 @@ class ApiClient {
     return this.request('/attendance/my');
   }
 
-  // Get lecture videos for NextGen Education
-  async getNextGenLectureVideos(studentId, courseId, token) {
-    console.log(studentId, courseId, 'api lecture student & course id');
+  // FIXED: Get all student attendance for course
+async getStudentAttendance(courseId, token) {
+  return this.request(`/attendance/all/${courseId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+}
 
-    return this.request(
-      `/nextgen/lectureVideo/student?studentId=${studentId}&courseId=${courseId}`,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-  }
+
+// FIXED: Attendance by student
+async getStudentAttendanceByName(courseId, studentId, token) {
+  return this.request(`/attendance/student/${courseId}/${studentId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+
+// FIXED: Attendance by date (params were wrong)
+async getStudentAttendanceByDate(courseId, date, token) {
+  return this.request(
+    `/attendance/date/${courseId}?date=${encodeURIComponent(date)}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
+
   async getNextGenLectureVideos(studentId, courseId, token) {
     console.log(studentId, courseId, 'api lecture student & course id');
 
@@ -676,9 +710,8 @@ class ApiClient {
   }
 
   async getMyNextGenAssignments() {
-  return this.request("GET", "/api/nextgen/assignments/my-assignments");
-}
-
+    return this.request('GET', '/api/nextgen/assignments/my-assignments');
+  }
 
   async getNextGenAssignmentById(id) {
     return this.request(`/nextgen/assignments/id/${id}`);
@@ -807,6 +840,20 @@ class ApiClient {
     }
     return response;
   }
+
+  // NextGen Student Results
+  async getStudentResults() {
+    return this.request('/nextgen/student/results');
+  }
+
+  async getExamResultDetail(submissionId) {
+    return this.request(`/nextgen/student/results/exam/${submissionId}`);
+  }
+
+  async getCodingExamResultDetail(examId) {
+    return this.request(`/nextgen/student/results/coding-exam/${examId}`);
+  }
+
   // Inquiry endpoints
   async createInquiry(inquiryData) {
     return this.request('/inquiry', {

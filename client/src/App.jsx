@@ -118,6 +118,9 @@ import ManageLecture from './pages/NextGenFreeEdu/ManageLecture';
 import ClassLinks from './pages/NextGenFreeEdu/ClassLinks';
 import ManageClassLinks from './pages/NextGenFreeEdu/ManageClassLinks';
 
+import CourseAttendance from './pages/Portal/CourseManagerStudentAtten';
+
+
 function MainLayout() {
   return (
     <div
@@ -367,6 +370,9 @@ export default function App() {
               path='/portal/coursemanager/manageclasslinks'
               element={<ManageClassLinks />}
             />
+                path="/portal/coursemanager/attendance"
+                element={<CourseAttendance />}
+              />
             <Route path='test' element={<TestConnection />} />
           </Routes>
         </AuthProvider>

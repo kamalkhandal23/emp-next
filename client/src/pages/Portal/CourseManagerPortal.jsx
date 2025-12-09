@@ -48,6 +48,8 @@ export default function CourseManagerPortal() {
   const [studentRegistrations, setStudentRegistrations] = useState([]);
   const [courses, setCourses] = useState([]);
   const [courseManagerData, setCourseManagerData] = useState(null);
+  const [courseIDForAtt, setcourseIDForAtt] = useState(null);
+
 
   // Filter state
   const [courseFilter, setCourseFilter] = useState({
@@ -1535,6 +1537,11 @@ export default function CourseManagerPortal() {
                       'Student Attendance',
                     ]}
                     onActionClick={handleActionClick}
+                    onActionClick={(action) => {
+                      if (action === 'Student Attendance') {
+                        navigate('/portal/coursemanager/attendance');
+                      }
+                    }}
                   />
                 </Card>
               </div>
