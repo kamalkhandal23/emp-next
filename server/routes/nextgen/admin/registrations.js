@@ -11,6 +11,7 @@ const router = express.Router();
 import bcrypt from 'bcryptjs';
 import { sendWelcomeEmail } from '../../../utils/mailer.js';
 import { sendRejectionEmail } from '../../../utils/mailer.js';
+import { decrypt } from '../../../utils/crypto.js';
 
 /* -------------------- Helper Middleware -------------------- */
 const ensureAdminOrManager = (req, res, next) => {
@@ -267,12 +268,26 @@ router.get('/', auth, ensureAdminOrManager, async (req, res) => {
       .limit(Number(limit))
       .skip((page - 1) * limit);
 
+    // Decrypt phone numbers for display
+    const decryptedRegistrations = registrations.map(reg => {
+      const regObj = reg.toObject();
+      if (regObj.phone && typeof regObj.phone === 'object' && regObj.phone.c) {
+        try {
+          regObj.phone = decrypt(regObj.phone);
+        } catch (error) {
+          console.warn('Failed to decrypt phone for registration:', regObj._id);
+          regObj.phone = 'N/A';
+        }
+      }
+      return regObj;
+    });
+
     const total = await Registration.countDocuments(query);
 
     res.json({
       success: true,
       data: {
-        registrations,
+        registrations: decryptedRegistrations,
         pagination: {
           total,
           page: Number(page),

@@ -8,6 +8,7 @@ import Ticket from '../models/nextgen/support/Ticket.js';
 import Certificate from '../models/nextgen/education/Certificate.js';
 import HRDocRequest from '../models/nextgen/support/HRRequest.js';
 import NG_Courses from '../models/education/NG_Courses.js';
+import { encrypt } from '../utils/crypto.js';
 
 import multer from 'multer';
 
@@ -25,12 +26,7 @@ export const upload = multer({
    Convert File Buffer to Base64
 ----------------------------------------------------------- */
 function fileToBase64(file) {
-  return {
-    name: file.originalname,
-    type: file.mimetype,
-    size: file.size,
-    data: file.buffer.toString("base64")
-  };
+  return file.buffer.toString("base64");
 }
 
 /* ---------------------------------------------------------
@@ -63,11 +59,25 @@ export const registerWithDocs = async (req, res) => {
       });
     }
 
+    // Find the course by _id or slug
+    const course = await NG_Courses.findOne({
+      $or: [
+        { _id: course_id },
+        { slug: course_id }
+      ]
+    });
+
+    if (!course) {
+      return res.status(400).json({
+        message: 'Invalid course selected'
+      });
+    }
+
     const registration = new Registration({
       full_name,
       email: email.toLowerCase(),
-      phone,
-      course_id,
+      phone: phone ? encrypt(phone) : null,
+      course_id: course._id,
       date_of_birth,
       education,
       experience,

@@ -4,6 +4,11 @@ import apiClient from '../../utils/api';
 import StudentProfileNav from '../../components/StudentProfileNav';
 
 export default function Results() {
+  const [selectedResult, setSelectedResult] = useState(null)
+  const [filterStatus, setFilterStatus] = useState('all')
+  const [sortBy, setSortBy] = useState('date')
+
+  // Mock student results data
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('exams');

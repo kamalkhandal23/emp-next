@@ -754,38 +754,6 @@ export default function StudentLogin() {
           </button>
         </form>
 
-        {/* Demo Credentials */}
-        <div
-          style={{
-            background: '#f0f9ff',
-            border: '1px solid #bae6fd',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginTop: '1.5rem',
-          }}>
-          <h3
-            style={{
-              color: '#0369a1',
-              fontSize: '0.875rem',
-              marginBottom: '0.5rem',
-            }}>
-            Demo Credentials (for testing):
-          </h3>
-          <div
-            style={{
-              fontSize: '0.75rem',
-              color: '#0c4a6e',
-              lineHeight: '1.4',
-            }}>
-            <div>
-              <strong>Email:</strong> demo@student.com
-            </div>
-            <div>
-              <strong>Password:</strong> demo123
-            </div>
-          </div>
-        </div>
-
         {/* Sign Up Link */}
         <div
           style={{

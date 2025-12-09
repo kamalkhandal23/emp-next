@@ -113,10 +113,9 @@ class ApiClient {
     return response;
   }
 
-  // async getUserByUsername(username) {
-  //   return this.request(`/users/${username}`);
-  // }
-
+  async getCourseManagerData() {
+   
+  }
   async updatePassword(passwordData) {
     return this.request('/auth/update-password', {
       method: 'PUT',
@@ -450,6 +449,10 @@ async getStudentAttendanceByDate(courseId, date, token) {
   // NextGen Education endpoints
   async getNextGenCourses() {
     return this.request('/nextgen/courses');
+  }
+
+  async getMyCourses() {
+    return this.request('/nextgen/courses/my-courses');
   }
 
   async createCourse(courseData) {
@@ -819,7 +822,7 @@ async getStudentAttendanceByDate(courseId, date, token) {
       }`
     );
   }
-
+ 
   // NextGen Student Authentication
   async nextGenStudentLogin(credentials) {
     const response = await this.request('/nextgen/student/login', {
@@ -893,6 +896,30 @@ async getStudentAttendanceByDate(courseId, date, token) {
   }
   async getAllNotifications() {
     return this.request('/nextgen/notifications');
+  }
+
+  async getclassLinks(courseId) {
+    return this.request(`/nextgen/classLinks?courseId=${courseId}`);
+  }
+  async addClassLinks(payload) {
+    return this.request('/nextgen/addClassLink/add-class-links', {
+      method: 'POST',
+      body: payload,
+    });
+  }
+  async deleteClassLink(classLinkId) {
+    return this.request(`/nextgen/classLinks/${classLinkId}`, {
+      method: 'DELETE',
+    });
+  }
+  async updateClassLink(classLinkId, classLinkData) {
+    return this.request(`/nextgen/classLinks/${classLinkId}`, {
+      method: 'PUT',
+      body: classLinkData,
+    });
+  }
+  async getCourseById(courseId) {
+    return this.request(`/nextgen/courses/${courseId}`);
   }
 }
 
