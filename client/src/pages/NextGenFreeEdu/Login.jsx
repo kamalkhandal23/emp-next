@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
+import StudentProfileNav from '../../components/StudentProfileNav';
 
 export default function StudentLogin() {
+  const location = useLocation();
   const [loginData, setLoginData] = useState({
     identifier: '',
     password: '',
@@ -54,8 +56,10 @@ export default function StudentLogin() {
     const studentInfo = localStorage.getItem('studentInfo');
     if (authToken && studentInfo) {
       setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
     }
-  }, []);
+  }, [location]); // Re-check when location changes (e.g., after logout redirect)
   const [profileDataView, setProfileDataView] = useState(null);
   const [recentActivities, setRecentActivities] = useState([]);
   const [assignmentPending, setAssignmentPending] = useState(0);
@@ -248,6 +252,9 @@ export default function StudentLogin() {
         className='container'
         style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          {/* Navigation Bar */}
+          <StudentProfileNav />
+
           {/* Welcome Header */}
           <div
             className='service-card'
@@ -369,13 +376,6 @@ export default function StudentLogin() {
                   flexDirection: 'column',
                   gap: '0.75rem',
                 }}>
-                <Link
-                  to='/nextgen/exam'
-                  className='btn-primary'
-                  style={{ textAlign: 'center' }}>
-                  Take Pending Exam
-                </Link>
-
                 <Link
                   to='/nextgen/profile'
                   className='btn-secondary'
@@ -628,20 +628,6 @@ export default function StudentLogin() {
                 </Link>
               </div>
             </div>
-          </div>
-
-          {/* Logout */}
-          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-            <button
-              onClick={() => {
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('studentInfo');
-                localStorage.removeItem('userRole');
-                setIsLoggedIn(false);
-              }}
-              className='btn-secondary'>
-              Logout
-            </button>
           </div>
         </div>
       </div>

@@ -129,6 +129,14 @@ router.post("/student/exams/:examId/submit", async (req, res) => {
   try {
     const { examId } = req.params;
     const { studentId, answers, score, feedback } = req.body;
+    
+    console.log('=== EXAM SUBMISSION DEBUG ===');
+    console.log('Exam ID:', examId);
+    console.log('Student ID:', studentId);
+    console.log('Answers received:', JSON.stringify(answers, null, 2));
+    console.log('Score:', score);
+    console.log('Feedback:', feedback);
+    
     if (!studentId || !answers) {
       return res.status(400).json({
         success: false,
@@ -172,6 +180,15 @@ router.post("/student/exams/:examId/submit", async (req, res) => {
         setDefaultsOnInsert: true,
       }
     );
+    
+    console.log('Submission created/updated:', {
+      id: submission._id,
+      submission_data: submission.submission_data,
+      status: submission.status,
+      grade: submission.grade
+    });
+    console.log('=== END SUBMISSION DEBUG ===');
+    
     //Update score and recent Activity
     const student = await ngApprovedStudent.findById(studentId);
     const examForUpdate = await ng_exams.findById(examId);

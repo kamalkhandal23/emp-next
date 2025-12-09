@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import StudentProfileNav from '../../components/StudentProfileNav';
 
 function normalizeStudent(raw) {
   if (!raw) return null;
@@ -331,6 +332,9 @@ export default function StudentProfile() {
       className='container'
       style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Navigation Bar */}
+        <StudentProfileNav />
+
         {/* Header */}
         <div
           style={{
@@ -354,14 +358,6 @@ export default function StudentProfile() {
             <p style={{ color: '#6b7280', margin: '0.5rem 0 0 0' }}>
               Manage your account information and track your progress
             </p>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Link to='/nextgen/login' className='btn-secondary'>
-              Back to Dashboard
-            </Link>
-            <button onClick={handleLogout} className='btn-outline'>
-              Logout
-            </button>
           </div>
         </div>
 
