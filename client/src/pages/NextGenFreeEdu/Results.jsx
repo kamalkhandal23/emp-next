@@ -12,9 +12,9 @@ export default function Results() {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('exams');
-  const [selectedResult, setSelectedResult] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
+  // const [selectedResult, setSelectedResult] = useState(null);
+  // const [filterStatus, setFilterStatus] = useState('all');
+  // const [sortBy, setSortBy] = useState('date');
   const [codingExamResult, setCodingExamResult] = useState(null);
   const [results, setResults] = useState([]);
   const [codingResults, setCodingResults] = useState([]);

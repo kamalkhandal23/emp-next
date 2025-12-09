@@ -370,6 +370,7 @@ export default function App() {
               path='/portal/coursemanager/manageclasslinks'
               element={<ManageClassLinks />}
             />
+               <Route
                 path="/portal/coursemanager/attendance"
                 element={<CourseAttendance />}
               />
