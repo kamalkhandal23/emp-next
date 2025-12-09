@@ -1536,7 +1536,7 @@ export default function CourseManagerPortal() {
                     actions={[
                       'Student Attendance',
                     ]}
-                    onActionClick={handleActionClick}
+                    //onActionClick={handleActionClick}
                     onActionClick={(action) => {
                       if (action === 'Student Attendance') {
                         navigate('/portal/coursemanager/attendance');
