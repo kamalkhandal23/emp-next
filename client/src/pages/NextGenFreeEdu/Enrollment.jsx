@@ -127,7 +127,7 @@ export default function Enrollment() {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/student/registration/register`,
+        `${import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}/nextgen/register`,
         {
           method: 'POST',
           body: formDataToSend
@@ -137,7 +137,7 @@ export default function Enrollment() {
       const data = await response.json()
       if (response.ok) {
         setSubmitStatus('success')
-        localStorage.setItem('registrationId', data.data?.registration_id)
+        localStorage.setItem('registrationId', data.registration?.id)
       } else {
         alert(`Registration failed: ${data.message || 'Unknown error'}`)
         setSubmitStatus('error')
@@ -381,7 +381,7 @@ export default function Enrollment() {
                     <input type="radio" name="paymentType" value="free" checked={paymentType === 'free'} onChange={() => setPaymentType('free')} />
                     <span>Free</span>
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  {/* <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                     <input type="radio" name="paymentType" value="paid" checked={paymentType === 'paid'} onChange={() => setPaymentType('paid')} />
                     <span>Paid</span>
                   </label>
@@ -397,7 +397,7 @@ export default function Enrollment() {
                         style={{ width: '220px' }}
                       />
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>
