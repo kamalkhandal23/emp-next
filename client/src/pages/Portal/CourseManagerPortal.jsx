@@ -50,7 +50,6 @@ export default function CourseManagerPortal() {
   const [courseManagerData, setCourseManagerData] = useState(null);
   const [courseIDForAtt, setcourseIDForAtt] = useState(null);
 
-
   // Filter state
   const [courseFilter, setCourseFilter] = useState({
     visibility: 'all', // all, published, draft, archived
@@ -242,7 +241,7 @@ export default function CourseManagerPortal() {
       fetchCourseManagerData();
     }
   }, [courses]);
-  
+
   // Fetch registrations from API
   const fetchRegistrations = async (status = 'all') => {
     try {
@@ -285,7 +284,10 @@ export default function CourseManagerPortal() {
       const userResponse = await apiClient.getCurrentUser();
       console.log('Fetched user data:', userResponse);
 
-      let user = userResponse.success && userResponse.data ? userResponse.user || userResponse.data : null;
+      let user =
+        userResponse.success && userResponse.data
+          ? userResponse.user || userResponse.data
+          : null;
 
       // If API fails, try to get from localStorage
       if (!user) {
@@ -303,7 +305,9 @@ export default function CourseManagerPortal() {
       // If user doesn't have assignedCourses, try to fetch from ng_users using username
       if (!user.assignedCourses && user.username) {
         try {
-          const fullUserResponse = await apiClient.getUserByUsername(user.username);
+          const fullUserResponse = await apiClient.getUserByUsername(
+            user.username
+          );
           console.log('Fetched full user data:', fullUserResponse);
           if (fullUserResponse.success && fullUserResponse.data) {
             user = { ...user, ...fullUserResponse.data };
@@ -316,25 +320,31 @@ export default function CourseManagerPortal() {
       // Debug logging
       console.log('User', user);
       console.log('User assignedCourses:', user.assignedCourses);
-      console.log('Available courses:', courses.map(c => ({ id: c._id, title: c.title })));
+      console.log(
+        'Available courses:',
+        courses.map((c) => ({ id: c._id, title: c.title }))
+      );
 
       // Filter courses assigned to this course manager
-      const assignedCourses = (user.assignedCourses && Array.isArray(user.assignedCourses))
-        ? courses
-            .filter(course => {
-              const isAssigned = user.assignedCourses.includes(course._id);
-              console.log(`Checking course ${course.title} (${course._id}): ${isAssigned}`);
-              return isAssigned;
-            })
-            .map(course => course.title)
-            .join(', ') || 'No courses assigned'
-        : 'No courses assigned';
+      const assignedCourses =
+        user.assignedCourses && Array.isArray(user.assignedCourses)
+          ? courses
+              .filter((course) => {
+                const isAssigned = user.assignedCourses.includes(course._id);
+                console.log(
+                  `Checking course ${course.title} (${course._id}): ${isAssigned}`
+                );
+                return isAssigned;
+              })
+              .map((course) => course.title)
+              .join(', ') || 'No courses assigned'
+          : 'No courses assigned';
 
       console.log('Final assignedCourses:', assignedCourses);
 
       const courseManagerInfo = {
         ...user,
-        assignedCourses: assignedCourses
+        assignedCourses: assignedCourses,
       };
 
       setCourseManagerData(courseManagerInfo);
@@ -353,10 +363,11 @@ export default function CourseManagerPortal() {
 
       const courseManagerInfo = {
         ...user,
-        assignedCourses: courses
-          .filter(course => user.assignedCourses?.includes(course._id))
-          .map(course => course.title)
-          .join(', ') || 'No courses assigned'
+        assignedCourses:
+          courses
+            .filter((course) => user.assignedCourses?.includes(course._id))
+            .map((course) => course.title)
+            .join(', ') || 'No courses assigned',
       };
       setCourseManagerData(courseManagerInfo);
     }
@@ -498,6 +509,9 @@ export default function CourseManagerPortal() {
     if (action === 'Manage Coding Exams') {
       navigate('/portal/coursemanager/managecodingexams');
     }
+    if (action === 'Coding exams Results') {
+      navigate('/portal/coursemanager/codingexamresults');
+    }
     if (action === 'Manage Assignments') {
       navigate('/portal/coursemanager/manageassignments');
     }
@@ -567,7 +581,9 @@ export default function CourseManagerPortal() {
 
   const handleChangePassword = async (newPassword) => {
     try {
-      const response = await apiClient.updatePassword({ password: newPassword });
+      const response = await apiClient.updatePassword({
+        password: newPassword,
+      });
       if (response.success) {
         alert('Password updated successfully!');
       } else {
@@ -632,7 +648,7 @@ export default function CourseManagerPortal() {
 
       <div className='portal-content'>
         <div className='container'>
-           {/* DASHBOARD */}
+          {/* DASHBOARD */}
           {activeTab === 'dashboard' && (
             <section>
               <h2 style={{ marginBottom: '2rem', color: 'black' }}>
@@ -649,19 +665,29 @@ export default function CourseManagerPortal() {
                   <div
                     className='portal-card-header'
                     style={{ padding: '1rem 1.5rem' }}>
-                    <h3 className='portal-card-title' style={{color:''}}>Course Manager Profile</h3>
+                    <h3 className='portal-card-title' style={{ color: '' }}>
+                      Course Manager Profile
+                    </h3>
                   </div>
                   <div style={{ padding: '1rem' }}>
                     {courseManagerData ? (
                       <div style={{ display: 'grid', gap: '1rem' }}>
                         <div>
-                          <strong>Full Name:</strong> {courseManagerData.full_name || courseManagerData.fullName || 'N/A'}
+                          <strong>Full Name:</strong>{' '}
+                          {courseManagerData.full_name ||
+                            courseManagerData.fullName ||
+                            'N/A'}
                         </div>
                         <div>
-                          <strong>Assigned Course:</strong> {courseManagerData.assignedCourses}
+                          <strong>Assigned Course:</strong>{' '}
+                          {courseManagerData.assignedCourses}
                         </div>
                         <div>
-                          <strong>Password:</strong> {courseManagerData.password || courseManagerData.password_hash ? '••••••••' : 'Not set'}
+                          <strong>Password:</strong>{' '}
+                          {courseManagerData.password ||
+                          courseManagerData.password_hash
+                            ? '••••••••'
+                            : 'Not set'}
                         </div>
                         <button
                           className='btn-primary'
@@ -680,12 +706,10 @@ export default function CourseManagerPortal() {
                     )}
                   </div>
                 </div>
-
-                
               </div>
             </section>
           )}
-         
+
           {/* STUDENT MANAGEMENT */}
           {activeTab === 'employees' && (
             <section>
@@ -714,37 +738,39 @@ export default function CourseManagerPortal() {
                   <div>Course</div>
                   <div>Status</div>
                   <div>Join Date</div>
-                
                 </div>
 
                 {studentRegistrations.map((s, i) => {
                   // 1. Create a Date object from the API string
-                  const date = new Date(s.updated_at); 
+                  const date = new Date(s.updated_at);
 
                   // 2. Format the date using the Indian locale (en-IN)
                   // This will output the date in DD/MM/YYYY format.
-                  const formattedDate = date.toLocaleDateString('en-IN'); 
+                  const formattedDate = date.toLocaleDateString('en-IN');
 
                   return (
-                      <div
-                          key={i}
-                          className='table-row'
-                          style={{ gridTemplateColumns: '2fr 1fr 1fr auto' }}>
-                          <div style={{ fontWeight: 500 }}>{s.full_name}</div>
-                          <div>{s.course_id.title}</div>
-                          <div>
-                              <span className={`status-badge status-${s.status}`}>
-                                  {s.status}
-                              </span>
-                          </div>
-                          
-                          {/* 3. Use the formatted date here */}
-                          <div>{formattedDate}</div> 
-                          
-                          
+                    <div
+                      key={i}
+                      className='table-row'
+                      style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
+                      <div style={{ fontWeight: 500 }}>{s.full_name}</div>
+                      <div>{s.course_id.title}</div>
+                      <div>
+                        <span className={`status-badge status-${s.status}`}>
+                          {s.status}
+                        </span>
                       </div>
+
+                      {/* 3. Use the formatted date here */}
+                      <div>{formattedDate}</div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className='action-button'>Edit</button>
+                        <button className='action-button'>View</button>
+                      </div>
+                    </div>
                   );
-              })}
+                })}
               </div>
             </section>
           )}
@@ -1515,28 +1541,19 @@ export default function CourseManagerPortal() {
                 }}>
                 <Card title='Course Management'>
                   <ActionList
-                    actions={[
-                      'Add Lectures to Course',
-                      'Manage Lecture'
-                    ]}
+                    actions={['Add Lectures to Course', 'Manage Lecture']}
                     onActionClick={handleActionClick}
                   />
                 </Card>
                 <Card title='Online Classes'>
                   <ActionList
-                    actions={[
-                      'Add Class Link',
-                      'Manage Class Links'
-                    ]}
+                    actions={['Add Class Link', 'Manage Class Links']}
                     onActionClick={handleActionClick}
                   />
                 </Card>
                 <Card title='Attendances'>
                   <ActionList
-                    actions={[
-                      'Student Attendance',
-                    ]}
-                    //onActionClick={handleActionClick}
+                    actions={['Student Attendance']}
                     onActionClick={(action) => {
                       if (action === 'Student Attendance') {
                         navigate('/portal/coursemanager/attendance');
@@ -1549,48 +1566,99 @@ export default function CourseManagerPortal() {
           )}
         </div>
       </div>
-      
-       {/* Registration Details Modal */}
-       {showRegistrationDetails && selectedRegistration && (
-         <Modal
-          title="Student Registration Details"
-           onClose={() => {
-             setShowRegistrationDetails(false);
-             setSelectedRegistration(null);
-           }}>
-           <div style={{ display: "grid", gap: "1rem" }}>
-             <KV label="Full Name" value={selectedRegistration?.full_name || selectedRegistration?.fullName || "N/A"} />
-             <KV label="Email" value={selectedRegistration?.email || "N/A"} />
-             <KV label="Phone" value={selectedRegistration?.phone || "N/A"} />
-             <KV label="Course" value={selectedRegistration?.course_id?.title || selectedRegistration?.course || "N/A"} />
-             <KV label="Address" value={selectedRegistration?.address || "N/A"} />
-             <KV label="Registration Date" value={selectedRegistration?.created_at ? new Date(selectedRegistration.created_at).toLocaleDateString() : selectedRegistration?.registrationDate || "N/A"} />
-             <KV label="Status" value={selectedRegistration?.status || "N/A"} />
-             <KV label="Documents" value={Array.isArray(selectedRegistration?.documents) ? selectedRegistration.documents.join(", ") : "N/A"} />
-             {selectedRegistration?.notes && <KV label="Notes" value={selectedRegistration.notes} />}
-             {selectedRegistration?.rejectionReason && <KV label="Rejection Reason" value={selectedRegistration.rejectionReason} />}    
-             {selectedRegistration?.reviewed_at && <KV label="Reviewed At" value={new Date(selectedRegistration.reviewed_at).toLocaleDateString()} />}
-             {selectedRegistration?.reviewed_by?.full_name && <KV label="Reviewed By" value={selectedRegistration.reviewed_by.full_name} />}
-           </div>
-           <div
-             style={{
-               display: "flex",
-               justifyContent: "flex-end",
-               marginTop: "2rem",
-             }}>
-             <button
-               className="btn-secondary"
-               onClick={() => {
-                 setShowRegistrationDetails(false);
-                 setSelectedRegistration(null);
-               }}>
-               Close
-             </button>
-           </div>
-         </Modal>
-       )}
-     
- 
+
+      {/* Registration Details Modal */}
+      {showRegistrationDetails && selectedRegistration && (
+        <Modal
+          title='Student Registration Details'
+          onClose={() => {
+            setShowRegistrationDetails(false);
+            setSelectedRegistration(null);
+          }}>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <KV
+              label='Full Name'
+              value={
+                selectedRegistration?.full_name ||
+                selectedRegistration?.fullName ||
+                'N/A'
+              }
+            />
+            <KV label='Email' value={selectedRegistration?.email || 'N/A'} />
+            <KV label='Phone' value={selectedRegistration?.phone || 'N/A'} />
+            <KV
+              label='Course'
+              value={
+                selectedRegistration?.course_id?.title ||
+                selectedRegistration?.course ||
+                'N/A'
+              }
+            />
+            <KV
+              label='Address'
+              value={selectedRegistration?.address || 'N/A'}
+            />
+            <KV
+              label='Registration Date'
+              value={
+                selectedRegistration?.created_at
+                  ? new Date(
+                      selectedRegistration.created_at
+                    ).toLocaleDateString()
+                  : selectedRegistration?.registrationDate || 'N/A'
+              }
+            />
+            <KV label='Status' value={selectedRegistration?.status || 'N/A'} />
+            <KV
+              label='Documents'
+              value={
+                Array.isArray(selectedRegistration?.documents)
+                  ? selectedRegistration.documents.join(', ')
+                  : 'N/A'
+              }
+            />
+            {selectedRegistration?.notes && (
+              <KV label='Notes' value={selectedRegistration.notes} />
+            )}
+            {selectedRegistration?.rejectionReason && (
+              <KV
+                label='Rejection Reason'
+                value={selectedRegistration.rejectionReason}
+              />
+            )}
+            {selectedRegistration?.reviewed_at && (
+              <KV
+                label='Reviewed At'
+                value={new Date(
+                  selectedRegistration.reviewed_at
+                ).toLocaleDateString()}
+              />
+            )}
+            {selectedRegistration?.reviewed_by?.full_name && (
+              <KV
+                label='Reviewed By'
+                value={selectedRegistration.reviewed_by.full_name}
+              />
+            )}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginTop: '2rem',
+            }}>
+            <button
+              className='btn-secondary'
+              onClick={() => {
+                setShowRegistrationDetails(false);
+                setSelectedRegistration(null);
+              }}>
+              Close
+            </button>
+          </div>
+        </Modal>
+      )}
+
       {/* Add Course Modal (logged-in view) */}
       {showAddCourse && (
         <Modal title='Add New Course' onClose={() => setShowAddCourse(false)}>
@@ -1943,7 +2011,7 @@ export default function CourseManagerPortal() {
       {/* Documents Modal */}
       {showDocumentsModal && selectedDocuments.length > 0 && (
         <Modal
-          title="Student Documents"
+          title='Student Documents'
           onClose={() => {
             setShowDocumentsModal(false);
             setSelectedDocuments([]);
@@ -1975,7 +2043,7 @@ export default function CourseManagerPortal() {
               marginTop: '2rem',
             }}>
             <button
-              className="btn-secondary"
+              className='btn-secondary'
               onClick={() => {
                 setShowDocumentsModal(false);
                 setSelectedDocuments([]);
