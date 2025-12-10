@@ -59,6 +59,15 @@ const courseSchema = new mongoose.Schema(
         created_at: { type: Date, default: Date.now },
       },
     ],
+    classLinks: [
+      {
+        title: { type: String, required: true },
+        date: { type: String, required: true },
+        time: { type: String, required: true },
+        videoURL: { type: String },
+        created_at: { type: Date, default: Date.now },
+      },
+    ],
     rating: {
       type: Number,
       min: 0,

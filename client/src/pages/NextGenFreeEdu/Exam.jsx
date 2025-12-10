@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 export default function Exam() {
@@ -21,10 +21,9 @@ export default function Exam() {
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
   //Full screen mode handler
-    const [showTopMessage, setShowTopMessage] = useState(false);
-    const [showPopup, setShowPopup] = useState(false);
-    const [countdown, setCountdown] = useState(30);
-
+  const [showTopMessage, setShowTopMessage] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [countdown, setCountdown] = useState(30);
 
   // ---- Student info (localStorage se) ----
   const getStudentData = () => {
@@ -242,80 +241,79 @@ export default function Exam() {
   const getAnsweredCount = () => {
     return Object.keys(answers).length;
   };
-    // ENTER FULLSCREEN
-    const enterFullscreen = () => {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) elem.requestFullscreen();
-        else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
-        else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-    };
+  // ENTER FULLSCREEN
+  const enterFullscreen = () => {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+  };
 
-    // EXIT FULLSCREEN
-    const exitFullscreen = () => {
-        if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
-        }
-    };
+  // EXIT FULLSCREEN
+  const exitFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
 
-    // BLUR + FULLSCREEN EXIT DETECT
-    useEffect(() => {
-        const handleBlur = () => {
-            if(!showPopup){
-                console.log(showPopup);
-                setShowTopMessage(true);
-                setShowPopup(true);
-                setCountdown(30);
-            }
-        };
-
-        const handleFullscreenChange = () => {
-            if (!document.fullscreenElement && !showPopup) {
-                setShowTopMessage(true);
-                setShowPopup(true);
-                setCountdown(30);
-            }
-        };
-
-        window.addEventListener("blur", handleBlur);
-        document.addEventListener("fullscreenchange", handleFullscreenChange);
-
-        return () => {
-            window.removeEventListener("blur", handleBlur);
-            document.removeEventListener("fullscreenchange", handleFullscreenChange);
-        };
-    }, []);
-    // COUNTDOWN LOGIC
-    useEffect(() => {
-        let interval;
-
-        if (showPopup && countdown > 0) {
-            interval = setInterval(() => setCountdown((c) => c - 1), 1000);
-        }
-
-        if (countdown === 0 && showPopup) {
-            setExamSubmitted(true);
-            setShowPopup(false);
-        }
-
-        return () => clearInterval(interval);
-    }, [showPopup, countdown]);
-
-    // PROCEED BUTTON → RE-ENTER FULLSCREEN
-    const handleOk = () => {
-        enterFullscreen();
-        setShowPopup(false);
-        setShowTopMessage(false);
+  // BLUR + FULLSCREEN EXIT DETECT
+  useEffect(() => {
+    const handleBlur = () => {
+      if (!showPopup) {
+        console.log(showPopup);
+        setShowTopMessage(true);
+        setShowPopup(true);
         setCountdown(30);
-    };
-    const handleCancel = () => {
-        if (document.fullscreenElement) exitFullscreen();  // only exit if fullscreen
-        setExamSubmitted(true);
-        setShowPopup(false);
-        setShowTopMessage(false);
+      }
     };
 
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && !showPopup) {
+        setShowTopMessage(true);
+        setShowPopup(true);
+        setCountdown(30);
+      }
+    };
 
-    const calculateScore = () => {
+    window.addEventListener('blur', handleBlur);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+  // COUNTDOWN LOGIC
+  useEffect(() => {
+    let interval;
+
+    if (showPopup && countdown > 0) {
+      interval = setInterval(() => setCountdown((c) => c - 1), 1000);
+    }
+
+    if (countdown === 0 && showPopup) {
+      setExamSubmitted(true);
+      setShowPopup(false);
+    }
+
+    return () => clearInterval(interval);
+  }, [showPopup, countdown]);
+
+  // PROCEED BUTTON → RE-ENTER FULLSCREEN
+  const handleOk = () => {
+    enterFullscreen();
+    setShowPopup(false);
+    setShowTopMessage(false);
+    setCountdown(30);
+  };
+  const handleCancel = () => {
+    if (document.fullscreenElement) exitFullscreen(); // only exit if fullscreen
+    setExamSubmitted(true);
+    setShowPopup(false);
+    setShowTopMessage(false);
+  };
+
+  const calculateScore = () => {
     let correct = 0;
     questions.forEach((question) => {
       if (question.type === 'multiple-choice') {
@@ -352,6 +350,13 @@ export default function Exam() {
       setSubmitError(null);
 
       const score = calculateScore();
+
+      console.log('=== FRONTEND SUBMISSION DEBUG ===');
+      console.log('Exam ID:', examId);
+      console.log('Student ID:', studentId);
+      console.log('Answers being sent:', JSON.stringify(answers, null, 2));
+      console.log('Score:', score);
+      console.log('Started At:', examStartTime);
 
       const baseUrl =
         import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
@@ -864,497 +869,502 @@ export default function Exam() {
   const currentQ = questions[currentQuestion];
 
   return (
-      <div style={styles.page}>
-          {/* TOP WARNING DROPDOWN */}
-          {showTopMessage && !examSubmitted && (
-              <div style={{ ...styles.topWarning, ...styles.slideDown }}>
-                  ⚠️ You exited fullscreen or switched the tab!
-              </div>
-          )}
+    <div style={styles.page}>
+      {/* TOP WARNING DROPDOWN */}
+      {showTopMessage && !examSubmitted && (
+        <div style={{ ...styles.topWarning, ...styles.slideDown }}>
+          ⚠️ You exited fullscreen or switched the tab!
+        </div>
+      )}
 
-          {/* POPUP */}
-          {showPopup && !examSubmitted && (
-              <div style={styles.overlay}>
-                  <div style={styles.popup}>
-                      <div style={styles.iconCircle}>⚠️</div>
-                      <h2 style={styles.title}>WARNING!</h2>
-                      <p style={styles.text}>
-                          You must stay in fullscreen mode. Return within {countdown} seconds or the exam will auto-submit.
-                      </p>
-
-                      <div style={styles.buttonRow}>
-                          <button style={styles.cancelBtn} onClick={handleCancel}>CANCEL</button>
-                          <button style={styles.proceedBtn} onClick={handleOk}>PROCEED</button>
-                      </div>
-
-                      <div style={styles.bottomStripe}></div>
-                  </div>
-              </div>
-          )}
-
-          {/* AUTO SUBMIT */}
-          {examSubmitted && (
-              <div style={styles.autoSubmit}>Exam Auto-Submitted ❗</div>
-          )}
-
-          <div
-      className='container'
-      style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Time Warning Banner */}
-        {showTimeWarning && (
-          <div
-            style={{
-              position: 'fixed',
-              top: '20px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 1000,
-              background: timeLeft <= 60 ? '#dc2626' : '#f59e0b',
-              color: 'white',
-              padding: '1rem 2rem',
-              borderRadius: '0.5rem',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              animation: 'pulse 1s ease-in-out infinite',
-            }}>
-            {warningMessage}
-          </div>
-        )}
-
-        {/* Exam Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '2rem',
-            padding: '1rem',
-            background: 'white',
-            borderRadius: '0.75rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          }}>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontSize: '1.5rem',
-                color: '#374151',
-              }}>
-              {examData.title}
-            </h1>
-            <p
-              style={{
-                margin: '0.25rem 0 0 0',
-                color: '#6b7280',
-                fontSize: '0.875rem',
-              }}>
-              Question {currentQuestion + 1} of {questions.length}
+      {/* POPUP */}
+      {showPopup && !examSubmitted && (
+        <div style={styles.overlay}>
+          <div style={styles.popup}>
+            <div style={styles.iconCircle}>⚠️</div>
+            <h2 style={styles.title}>WARNING!</h2>
+            <p style={styles.text}>
+              You must stay in fullscreen mode. Return within {countdown}{' '}
+              seconds or the exam will auto-submit.
             </p>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div
-              style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: timeLeft < 600 ? '#ef4444' : '#374151',
-                marginBottom: '0.25rem',
-              }}>
-              {formatTime(timeLeft)}
+
+            <div style={styles.buttonRow}>
+              <button style={styles.cancelBtn} onClick={handleCancel}>
+                CANCEL
+              </button>
+              <button style={styles.proceedBtn} onClick={handleOk}>
+                PROCEED
+              </button>
             </div>
-            <div
-              style={{
-                fontSize: '0.75rem',
-                color: '#6b7280',
-              }}>
-              Time Remaining
-            </div>
+
+            <div style={styles.bottomStripe}></div>
           </div>
         </div>
+      )}
 
-        {submitError && (
+      {/* AUTO SUBMIT */}
+      {examSubmitted && (
+        <div style={styles.autoSubmit}>Exam Auto-Submitted ❗</div>
+      )}
+
+      <div
+        className='container'
+        style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Time Warning Banner */}
+          {showTimeWarning && (
+            <div
+              style={{
+                position: 'fixed',
+                top: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 1000,
+                background: timeLeft <= 60 ? '#dc2626' : '#f59e0b',
+                color: 'white',
+                padding: '1rem 2rem',
+                borderRadius: '0.5rem',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                animation: 'pulse 1s ease-in-out infinite',
+              }}>
+              {warningMessage}
+            </div>
+          )}
+
+          {/* Exam Header */}
           <div
             style={{
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem',
+              padding: '1rem',
+              background: 'white',
               borderRadius: '0.75rem',
-              padding: '0.75rem 1rem',
-              marginBottom: '1rem',
-              color: '#b91c1c',
-              fontSize: '0.875rem',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
             }}>
-            {submitError}
+            <div>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: '1.5rem',
+                  color: '#374151',
+                }}>
+                {examData.title}
+              </h1>
+              <p
+                style={{
+                  margin: '0.25rem 0 0 0',
+                  color: '#6b7280',
+                  fontSize: '0.875rem',
+                }}>
+                Question {currentQuestion + 1} of {questions.length}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div
+                style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: timeLeft < 600 ? '#ef4444' : '#374151',
+                  marginBottom: '0.25rem',
+                }}>
+                {formatTime(timeLeft)}
+              </div>
+              <div
+                style={{
+                  fontSize: '0.75rem',
+                  color: '#6b7280',
+                }}>
+                Time Remaining
+              </div>
+            </div>
           </div>
-        )}
 
-        <div
-          className='services-grid'
-          style={{ gridTemplateColumns: '3fr 1fr' }}>
-          {/* Question Area */}
-          <div className='service-card' style={{ height: 'fit-content' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
+          {submitError && (
+            <div
+              style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '0.75rem',
+                padding: '0.75rem 1rem',
+                marginBottom: '1rem',
+                color: '#b91c1c',
+                fontSize: '0.875rem',
+              }}>
+              {submitError}
+            </div>
+          )}
+
+          <div
+            className='services-grid'
+            style={{ gridTemplateColumns: '3fr 1fr' }}>
+            {/* Question Area */}
+            <div className='service-card' style={{ height: 'fit-content' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div
+                  style={{
+                    fontSize: '0.875rem',
+                    color: '#6b7280',
+                    marginBottom: '0.5rem',
+                  }}>
+                  Question {currentQuestion + 1} of {questions.length}
+                </div>
+                <h2
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    lineHeight: '1.6',
+                    marginBottom: '1.5rem',
+                  }}>
+                  {currentQ.question}
+                </h2>
+              </div>
+
+              {/* Answer Options */}
+              {currentQ.type === 'multiple-choice' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem',
+                  }}>
+                  {currentQ.options.map((option, index) => (
+                    <label
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        padding: '1rem',
+                        border:
+                          answers[currentQ.id] === index
+                            ? '2px solid #3b82f6'
+                            : '2px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        cursor: 'pointer',
+                        background:
+                          answers[currentQ.id] === index ? '#f0f9ff' : 'white',
+                        transition: 'all 0.2s ease',
+                      }}>
+                      <input
+                        type='radio'
+                        name={`question-${currentQ.id}`}
+                        value={index}
+                        checked={answers[currentQ.id] === index}
+                        onChange={() => handleAnswerChange(currentQ.id, index)}
+                      />
+                      <span style={{ flex: 1 }}>{option}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {(currentQ.type === 'text' || currentQ.type === 'code') && (
+                <textarea
+                  value={answers[currentQ.id] || ''}
+                  onChange={(e) =>
+                    handleAnswerChange(currentQ.id, e.target.value)
+                  }
+                  rows={currentQ.type === 'code' ? 8 : 4}
+                  className='form-input'
+                  placeholder={
+                    currentQ.type === 'code'
+                      ? 'Write your code here...'
+                      : 'Write your answer here...'
+                  }
+                  style={{
+                    fontFamily:
+                      currentQ.type === 'code' ? 'monospace' : 'inherit',
+                    fontSize: currentQ.type === 'code' ? '0.875rem' : '1rem',
+                  }}
+                />
+              )}
+
+              {/* Navigation Buttons */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: '2rem',
+                  paddingTop: '1.5rem',
+                  borderTop: '1px solid #e5e7eb',
+                }}>
+                <button
+                  onClick={() =>
+                    setCurrentQuestion(Math.max(0, currentQuestion - 1))
+                  }
+                  disabled={currentQuestion === 0}
+                  className='btn-secondary'
+                  style={{
+                    opacity: currentQuestion === 0 ? 0.5 : 1,
+                    cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+                  }}>
+                  Previous
+                </button>
+
+                {currentQuestion === questions.length - 1 ? (
+                  <button
+                    onClick={() => setShowConfirmSubmit(true)}
+                    className='btn-primary'
+                    style={{
+                      background: '#22c55e',
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : 'Submit Exam'}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() =>
+                      setCurrentQuestion(
+                        Math.min(questions.length - 1, currentQuestion + 1)
+                      )
+                    }
+                    className='btn-primary'>
+                    Next
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Question Navigation */}
+            <div className='service-card' style={{ height: 'fit-content' }}>
+              <h3 className='service-title'>Question Navigation</h3>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(5, 1fr)',
+                  gap: '0.5rem',
+                  marginBottom: '1.5rem',
+                }}>
+                {questions.map((q, index) => (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentQuestion(index)}
+                    style={{
+                      width: '2.5rem',
+                      height: '2.5rem',
+                      borderRadius: '0.375rem',
+                      border: '2px solid',
+                      borderColor:
+                        currentQuestion === index
+                          ? '#3b82f6'
+                          : answers[q.id] !== undefined
+                          ? '#22c55e'
+                          : '#e5e7eb',
+                      background:
+                        currentQuestion === index
+                          ? '#3b82f6'
+                          : answers[q.id] !== undefined
+                          ? '#22c55e'
+                          : 'white',
+                      color:
+                        currentQuestion === index || answers[q.id] !== undefined
+                          ? 'white'
+                          : '#6b7280',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}>
+                    {index + 1}
+                  </button>
+                ))}
+              </div>
+
               <div
                 style={{
                   fontSize: '0.875rem',
                   color: '#6b7280',
-                  marginBottom: '0.5rem',
-                }}>
-                Question {currentQuestion + 1} of {questions.length}
-              </div>
-              <h2
-                style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#374151',
                   lineHeight: '1.6',
-                  marginBottom: '1.5rem',
                 }}>
-                {currentQ.question}
-              </h2>
-            </div>
-
-            {/* Answer Options */}
-            {currentQ.type === 'multiple-choice' && (
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.75rem',
-                }}>
-                {currentQ.options.map((option, index) => (
-                  <label
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '1rem',
-                      border:
-                        answers[currentQ.id] === index
-                          ? '2px solid #3b82f6'
-                          : '2px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      cursor: 'pointer',
-                      background:
-                        answers[currentQ.id] === index ? '#f0f9ff' : 'white',
-                      transition: 'all 0.2s ease',
-                    }}>
-                    <input
-                      type='radio'
-                      name={`question-${currentQ.id}`}
-                      value={index}
-                      checked={answers[currentQ.id] === index}
-                      onChange={() => handleAnswerChange(currentQ.id, index)}
-                    />
-                    <span style={{ flex: 1 }}>{option}</span>
-                  </label>
-                ))}
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <span style={{ color: '#22c55e' }}>●</span> Answered (
+                  {getAnsweredCount()})
+                </div>
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <span style={{ color: '#6b7280' }}>●</span> Not Answered (
+                  {questions.length - getAnsweredCount()})
+                </div>
+                <div>
+                  <span style={{ color: '#3b82f6' }}>●</span> Current Question
+                </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {(currentQ.type === 'text' || currentQ.type === 'code') && (
-              <textarea
-                value={answers[currentQ.id] || ''}
-                onChange={(e) =>
-                  handleAnswerChange(currentQ.id, e.target.value)
-                }
-                rows={currentQ.type === 'code' ? 8 : 4}
-                className='form-input'
-                placeholder={
-                  currentQ.type === 'code'
-                    ? 'Write your code here...'
-                    : 'Write your answer here...'
-                }
-                style={{
-                  fontFamily:
-                    currentQ.type === 'code' ? 'monospace' : 'inherit',
-                  fontSize: currentQ.type === 'code' ? '0.875rem' : '1rem',
-                }}
-              />
-            )}
-
-            {/* Navigation Buttons */}
+          {/* Submit Confirmation Modal */}
+          {showConfirmSubmit && (
             <div
               style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0, 0, 0, 0.5)',
                 display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: '2rem',
-                paddingTop: '1.5rem',
-                borderTop: '1px solid #e5e7eb',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
               }}>
-              <button
-                onClick={() =>
-                  setCurrentQuestion(Math.max(0, currentQuestion - 1))
-                }
-                disabled={currentQuestion === 0}
-                className='btn-secondary'
-                style={{
-                  opacity: currentQuestion === 0 ? 0.5 : 1,
-                  cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
-                }}>
-                Previous
-              </button>
-
-              {currentQuestion === questions.length - 1 ? (
-                <button
-                  onClick={() => setShowConfirmSubmit(true)}
-                  className='btn-primary'
-                  style={{
-                    background: '#22c55e',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  }}
-                  disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Submit Exam'}
-                </button>
-              ) : (
-                <button
-                  onClick={() =>
-                    setCurrentQuestion(
-                      Math.min(questions.length - 1, currentQuestion + 1)
-                    )
-                  }
-                  className='btn-primary'>
-                  Next
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Question Navigation */}
-          <div className='service-card' style={{ height: 'fit-content' }}>
-            <h3 className='service-title'>Question Navigation</h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(5, 1fr)',
-                gap: '0.5rem',
-                marginBottom: '1.5rem',
-              }}>
-              {questions.map((q, index) => (
-                <button
-                  key={q.id}
-                  onClick={() => setCurrentQuestion(index)}
-                  style={{
-                    width: '2.5rem',
-                    height: '2.5rem',
-                    borderRadius: '0.375rem',
-                    border: '2px solid',
-                    borderColor:
-                      currentQuestion === index
-                        ? '#3b82f6'
-                        : answers[q.id] !== undefined
-                        ? '#22c55e'
-                        : '#e5e7eb',
-                    background:
-                      currentQuestion === index
-                        ? '#3b82f6'
-                        : answers[q.id] !== undefined
-                        ? '#22c55e'
-                        : 'white',
-                    color:
-                      currentQuestion === index || answers[q.id] !== undefined
-                        ? 'white'
-                        : '#6b7280',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}>
-                  {index + 1}
-                </button>
-              ))}
-            </div>
-
-            <div
-              style={{
-                fontSize: '0.875rem',
-                color: '#6b7280',
-                lineHeight: '1.6',
-              }}>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <span style={{ color: '#22c55e' }}>●</span> Answered (
-                {getAnsweredCount()})
-              </div>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <span style={{ color: '#6b7280' }}>●</span> Not Answered (
-                {questions.length - getAnsweredCount()})
-              </div>
-              <div>
-                <span style={{ color: '#3b82f6' }}>●</span> Current Question
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Confirmation Modal */}
-        {showConfirmSubmit && (
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-            }}>
-            <div
-              className='service-card'
-              style={{ maxWidth: '500px', margin: '1rem' }}>
-              <h3 style={{ color: '#374151', marginBottom: '1rem' }}>
-                Submit Exam?
-              </h3>
-              <p
-                style={{
-                  color: '#6b7280',
-                  marginBottom: '1.5rem',
-                }}>
-                Are you sure you want to submit your exam? You have answered{' '}
-                {getAnsweredCount()} out of {questions.length} questions. You
-                cannot change your answers after submission.
-              </p>
               <div
-                style={{
-                  display: 'flex',
-                  gap: '1rem',
-                  justifyContent: 'flex-end',
-                }}>
-                <button
-                  onClick={() => setShowConfirmSubmit(false)}
-                  className='btn-secondary'>
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmitExam}
-                  className='btn-primary'
+                className='service-card'
+                style={{ maxWidth: '500px', margin: '1rem' }}>
+                <h3 style={{ color: '#374151', marginBottom: '1rem' }}>
+                  Submit Exam?
+                </h3>
+                <p
                   style={{
-                    background: '#22c55e',
-                    opacity: isSubmitting ? 0.7 : 1,
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  }}
-                  disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting...' : 'Yes, Submit Exam'}
-                </button>
+                    color: '#6b7280',
+                    marginBottom: '1.5rem',
+                  }}>
+                  Are you sure you want to submit your exam? You have answered{' '}
+                  {getAnsweredCount()} out of {questions.length} questions. You
+                  cannot change your answers after submission.
+                </p>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '1rem',
+                    justifyContent: 'flex-end',
+                  }}>
+                  <button
+                    onClick={() => setShowConfirmSubmit(false)}
+                    className='btn-secondary'>
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSubmitExam}
+                    className='btn-primary'
+                    style={{
+                      background: '#22c55e',
+                      opacity: isSubmitting ? 0.7 : 1,
+                      cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                    }}
+                    disabled={isSubmitting}>
+                    {isSubmitting ? 'Submitting...' : 'Yes, Submit Exam'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
-  </div>
-      );
+  );
 }
-              /* ------------------ Warning CSS ------------------ */
-              const styles = {
-              page: {
-              width: "100%",
-              height: "100vh",
-              background: "#e8ffe8",
-              position: "relative",
-              fontFamily: "Arial",
-          },
-              topWarning: {
-              width: "100%",
-              background: "#ff4d4d",
-              padding: "12px",
-              textAlign: "center",
-              color: "white",
-              fontWeight: "bold",
-              position: "fixed",
-              top: 0,
-              left: 0,
-              zIndex: 50,
-          },
-              slideDown: {
-              animation: "slideDown 0.4s ease forwards",
-          },
-              overlay: {
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.5)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 100,
-          },
-              popup: {
-              width: "350px",
-              background: "white",
-              borderRadius: "10px",
-              padding: "20px",
-              textAlign: "center",
-          },
-              iconCircle: {
-              width: "70px",
-              height: "70px",
-              borderRadius: "50%",
-              background: "#ff7043",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              color: "white",
-              fontSize: "32px",
-              margin: "10px auto",
-          },
-                  title: { fontSize: "22px", fontWeight: "bold" },
-                  text: { fontSize: "14px", color: "#555", margin: "10px 0 20px" },
-                  buttonRow: { display: "flex", gap: "10px" },
-                  cancelBtn: {
-                      width: "50%",
-                      padding: "10px",
-                      border: "1px solid black",
-                      background: "black",
-                      color: "white",     // FIX
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                  },
+/* ------------------ Warning CSS ------------------ */
+const styles = {
+  page: {
+    width: '100%',
+    height: '100vh',
+    background: '#e8ffe8',
+    position: 'relative',
+    fontFamily: 'Arial',
+  },
+  topWarning: {
+    width: '100%',
+    background: '#ff4d4d',
+    padding: '12px',
+    textAlign: 'center',
+    color: 'white',
+    fontWeight: 'bold',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    zIndex: 50,
+  },
+  slideDown: {
+    animation: 'slideDown 0.4s ease forwards',
+  },
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  popup: {
+    width: '350px',
+    background: 'white',
+    borderRadius: '10px',
+    padding: '20px',
+    textAlign: 'center',
+  },
+  iconCircle: {
+    width: '70px',
+    height: '70px',
+    borderRadius: '50%',
+    background: '#ff7043',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: 'white',
+    fontSize: '32px',
+    margin: '10px auto',
+  },
+  title: { fontSize: '22px', fontWeight: 'bold' },
+  text: { fontSize: '14px', color: '#555', margin: '10px 0 20px' },
+  buttonRow: { display: 'flex', gap: '10px' },
+  cancelBtn: {
+    width: '50%',
+    padding: '10px',
+    border: '1px solid black',
+    background: 'black',
+    color: 'white', // FIX
+    borderRadius: '6px',
+    cursor: 'pointer',
+  },
 
-                  proceedBtn: {
-              width: "50%",
-              padding: "10px",
-              background: "#ff5722",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer",
-          },
-              bottomStripe: {
-              width: "100%",
-              height: "12px",
-              marginTop: "15px",
-              background: "repeating-linear-gradient(45deg, #ff5722, #ff5722 10px, white 10px, white 20px)",
-              borderRadius: "0 0 10px 10px",
-          },
-              autoSubmit: {
-              position: "fixed",
-              inset: 0,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              color: "white",
-              background: "rgba(0,0,0,0.7)",
-              fontSize: "28px",
-              zIndex: 200,
-          },
-              content: { textAlign: "center", marginTop: "100px" },
-              startBtn: {
-              padding: "12px 25px",
-              background: "green",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontSize: "18px",
-          },
-          };
+  proceedBtn: {
+    width: '50%',
+    padding: '10px',
+    background: '#ff5722',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+  },
+  bottomStripe: {
+    width: '100%',
+    height: '12px',
+    marginTop: '15px',
+    background:
+      'repeating-linear-gradient(45deg, #ff5722, #ff5722 10px, white 10px, white 20px)',
+    borderRadius: '0 0 10px 10px',
+  },
+  autoSubmit: {
+    position: 'fixed',
+    inset: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: 'white',
+    background: 'rgba(0,0,0,0.7)',
+    fontSize: '28px',
+    zIndex: 200,
+  },
+  content: { textAlign: 'center', marginTop: '100px' },
+  startBtn: {
+    padding: '12px 25px',
+    background: 'green',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '18px',
+  },
+};
 
-              /* Inject KEYFRAME animation */
-              const style = document.createElement("style");
-              style.innerHTML = `@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }`;
-              document.head.appendChild(style);
-
+/* Inject KEYFRAME animation */
+const style = document.createElement('style');
+style.innerHTML = `@keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }`;
+document.head.appendChild(style);

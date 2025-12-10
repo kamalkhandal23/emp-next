@@ -3,19 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { apiClient } from "../../utils/api";
 
 export default function App() {
-    const [upcomingClass, setUpcomingClass] = useState(null);
+    const [classLinks, setClassLinks] = useState([]);
     const { idU } = useParams();
     const navigate = useNavigate();
 
-    const demo = {
-        id: "652f1c2d5e3a4b1f9a8d2c3b",
-        title: "Advanced DSA",
-        time: "Today 7:00 PM",
-        link: "https://www.youtube.com/watch?v=xwI5OBEnsZU",
-    };
-
     useEffect(() => {
-        const fetchLectures = async () => {
+        const fetchCourse = async () => {
             try {
                 const raw = localStorage.getItem("studentInfo");
                 let studentInfo = null;
@@ -32,39 +25,59 @@ export default function App() {
                     return;
                 }
 
-                const studentId = studentInfo?.student_id ?? studentInfo?.id;
                 const courseId = studentInfo?.course?._id;
 
-                if (!studentId || !courseId) {
-                    console.log("Invalid student or course data");
-                    setUpcomingClass(null);
+                if (!courseId) {
+                    console.log("Invalid course data");
+                    setClassLinks([]);
                     return;
                 }
 
-                const data = await apiClient.getNextGenClass(
-                    studentId,
-                    courseId,
-                    token
-                );
+                const response = await apiClient.getCourseById(courseId);
 
-                // Assuming backend returns next lecture →
-                if (data?.upcomingLecture) {
-                    setUpcomingClass(data.upcomingLecture);
+                if (response?.data?.course?.classLinks) {
+                    // Process and sort all class links based on current date/time
+                    const now = new Date();
+                    const processedLinks = response.data.course.classLinks
+                        .map(link => {
+                            // Parse date and time
+                            const [day, month, year] = link.date.split('/').map(Number);
+                            const [hours, minutes] = link.time.split(':').map(Number);
+
+                            // Handle 2-digit or 4-digit year
+                            const fullYear = year < 100 ? (year < 50 ? 2000 + year : 1900 + year) : year;
+                            const classDateTime = new Date(fullYear, month - 1, day, hours, minutes);
+
+                            const isPast = classDateTime < new Date(now.getTime() - 2 * 60 * 60 * 1000); // Past classes (more than 2 hours ago)
+                            const isActive = classDateTime <= now && !isPast; // Active classes (started and within 2 hours)
+                            const isUpcoming = classDateTime > now; // Upcoming classes (in the future)
+
+                            return {
+                                ...link,
+                                classDateTime,
+                                isPast,
+                                isUpcoming,
+                                isActive
+                            };
+                        })
+                        .sort((a, b) => a.classDateTime - b.classDateTime); // Sort by date/time
+
+                    setClassLinks(processedLinks);
                 } else {
-                    setUpcomingClass(null);
+                    setClassLinks([]);
                 }
 
-                console.log("Fetched Lectures:", data);
+                console.log("Fetched Course:", response);
             } catch (err) {
-                console.error("Error fetching lectures:", err);
-                setUpcomingClass(demo); // Fallback demo
+                console.error("Error fetching course:", err);
+                setClassLinks([]);
             }
         };
 
-        fetchLectures();
+        fetchCourse();
     }, [idU, navigate]);
 
-    const updateActivity = async (lectureTitle) => {
+    const updateActivity = async (classLink) => {
         try {
             const raw = localStorage.getItem("studentInfo");
             let studentInfo = null;
@@ -93,9 +106,9 @@ export default function App() {
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
-                        lectureId: upcomingClass?.id,
+                        lectureId: classLink?._id,
                         activityType: "Joined Lecture",
-                        description: `Joined lecture: ${lectureTitle}`,
+                        description: `Joined lecture: ${classLink.title}`,
                     }),
                 }
             );
@@ -132,11 +145,11 @@ export default function App() {
                     transform: "translateX(-50%)",
                 }}
             >
-                📚 Class Lecture
+                📚 Class Links
             </h1>
 
-            {/* No upcoming class */}
-            {!upcomingClass && (
+            {/* No class links */}
+            {classLinks.length === 0 && (
                 <div
                     style={{
                         display: "flex",
@@ -165,83 +178,126 @@ export default function App() {
                             color: "#0f172a",
                         }}
                     >
-                        No Class Scheduled Today
+                        No Class Links Available
                     </h2>
                     <p style={{ color: "#475569", fontSize: "17px" }}>
-                        Your next lecture will appear here once scheduled.
+                        Class links will appear here once scheduled.
                     </p>
                 </div>
             )}
 
-            {/* Upcoming class */}
-            {upcomingClass && (
+            {/* Class links list */}
+            {classLinks.length > 0 && (
                 <>
-                    <h2
-                        style={{
-                            fontSize: "26px",
-                            marginBottom: "15px",
-                            fontWeight: 600,
-                            color: "#0f172a",
-                        }}
-                    >
-                        Upcoming Lecture
-                    </h2>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                        {classLinks.map((classLink, index) => (
+                            <div
+                                key={classLink._id || index}
+                                style={{
+                                    background:
+                                        "linear-gradient(135deg, #e3f1ff, #f5faff)",
+                                    padding: "35px",
+                                    borderRadius: "18px",
+                                    border: "1px solid #dbeafe",
+                                    boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+                                }}
+                            >
+                                <h3
+                                    style={{
+                                        margin: 0,
+                                        fontSize: "24px",
+                                        fontWeight: 700,
+                                        color: "#0f172a",
+                                    }}
+                                >
+                                    {classLink.title}
+                                </h3>
 
-                    <div
-                        style={{
-                            background:
-                                "linear-gradient(135deg, #e3f1ff, #f5faff)",
-                            padding: "35px",
-                            borderRadius: "18px",
-                            border: "1px solid #dbeafe",
-                            boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
-                        }}
-                    >
-                        <h3
-                            style={{
-                                margin: 0,
-                                fontSize: "24px",
-                                fontWeight: 700,
-                                color: "#0f172a",
-                            }}
-                        >
-                            {upcomingClass.title}
-                        </h3>
+                                <p
+                                    style={{
+                                        margin: "10px 0 15px",
+                                        color: "#475569",
+                                        fontSize: "17px",
+                                    }}
+                                >
+                                    📅 {classLink.date} 🕒 {classLink.time}
+                                    <span
+                                        style={{
+                                            marginLeft: "10px",
+                                            padding: "4px 8px",
+                                            borderRadius: "12px",
+                                            fontSize: "12px",
+                                            fontWeight: "bold",
+                                            backgroundColor: classLink.isActive ? "#10b981" : classLink.isPast ? "#6b7280" : "#f59e0b",
+                                            color: "white",
+                                        }}
+                                    >
+                                        {classLink.isActive ? "LIVE" : classLink.isPast ? "PAST" : "UPCOMING"}
+                                    </span>
+                                </p>
 
-                        <p
-                            style={{
-                                margin: "10px 0 25px",
-                                color: "#475569",
-                                fontSize: "17px",
-                            }}
-                        >
-                            🕒 {upcomingClass.time}
-                        </p>
-
-                        <a
-                            href={upcomingClass.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                padding: "14px 26px",
-                                background: "#2563eb",
-                                color: "white",
-                                borderRadius: "10px",
-                                textDecoration: "none",
-                                fontWeight: 600,
-                                fontSize: "16px",
-                                boxShadow:
-                                    "0 4px 12px rgba(37, 99, 235, 0.4)",
-                                transition: "0.25s",
-                            }}
-                            onClick={async (e) => {
-                                e.preventDefault();
-                                await updateActivity(upcomingClass.title);
-                                window.open(upcomingClass.link, "_blank");
-                            }}
-                        >
-                            🚀 Join Class
-                        </a>
+                                {classLink.isActive ? (
+                                    <a
+                                        href={classLink.videoURL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            padding: "14px 26px",
+                                            background: "#2563eb",
+                                            color: "white",
+                                            borderRadius: "10px",
+                                            textDecoration: "none",
+                                            fontWeight: 600,
+                                            fontSize: "16px",
+                                            boxShadow:
+                                                "0 4px 12px rgba(37, 99, 235, 0.4)",
+                                            transition: "0.25s",
+                                        }}
+                                        onClick={async (e) => {
+                                            e.preventDefault();
+                                            await updateActivity(classLink);
+                                            window.open(classLink.videoURL, "_blank");
+                                        }}
+                                    >
+                                        🚀 Join Class
+                                    </a>
+                                ) : classLink.isPast ? (
+                                    <button
+                                        disabled
+                                        style={{
+                                            padding: "14px 26px",
+                                            background: "#6b7280",
+                                            color: "white",
+                                            borderRadius: "10px",
+                                            border: "none",
+                                            fontWeight: 600,
+                                            fontSize: "16px",
+                                            cursor: "not-allowed",
+                                            opacity: 0.6,
+                                        }}
+                                    >
+                                        📚 Class Ended
+                                    </button>
+                                ) : (
+                                    <button
+                                        disabled
+                                        style={{
+                                            padding: "14px 26px",
+                                            background: "#9ca3af",
+                                            color: "white",
+                                            borderRadius: "10px",
+                                            border: "none",
+                                            fontWeight: 600,
+                                            fontSize: "16px",
+                                            cursor: "not-allowed",
+                                            opacity: 0.6,
+                                        }}
+                                    >
+                                        ⏰ Class Not Started
+                                    </button>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </>
             )}

@@ -5,6 +5,7 @@ import registrationRoutes from './registration.js';
 import loginRoutes from './login.js';
 import profileRoutes from './profile.js';
 import paymentRoutes from './payment.js';
+import resultsRoutes from './results.js';
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use('/', authRoutes); // set-password, validate-token (but NOT login to a
 router.use('/registration', registrationRoutes);
 router.use('/payment', paymentRoutes);
 router.use('/profile', profileRoutes);
+router.use('/results', resultsRoutes);
 
 export default router;

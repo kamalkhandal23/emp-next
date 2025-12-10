@@ -1,8 +1,8 @@
 import NG_Courses from "../../models/education/NG_Courses.js"
 
-export const addLectureToCourse = async (req, res) => {
+export const addClassLinkToCourse = async (req, res) => {
   try {
-    const { courseId, lectures } = req.body;
+    const { courseId, classLinks } = req.body;
 
     if (!courseId) {
       return res.status(400).json({
@@ -11,19 +11,19 @@ export const addLectureToCourse = async (req, res) => {
       });
     }
 
-    if (!Array.isArray(lectures) || lectures.length === 0) {
+    if (!Array.isArray(classLinks) || classLinks.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Lectures must be a non-empty array"
+        message: "Class links must be a non-empty array"
       });
     }
 
-    // Validate lectures before pushing
-    for (const lec of lectures) {
-      if (!lec.title || !lec.description || !lec.videoURL) {
+    // Validate class links before pushing
+    for (const link of classLinks) {
+      if (!link.title || !link.date || !link.time) {
         return res.status(400).json({
           success: false,
-          message: "Each lecture must contain title, description & videoURL"
+          message: "Each class link must contain title, date & time"
         });
       }
     }
@@ -37,25 +37,22 @@ export const addLectureToCourse = async (req, res) => {
       });
     }
 
-    // Add lectures to existing array
-    course.lectures.push(...lectures);
+    // Add class links to existing array
+    course.classLinks.push(...classLinks);
 
     await course.save({ validateModifiedOnly: true });
 
-
     return res.status(200).json({
       success: true,
-      message: "Lectures added successfully",
+      message: "Class links added successfully",
       data: course
     });
 
   } catch (error) {
-    console.log("Error in addLectureToCourse:", error);
+    console.log("Error in addClassLinkToCourse:", error);
     return res.status(500).json({
       success: false,
       message: "Server error"
     });
   }
 };
-
-

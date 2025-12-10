@@ -12,6 +12,22 @@ import apiClient from '../../utils/api';
  * - Approve/Reject calls point to /nextgen/admin/registrations/:id/review
  */
 
+/* ---------------- Helper Functions ---------------- */
+
+const safeRender = (val) => {
+  if (val === null || val === undefined) return 'N/A';
+  if (typeof val === 'object') {
+    // If it's an encrypted object { c, iv, tag }
+    if (val.c && val.iv && val.tag) return '[Encrypted Data]';
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return '[Invalid Object]';
+    }
+  }
+  return String(val);
+};
+
 export default function CourseManagerPortal() {
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -48,6 +64,10 @@ export default function CourseManagerPortal() {
   const [showEditCourse, setShowEditCourse] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showCourseDetails, setShowCourseDetails] = useState(false);
+  const [showRegistrationDetails, setShowRegistrationDetails] = useState(false);
+  const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [showDocumentsModal, setShowDocumentsModal] = useState(false);
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [editCourse, setEditCourse] = useState({
     slug: '',
     title: '',
@@ -377,25 +397,8 @@ export default function CourseManagerPortal() {
   };
 
   const handleViewDetails = (registration) => {
-    const name = registration?.full_name || registration?.fullName || 'Unnamed';
-    const course =
-      registration?.course_id?.title || registration?.course || 'N/A';
-    const phone = registration?.phone || 'N/A';
-    const address = registration?.address || 'N/A';
-    const documents = Array.isArray(registration?.documents)
-      ? registration.documents.join(', ')
-      : 'N/A';
-    const registrationDate = registration?.created_at
-      ? new Date(registration.created_at).toLocaleDateString()
-      : registration?.registrationDate || 'N/A';
-
-    alert(
-      `Registration Details:\n\nName: ${name}\nEmail: ${
-        registration?.email || 'N/A'
-      }\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${
-        registration?.status || 'N/A'
-      }`
-    );
+    setSelectedRegistration(registration);
+    setShowRegistrationDetails(true);
   };
 
   const handleLogout = () => {
@@ -510,6 +513,15 @@ export default function CourseManagerPortal() {
     if (action === 'Manage Lecture') {
       navigate('/portal/coursemanager/managelecture');
     }
+    if (action === 'Add Class Link') {
+      navigate('/portal/coursemanager/addclasslink');
+    }
+    if (action === 'Manage Class Links') {
+      navigate('/portal/coursemanager/manageclasslinks');
+    }
+    if (action === 'Student Attendance') {
+      navigate('/portal/coursemanager/studentattendance');
+    }
   };
 
   const handleDeleteCourse = async (course) => {
@@ -568,20 +580,6 @@ export default function CourseManagerPortal() {
   };
 
   /* ---------------- UI Sections ---------------- */
-
-  const safeRender = (val) => {
-    if (val === null || val === undefined) return 'N/A';
-    if (typeof val === 'object') {
-      // If it's an encrypted object { c, iv, tag }
-      if (val.c && val.iv && val.tag) return '[Encrypted Data]';
-      try {
-        return JSON.stringify(val);
-      } catch {
-        return '[Invalid Object]';
-      }
-    }
-    return String(val);
-  };
 
   return (
     <div className='portal-layout'>
@@ -708,7 +706,7 @@ export default function CourseManagerPortal() {
                 <div
                   className='table-row'
                   style={{
-                    gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
+                    gridTemplateColumns: '2fr 1fr 1fr auto',
                     fontWeight: 600,
                     background: '#f8fafc',
                   }}>
@@ -716,7 +714,7 @@ export default function CourseManagerPortal() {
                   <div>Course</div>
                   <div>Status</div>
                   <div>Join Date</div>
-                  <div>Actions</div>
+                
                 </div>
 
                 {studentRegistrations.map((s, i) => {
@@ -731,7 +729,7 @@ export default function CourseManagerPortal() {
                       <div
                           key={i}
                           className='table-row'
-                          style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
+                          style={{ gridTemplateColumns: '2fr 1fr 1fr auto' }}>
                           <div style={{ fontWeight: 500 }}>{s.full_name}</div>
                           <div>{s.course_id.title}</div>
                           <div>
@@ -743,10 +741,7 @@ export default function CourseManagerPortal() {
                           {/* 3. Use the formatted date here */}
                           <div>{formattedDate}</div> 
                           
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                              <button className='action-button'>Edit</button>
-                              <button className='action-button'>View</button>
-                          </div>
+                          
                       </div>
                   );
               })}
@@ -1264,9 +1259,10 @@ export default function CourseManagerPortal() {
                           {docs.length > 0 && (
                             <button
                               className='action-button'
-                              onClick={() =>
-                                alert(`Documents:\n${docs.join('\n')}`)
-                              }
+                              onClick={() => {
+                                setSelectedDocuments(docs);
+                                setShowDocumentsModal(true);
+                              }}
                               style={{
                                 fontSize: '0.75rem',
                                 padding: '0.25rem 0.5rem',
@@ -1532,6 +1528,7 @@ export default function CourseManagerPortal() {
                       'Add Class Link',
                       'Manage Class Links'
                     ]}
+                    onActionClick={handleActionClick}
                   />
                 </Card>
                 <Card title='Attendances'>
@@ -1539,6 +1536,7 @@ export default function CourseManagerPortal() {
                     actions={[
                       'Student Attendance',
                     ]}
+                    //onActionClick={handleActionClick}
                     onActionClick={(action) => {
                       if (action === 'Student Attendance') {
                         navigate('/portal/coursemanager/attendance');
@@ -1551,7 +1549,48 @@ export default function CourseManagerPortal() {
           )}
         </div>
       </div>
-
+      
+       {/* Registration Details Modal */}
+       {showRegistrationDetails && selectedRegistration && (
+         <Modal
+          title="Student Registration Details"
+           onClose={() => {
+             setShowRegistrationDetails(false);
+             setSelectedRegistration(null);
+           }}>
+           <div style={{ display: "grid", gap: "1rem" }}>
+             <KV label="Full Name" value={selectedRegistration?.full_name || selectedRegistration?.fullName || "N/A"} />
+             <KV label="Email" value={selectedRegistration?.email || "N/A"} />
+             <KV label="Phone" value={selectedRegistration?.phone || "N/A"} />
+             <KV label="Course" value={selectedRegistration?.course_id?.title || selectedRegistration?.course || "N/A"} />
+             <KV label="Address" value={selectedRegistration?.address || "N/A"} />
+             <KV label="Registration Date" value={selectedRegistration?.created_at ? new Date(selectedRegistration.created_at).toLocaleDateString() : selectedRegistration?.registrationDate || "N/A"} />
+             <KV label="Status" value={selectedRegistration?.status || "N/A"} />
+             <KV label="Documents" value={Array.isArray(selectedRegistration?.documents) ? selectedRegistration.documents.join(", ") : "N/A"} />
+             {selectedRegistration?.notes && <KV label="Notes" value={selectedRegistration.notes} />}
+             {selectedRegistration?.rejectionReason && <KV label="Rejection Reason" value={selectedRegistration.rejectionReason} />}    
+             {selectedRegistration?.reviewed_at && <KV label="Reviewed At" value={new Date(selectedRegistration.reviewed_at).toLocaleDateString()} />}
+             {selectedRegistration?.reviewed_by?.full_name && <KV label="Reviewed By" value={selectedRegistration.reviewed_by.full_name} />}
+           </div>
+           <div
+             style={{
+               display: "flex",
+               justifyContent: "flex-end",
+               marginTop: "2rem",
+             }}>
+             <button
+               className="btn-secondary"
+               onClick={() => {
+                 setShowRegistrationDetails(false);
+                 setSelectedRegistration(null);
+               }}>
+               Close
+             </button>
+           </div>
+         </Modal>
+       )}
+     
+ 
       {/* Add Course Modal (logged-in view) */}
       {showAddCourse && (
         <Modal title='Add New Course' onClose={() => setShowAddCourse(false)}>
@@ -1894,6 +1933,52 @@ export default function CourseManagerPortal() {
               onClick={() => {
                 setShowCourseDetails(false);
                 setSelectedCourse(null);
+              }}>
+              Close
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Documents Modal */}
+      {showDocumentsModal && selectedDocuments.length > 0 && (
+        <Modal
+          title="Student Documents"
+          onClose={() => {
+            setShowDocumentsModal(false);
+            setSelectedDocuments([]);
+          }}>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {selectedDocuments.map((doc, index) => (
+              <div key={index} style={{ textAlign: 'center' }}>
+                <h4 style={{ marginBottom: '0.5rem', color: '#374151' }}>
+                  Document {index + 1}
+                </h4>
+                <img
+                  src={doc}
+                  alt={`Document ${index + 1}`}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '400px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginTop: '2rem',
+            }}>
+            <button
+              className="btn-secondary"
+              onClick={() => {
+                setShowDocumentsModal(false);
+                setSelectedDocuments([]);
               }}>
               Close
             </button>

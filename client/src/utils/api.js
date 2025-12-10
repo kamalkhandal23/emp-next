@@ -34,11 +34,22 @@ class ApiClient {
 
     if (this.token) {
       config.headers.Authorization = `Bearer ${this.token}`;
+      console.log(
+        `🔑 Request to ${endpoint} with token:`,
+        this.token.substring(0, 20) + '...'
+      );
+    } else {
+      console.warn(`⚠️ No token found for request to ${endpoint}`);
     }
 
     if (config.body && typeof config.body === 'object') {
       config.body = JSON.stringify(config.body);
     }
+
+    console.log(`📤 Sending request to ${url}`, {
+      headers: config.headers,
+      method: config.method || 'GET',
+    });
 
     try {
       const response = await fetch(url, config);
@@ -102,10 +113,9 @@ class ApiClient {
     return response;
   }
 
-  // async getUserByUsername(username) {
-  //   return this.request(`/users/${username}`);
-  // }
-
+  async getCourseManagerData() {
+   
+  }
   async updatePassword(passwordData) {
     return this.request('/auth/update-password', {
       method: 'PUT',
@@ -457,6 +467,10 @@ async getAssignedCourses(managerId, token) {
     return this.request('/nextgen/courses');
   }
 
+  async getMyCourses() {
+    return this.request('/nextgen/courses/my-courses');
+  }
+
   async createCourse(courseData) {
     return this.request('/nextgen/courses', {
       method: 'POST',
@@ -712,9 +726,8 @@ async getAssignedCourses(managerId, token) {
   }
 
   async getMyNextGenAssignments() {
-  return this.request("GET", "/api/nextgen/assignments/my-assignments");
-}
-
+    return this.request('GET', '/api/nextgen/assignments/my-assignments');
+  }
 
   async getNextGenAssignmentById(id) {
     return this.request(`/nextgen/assignments/id/${id}`);
@@ -825,7 +838,7 @@ async getAssignedCourses(managerId, token) {
       }`
     );
   }
-
+ 
   // NextGen Student Authentication
   async nextGenStudentLogin(credentials) {
     const response = await this.request('/nextgen/student/login', {
@@ -843,6 +856,20 @@ async getAssignedCourses(managerId, token) {
     }
     return response;
   }
+
+  // NextGen Student Results
+  async getStudentResults() {
+    return this.request('/nextgen/student/results');
+  }
+
+  async getExamResultDetail(submissionId) {
+    return this.request(`/nextgen/student/results/exam/${submissionId}`);
+  }
+
+  async getCodingExamResultDetail(examId) {
+    return this.request(`/nextgen/student/results/coding-exam/${examId}`);
+  }
+
   // Inquiry endpoints
   async createInquiry(inquiryData) {
     return this.request('/inquiry', {
@@ -885,6 +912,30 @@ async getAssignedCourses(managerId, token) {
   }
   async getAllNotifications() {
     return this.request('/nextgen/notifications');
+  }
+
+  async getclassLinks(courseId) {
+    return this.request(`/nextgen/classLinks?courseId=${courseId}`);
+  }
+  async addClassLinks(payload) {
+    return this.request('/nextgen/addClassLink/add-class-links', {
+      method: 'POST',
+      body: payload,
+    });
+  }
+  async deleteClassLink(classLinkId) {
+    return this.request(`/nextgen/classLinks/${classLinkId}`, {
+      method: 'DELETE',
+    });
+  }
+  async updateClassLink(classLinkId, classLinkData) {
+    return this.request(`/nextgen/classLinks/${classLinkId}`, {
+      method: 'PUT',
+      body: classLinkData,
+    });
+  }
+  async getCourseById(courseId) {
+    return this.request(`/nextgen/courses/${courseId}`);
   }
 }
 
