@@ -13,11 +13,58 @@ export default function CourseAttendance() {
   const [studentAttendance, setStudentAttendance] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
 
+  // ================================
+  // PDF Download Function
+  // ================================
+  const downloadPDF = async (elementId, fileName) => {
+    try {
+      const element = document.getElementById(elementId);
+      if (!element) return console.error("PDF element not found:", elementId);
+
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).default;
+
+      const canvas = await html2canvas(element, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 10;
+
+      pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        pdf.addPage();
+        position = heightLeft - imgHeight;
+        pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(fileName + ".pdf");
+
+    } catch (error) {
+      console.error("PDF Generation Error:", error);
+    }
+  };
+
+  // ================================
+  // Logout
+  // ================================
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     window.location.href = "/login";
   };
 
+  // ================================
+  // Fetch Data
+  // ================================
   const fetchCourses = async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user")).id;
@@ -68,9 +115,10 @@ export default function CourseAttendance() {
     }
   };
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
+  // ================================
+  // USE EFFECTS
+  // ================================
+  useEffect(() => { fetchCourses(); }, []);
 
   useEffect(() => {
     if (viewType === "student") fetchByStudent();
@@ -83,7 +131,7 @@ export default function CourseAttendance() {
 
   return (
     <div className="portal-layout">
-      {/* ===== HEADER BAR ===== */}
+      {/* HEADER BAR */}
       <header className="portal-header">
         <div className="container header-inner">
           <div className="brand">
@@ -99,7 +147,7 @@ export default function CourseAttendance() {
         </div>
       </header>
 
-      {/* ===== MAIN ATTENDANCE VIEW ===== */}
+      {/* MAIN SECTION */}
       <main className="attendance-container">
         <div className="container">
           <div className="page-header">
@@ -118,13 +166,14 @@ export default function CourseAttendance() {
                 ))}
               </select>
 
-              <div className="selector-row" role="tablist" aria-label="View selector">
+              <div className="selector-row">
                 <button
                   className={`selector-btn ${viewType === "student" ? "active" : ""}`}
                   onClick={() => setViewType("student")}
                 >
                   By Students
                 </button>
+
                 <button
                   className={`selector-btn ${viewType === "date" ? "active" : ""}`}
                   onClick={() => setViewType("date")}
@@ -144,9 +193,11 @@ export default function CourseAttendance() {
             </div>
           </div>
 
-          {/* STUDENT TABLE VIEW */}
+          {/* ======================================
+              STUDENT LIST VIEW
+          ====================================== */}
           {viewType === "student" && !selectedStudent && (
-            <section className="table-section">
+            <section id="studentTableSection" className="table-section">
               <h3 className="section-title">Students Attendance Overview</h3>
 
               <div className="table-wrapper">
@@ -166,6 +217,7 @@ export default function CourseAttendance() {
                         <td colSpan={4} className="empty-row">No students found</td>
                       </tr>
                     )}
+
                     {students.map((stu) => (
                       <tr key={stu.studentId}>
                         <td>{stu.studentName}</td>
@@ -184,12 +236,26 @@ export default function CourseAttendance() {
                   </tbody>
                 </table>
               </div>
+
+              {/* PDF BUTTON */}
+              <button
+                className="view-btn"
+                style={{ marginTop: 10 }}
+                onClick={() =>
+                  downloadPDF("studentTableSection", "All_Students_Attendance")
+                }
+              >
+                Download PDF
+              </button>
             </section>
           )}
 
-          {/* STUDENT DETAILS */}
+          {/* ======================================
+              STUDENT DETAILS VIEW
+          ====================================== */}
           {selectedStudent && (
-            <section className="details-section">
+            <section id="studentDetailsSection" className="details-section">
+
               <div className="details-header">
                 <h3 className="section-title">Attendance Details</h3>
                 <button className="back-btn" onClick={() => setSelectedStudent(null)}>Back</button>
@@ -204,12 +270,14 @@ export default function CourseAttendance() {
                       <th>Status</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {studentAttendance.length === 0 && (
                       <tr>
                         <td colSpan={3} className="empty-row">No attendance records</td>
                       </tr>
                     )}
+
                     {studentAttendance.map((att, idx) => (
                       <tr key={idx}>
                         <td>{att.date ? new Date(att.date).toLocaleDateString() : "-"}</td>
@@ -222,12 +290,25 @@ export default function CourseAttendance() {
                   </tbody>
                 </table>
               </div>
+
+              {/* PDF BUTTON */}
+              <button
+                className="view-btn"
+                style={{ marginTop: 10 }}
+                onClick={() =>
+                  downloadPDF("studentDetailsSection", `Attendance_${selectedStudent}`)
+                }
+              >
+                Download Student PDF
+              </button>
             </section>
           )}
 
-          {/* DATE-WISE VIEW */}
+          {/* ======================================
+              DATE-WISE VIEW
+          ====================================== */}
           {viewType === "date" && (
-            <section className="table-section">
+            <section id="dateWiseSection" className="table-section">
               <h3 className="section-title">Attendance for {selectedDate}</h3>
 
               <div className="table-wrapper">
@@ -266,11 +347,23 @@ export default function CourseAttendance() {
                   </tbody>
                 </table>
               </div>
+
+              {/* PDF BUTTON */}
+              <button
+                className="view-btn"
+                style={{ marginTop: 10 }}
+                onClick={() =>
+                  downloadPDF("dateWiseSection", `Attendance_${selectedDate}`)
+                }
+              >
+                Download Datewise PDF
+              </button>
             </section>
           )}
         </div>
       </main>
 
+      {/* ==== STYLES remain unchanged ==== */}
       <style>{`
         :root{
           --max-width: 1100px;
@@ -313,13 +406,6 @@ export default function CourseAttendance() {
         .back-btn { padding:6px 12px; border-radius:6px; border:1px solid #8aacdfff; background: #8aacdfff; cursor:pointer; font-weight:500; }
         .present { color: #16a34a; font-weight:700; }
         .absent { color: #dc2626; font-weight:700; }
-        @media (max-width: 720px) {
-          .page-header { flex-direction: column; align-items:flex-start; gap:10px; }
-          .controls { width:100%; display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
-          .selector-row { width:100%; }
-          .selector-btn { width:100%; text-align:center; }
-          .date-input { width:100%; }
-        }
       `}</style>
     </div>
   );
