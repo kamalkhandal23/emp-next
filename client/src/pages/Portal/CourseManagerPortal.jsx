@@ -33,11 +33,21 @@ export default function CourseManagerPortal() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('🚀 CourseManagerPortal component mounted');
     const authToken = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
+    console.log(
+      '🔐 Auth check - Token exists:',
+      !!authToken,
+      'Role:',
+      userRole
+    );
 
     if (!authToken || !userRole) {
+      console.warn('⚠️ No auth token or role - redirecting to login');
       navigate('/login', { replace: true });
+    } else {
+      console.log('✅ Auth verified - staying on CourseManagerPortal');
     }
   }, []);
 
@@ -232,6 +242,7 @@ export default function CourseManagerPortal() {
   );
 
   useEffect(() => {
+    console.log('📞 Calling fetchRegistrations and fetchCourses');
     fetchRegistrations();
     fetchCourses();
   }, []);
@@ -245,16 +256,24 @@ export default function CourseManagerPortal() {
   // Fetch registrations from API
   const fetchRegistrations = async (status = 'all') => {
     try {
+      console.log('🔍 Fetching registrations with status:', status);
       const response = await apiClient.getRegistrations(status);
-      console.log('Fetched registrations:', response);
+      console.log('📥 Registrations response:', response);
+
       if (response.success && response.data) {
-        // console.log("registration",response.data.registrations)
+        console.log('✅ Registrations data:', response.data);
+        console.log(
+          '📊 Number of registrations:',
+          response.data.registrations?.length || 0
+        );
+        console.log('📄 Pagination:', response.data.pagination);
         setStudentRegistrations(response.data.registrations || []);
       } else {
+        console.warn('⚠️ No success or data in response');
         setStudentRegistrations([]);
       }
     } catch (error) {
-      console.error('Error fetching registrations:', error);
+      console.error('❌ Error fetching registrations:', error);
       setStudentRegistrations([]);
     }
   };
