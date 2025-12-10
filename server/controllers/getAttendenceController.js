@@ -1,35 +1,87 @@
 import studentAttendanceSchema from "../models/nextgen/education/NGStudentAttendence.js";
 import NG_Approved_Students from "../models/nextgen/core/NG_ApprovedStudents.js";
+import Course from "../models/nextgen/education/Course.js";
+import User from "../models/core/User.js"
+import { response } from "express";
+
 
 /**
- * Get attendance for a specific student in a course
+ * Helper: Get class name from course.classLinks
+ */
+const getClassName = (course) => {
+    if (!course?.classLinks || course.classLinks.length === 0) {
+        return "Introduction";
+    }
+    return course.classLinks[0]?.title || "Introduction";
+};
+
+//Get the assigned course
+export const getCourseDetails = async (req, res) => {
+    try {
+        const managerId = req.params.managerId; 
+
+        if (!managerId) {
+            return res.status(400).json({ success: false, message: "Manager ID missing" });
+        }
+
+        const user = await User.findById(managerId);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "Manager not found" });
+        }
+
+        const courseIds = user.assignedCourses || [];
+        const results = [];
+
+        for (const courseId of courseIds) {
+            const course = await Course.findById(courseId);
+            if (!course) continue;
+
+            results.push({
+                courseId,
+                name: course.title
+            });
+        }
+        console.log(results);   
+        return res.status(200).json({ success: true, data: results });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+
+
+/**
+ * 1. Get attendance of a specific student
  */
 export const getAttendanceByStudent = async (req, res) => {
     try {
         const { courseId, studentId } = req.params;
 
-        // FIX: studentId is roll number like "STU0019"
         const studentInfo = await NG_Approved_Students.findOne({ student_id: studentId });
 
         if (!studentInfo) {
             return res.status(404).json({ success: false, message: "Student not found" });
         }
 
-        // Use the actual ObjectId to fetch attendance
         const attendanceDoc = await studentAttendanceSchema
             .findOne({ course: courseId, student: studentInfo._id })
-            .populate("course", "title classId");
+            .populate("course");
 
         if (!attendanceDoc) {
             return res.status(404).json({ success: false, message: "Attendance not found" });
         }
+
+        const className = getClassName(attendanceDoc.course);
 
         const response = {
             studentId: studentInfo.student_id,
             studentName: studentInfo.fullName,
             email: studentInfo.email,
             course: attendanceDoc.course,
-            classId: attendanceDoc.course?.classId,
+            className,   // ✔️ class name from classLinks
             attendance: attendanceDoc.attendance
         };
 
@@ -42,8 +94,9 @@ export const getAttendanceByStudent = async (req, res) => {
 };
 
 
+
 /**
- * Get attendance of all students for a specific date in a course
+ *2. Get attendance by date
  */
 export const getAttendanceByDate = async (req, res) => {
     try {
@@ -58,29 +111,32 @@ export const getAttendanceByDate = async (req, res) => {
 
         const attendanceDocs = await studentAttendanceSchema
             .find({ course: courseId })
-            .populate("course", "title classId");
+            .populate("course");
 
         const results = [];
 
         for (const doc of attendanceDocs) {
-            const filteredAttendance = doc.attendance.filter(entry => {
-                return new Date(entry.date).toDateString() === targetDate.toDateString();
-            });
+            const filtered = doc.attendance.filter(a =>
+                new Date(a.date).toDateString() === targetDate.toDateString()
+            );
 
-            if (filteredAttendance.length === 0) continue;
+            if (filtered.length === 0) continue;
 
-            // FIX: student field contains ObjectId
             const studentInfo = await NG_Approved_Students.findById(doc.student);
+            if (!studentInfo) continue;
+
+            const className = getClassName(doc.course);
 
             results.push({
-                studentId: studentInfo?.student_id,
-                studentName: studentInfo?.fullName,
-                email: studentInfo?.email,
+                studentId: studentInfo.student_id,
+                studentName: studentInfo.fullName,
+                email: studentInfo.email,
                 course: doc.course,
-                classId: doc.course?.classId,
-                attendance: filteredAttendance
+                className,  // ✔️ from classLinks
+                attendance: filtered
             });
         }
+        console.log(results);
 
         res.status(200).json({ success: true, data: results });
 
@@ -91,8 +147,9 @@ export const getAttendanceByDate = async (req, res) => {
 };
 
 
+
 /**
- * Get all attendance for a course
+ * 3. Get ALL attendance for a course
  */
 export const getAllAttendance = async (req, res) => {
     try {
@@ -100,27 +157,29 @@ export const getAllAttendance = async (req, res) => {
 
         const attendanceDocs = await studentAttendanceSchema
             .find({ course: courseId })
-            .populate("course", "title classId");
+            .populate("course");
 
         const results = [];
 
         for (const doc of attendanceDocs) {
             const studentInfo = await NG_Approved_Students.findById(doc.student);
-
             if (!studentInfo) continue;
+
+            const className = getClassName(doc.course);
 
             results.push({
                 studentId: studentInfo.student_id,
                 studentName: studentInfo.fullName,
                 email: studentInfo.email,
                 course: doc.course,
-                classId: doc.course?.classId,
-                attendance: doc.attendance.length
+                className,  // ✔️ from classLinks
+                attendanceCount: doc.attendance.length
             });
+            console.log(results);
         }
+        
 
         res.status(200).json({ success: true, data: results });
-        return res;
 
     } catch (error) {
         console.error(error);
