@@ -507,7 +507,7 @@ export const getSubmissionsForExam = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verify exam exists
+    // 1. Verify exam exists (retrieves the exam document, including 'questions')
     const exam = await NGExamWithQuestions.findById(id);
     if (!exam) {
       return res.status(404).json({
@@ -516,23 +516,27 @@ export const getSubmissionsForExam = async (req, res) => {
       });
     }
 
+    // 2. Fetch submissions
     const submissions = await NGSubmissionExams.find({ exam_id: id })
-      .populate('student_id', 'full_name email')
+      .populate('student_id', 'fullName email')
       .sort({ submitted_at: -1 });
 
+    // 3. Construct the response, including the exam questions
     res.json({
       success: true,
       data: {
         exam: {
           id: exam._id,
           examName: exam.examName,
+          // 💡 ADD THE QUESTIONS FIELD HERE
+          questions: exam.questions, 
         },
         submissions: submissions.map((sub) => ({
           id: sub._id,
           student: sub.student_id
             ? {
                 id: sub.student_id._id,
-                fullName: sub.student_id.full_name,
+                fullName: sub.student_id.fullName,
                 email: sub.student_id.email,
               }
             : null,
@@ -553,7 +557,6 @@ export const getSubmissionsForExam = async (req, res) => {
     });
   }
 };
-
 // Submit an exam
 export const submitExam = async (req, res) => {
   try {

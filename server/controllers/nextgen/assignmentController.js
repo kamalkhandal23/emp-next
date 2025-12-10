@@ -622,21 +622,20 @@ export const getAssignmentsWithLockStatus = async (req, res) => {
 };
 
 // Get submissions for a specific assignment
+// Get submissions for a specific assignment
 export const getSubmissionsForAssignment = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verify assignment exists
+    // Verify assignment exists (NGAssignmentWithQuestions)
+    // This assignment object CONTAINS the 'questions' field.
     const assignment = await NGAssignmentWithQuestions.findById(id);
     if (!assignment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Assignment not found',
-      });
+      // ... (handle 404)
     }
 
     const submissions = await NGSubmissionAssignment.find({ assignment_id: id })
-      .populate('student_id', 'full_name email')
+      .populate('student_id', 'fullName email')
       .sort({ submitted_at: -1 });
 
     res.json({
@@ -646,16 +645,19 @@ export const getSubmissionsForAssignment = async (req, res) => {
           id: assignment._id,
           assignmentName: assignment.assignmentName,
           courseName: assignment.courseName,
+          // 💡 ADD THE QUESTIONS HERE:
+          questions: assignment.questions,
         },
         submissions: submissions.map((sub) => ({
+          // ... (submission mapping remains the same)
           id: sub._id,
           student: sub.student_id
-            ? {
-                id: sub.student_id._id,
-                fullName: sub.student_id.full_name,
-                email: sub.student_id.email,
-              }
-            : null,
+             ? {
+                 id: sub.student_id._id,
+                 fullName: sub.student_id.fullName,
+                 email: sub.student_id.email,
+               }
+             : null,
           submission_data: sub.submission_data,
           submitted_at: sub.submitted_at,
           status: sub.status,
@@ -665,8 +667,9 @@ export const getSubmissionsForAssignment = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching submissions:', error);
-    res.status(500).json({
+    // ... (handle error)
+    console.log("Error fetching submissions for assinment:",error)
+    res.status(500).send({
       success: false,
       message: 'Failed to fetch submissions',
       error: error.message,
