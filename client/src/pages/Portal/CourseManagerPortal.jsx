@@ -1062,7 +1062,7 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Assignments' style={{ color: 'black' }}>
+                <Card title='Assignments' style={{ textColor: 'white' }}>
                   <ActionList
                     actions={[
                       'Create Assignments',
@@ -2076,7 +2076,6 @@ function Card({ title, children }) {
         style={{
           textAlign: 'center',
           paddingBottom: '1rem',
-          color: 'black',
         }}>
         {title}
       </h3>
