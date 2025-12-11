@@ -103,6 +103,7 @@ import ManageExams from './pages/NextGenFreeEdu/ManageExams';
 import ManageAssignments from './pages/NextGenFreeEdu/ManageAssignments';
 import CreateCodingExam from './pages/NextGenFreeEdu/CreateCodingExam';
 import ManageCodingExams from './pages/NextGenFreeEdu/ManageCodingExams';
+import CodingExamResults from './pages/Portal/CodingExamResults';
 import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures';
 import Leaderboard from './pages/NextGenFreeEdu/Leaderboard';
 import ClassLink from './pages/NextGenFreeEdu/LecturePage';
@@ -261,6 +262,10 @@ function AppRoutes() {
         element={<ManageCodingExams />}
       />
       <Route
+        path='portal/coursemanager/codingexamresults'
+        element={<CodingExamResults />}
+      />
+      <Route
         path='portal/coursemanager/manageassignments'
         element={<ManageAssignments />}
       />
@@ -341,6 +346,10 @@ export default function App() {
             <Route
               path='/portal/coursemanager/managecodingexams'
               element={<ManageCodingExams />}
+            />
+            <Route
+              path='/portal/coursemanager/codingexamresults'
+              element={<CodingExamResults />}
             />
             <Route
               path='/portal/coursemanager/manageassignments'

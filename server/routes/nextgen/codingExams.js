@@ -10,7 +10,8 @@ import {
   deleteCodingExam,
   runCode,
   submitCodingExam,
-  getCodingExamsForManager
+  getCodingExamsForManager,
+  getAllSubmissions
 } from '../../controllers/nextgen/codingExamController.js';
 
 const router = express.Router();
@@ -18,6 +19,9 @@ const router = express.Router();
 // geta coding exam on the basis of course assingned to the course manager
 
 router.get("/my-codingexam",auth,authorize(["course_manager","admin"]),getCodingExamsForManager)
+
+// Get all submissions (for course managers/admins)
+router.get('/all-submissions', getAllSubmissions);
 
 // Create a new coding exam
 router.post('/create', createCodingExam);

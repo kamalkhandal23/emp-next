@@ -12,7 +12,8 @@ export const createCodingExam = async (req, res) => {
     if (!examName || !courseName || !totalQuestions || !questionData) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: examName, courseName, totalQuestions, and questionData are required'
+        message:
+          'Missing required fields: examName, courseName, totalQuestions, and questionData are required',
       });
     }
 
@@ -20,7 +21,7 @@ export const createCodingExam = async (req, res) => {
     if (examName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Exam name cannot be empty'
+        message: 'Exam name cannot be empty',
       });
     }
 
@@ -28,19 +29,20 @@ export const createCodingExam = async (req, res) => {
     if (courseName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Course name cannot be empty'
+        message: 'Course name cannot be empty',
       });
     }
 
     // Check if exam with same name already exists
     const existingExam = await NGCodingExamWithQuestions.findOne({
-      examName: examName.trim()
+      examName: examName.trim(),
     });
 
     if (existingExam) {
       return res.status(409).json({
         success: false,
-        message: 'An exam with this name already exists. Please choose a different name.'
+        message:
+          'An exam with this name already exists. Please choose a different name.',
       });
     }
 
@@ -49,7 +51,7 @@ export const createCodingExam = async (req, res) => {
     if (questionCount !== parseInt(totalQuestions)) {
       return res.status(400).json({
         success: false,
-        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`
+        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`,
       });
     }
 
@@ -58,46 +60,55 @@ export const createCodingExam = async (req, res) => {
       if (!qData.type || qData.type !== 'Coding') {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must be of type 'Coding'`
+          message: `Question ${qNum} must be of type 'Coding'`,
         });
       }
 
       if (!qData.question || qData.question.trim() === '') {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is missing the question text`
+          message: `Question ${qNum} is missing the question text`,
         });
       }
 
       // Validate sample inputs and outputs
-      if (!qData.sampleInputs || !Array.isArray(qData.sampleInputs) || qData.sampleInputs.length === 0) {
+      if (
+        !qData.sampleInputs ||
+        !Array.isArray(qData.sampleInputs) ||
+        qData.sampleInputs.length === 0
+      ) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have at least one sample input`
+          message: `Question ${qNum} must have at least one sample input`,
         });
       }
 
-      if (!qData.sampleOutputs || !Array.isArray(qData.sampleOutputs) || qData.sampleOutputs.length === 0) {
+      if (
+        !qData.sampleOutputs ||
+        !Array.isArray(qData.sampleOutputs) ||
+        qData.sampleOutputs.length === 0
+      ) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have at least one sample output`
+          message: `Question ${qNum} must have at least one sample output`,
         });
       }
 
       if (qData.sampleInputs.length !== qData.sampleOutputs.length) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have matching number of sample inputs and outputs`
+          message: `Question ${qNum} must have matching number of sample inputs and outputs`,
         });
       }
 
       // Check that at least one sample input/output pair is not empty
-      const hasValidSample = qData.sampleInputs.some(input => input && input.trim() !== '') &&
-                            qData.sampleOutputs.some(output => output && output.trim() !== '');
+      const hasValidSample =
+        qData.sampleInputs.some((input) => input && input.trim() !== '') &&
+        qData.sampleOutputs.some((output) => output && output.trim() !== '');
       if (!hasValidSample) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have at least one valid sample input/output pair`
+          message: `Question ${qNum} must have at least one valid sample input/output pair`,
         });
       }
     }
@@ -120,10 +131,9 @@ export const createCodingExam = async (req, res) => {
         courseName: exam.courseName,
         totalQuestions: exam.totalQuestions,
         status: exam.status,
-        createdAt: exam.createdAt
-      }
+        createdAt: exam.createdAt,
+      },
     });
-
   } catch (error) {
     console.error('Error creating coding exam:', error);
 
@@ -131,14 +141,14 @@ export const createCodingExam = async (req, res) => {
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: 'An exam with this name already exists'
+        message: 'An exam with this name already exists',
       });
     }
 
     res.status(500).json({
       success: false,
       message: 'Failed to create coding exam',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -178,17 +188,16 @@ export const getAllCodingExams = async (req, res) => {
           total,
           page: parseInt(page),
           limit: parseInt(limit),
-          totalPages: Math.ceil(total / parseInt(limit))
-        }
-      }
+          totalPages: Math.ceil(total / parseInt(limit)),
+        },
+      },
     });
-
   } catch (error) {
     console.error('Error fetching coding exams:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch coding exams',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -203,21 +212,20 @@ export const getCodingExamById = async (req, res) => {
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found'
+        message: 'Coding exam not found',
       });
     }
 
     res.json({
       success: true,
-      data: exam.getCodingExamData()
+      data: exam.getCodingExamData(),
     });
-
   } catch (error) {
     console.error('Error fetching coding exam:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch coding exam',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -228,27 +236,26 @@ export const getCodingExamByName = async (req, res) => {
     const { examName } = req.params;
 
     const exam = await NGCodingExamWithQuestions.findOne({
-      examName: examName.trim()
+      examName: examName.trim(),
     });
 
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found'
+        message: 'Coding exam not found',
       });
     }
 
     res.json({
       success: true,
-      data: exam.getCodingExamData()
+      data: exam.getCodingExamData(),
     });
-
   } catch (error) {
     console.error('Error fetching coding exam:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch coding exam',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -262,7 +269,7 @@ export const updateCodingExamStatus = async (req, res) => {
     if (!['draft', 'published', 'archived'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be one of: draft, published, archived'
+        message: 'Invalid status. Must be one of: draft, published, archived',
       });
     }
 
@@ -275,7 +282,7 @@ export const updateCodingExamStatus = async (req, res) => {
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found'
+        message: 'Coding exam not found',
       });
     }
 
@@ -285,16 +292,15 @@ export const updateCodingExamStatus = async (req, res) => {
       data: {
         id: exam._id,
         examName: exam.examName,
-        status: exam.status
-      }
+        status: exam.status,
+      },
     });
-
   } catch (error) {
     console.error('Error updating coding exam status:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update coding exam status',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -303,13 +309,15 @@ export const updateCodingExamStatus = async (req, res) => {
 export const updateCodingExam = async (req, res) => {
   try {
     const { id } = req.params;
-    const { examName, courseName, totalQuestions, questionData, status } = req.body;
+    const { examName, courseName, totalQuestions, questionData, status } =
+      req.body;
 
     // Validate required fields
     if (!examName || !courseName || !totalQuestions || !questionData) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: examName, courseName, totalQuestions, and questionData are required'
+        message:
+          'Missing required fields: examName, courseName, totalQuestions, and questionData are required',
       });
     }
 
@@ -317,7 +325,7 @@ export const updateCodingExam = async (req, res) => {
     if (examName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Exam name cannot be empty'
+        message: 'Exam name cannot be empty',
       });
     }
 
@@ -325,20 +333,21 @@ export const updateCodingExam = async (req, res) => {
     if (courseName.trim() === '') {
       return res.status(400).json({
         success: false,
-        message: 'Course name cannot be empty'
+        message: 'Course name cannot be empty',
       });
     }
 
     // Check if another exam with same name exists (excluding current)
     const existingExam = await NGCodingExamWithQuestions.findOne({
       examName: examName.trim(),
-      _id: { $ne: id }
+      _id: { $ne: id },
     });
 
     if (existingExam) {
       return res.status(409).json({
         success: false,
-        message: 'An exam with this name already exists. Please choose a different name.'
+        message:
+          'An exam with this name already exists. Please choose a different name.',
       });
     }
 
@@ -347,7 +356,7 @@ export const updateCodingExam = async (req, res) => {
     if (questionCount !== parseInt(totalQuestions)) {
       return res.status(400).json({
         success: false,
-        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`
+        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`,
       });
     }
 
@@ -356,46 +365,55 @@ export const updateCodingExam = async (req, res) => {
       if (!qData.type || qData.type !== 'Coding') {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must be of type 'Coding'`
+          message: `Question ${qNum} must be of type 'Coding'`,
         });
       }
 
       if (!qData.question || qData.question.trim() === '') {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} is missing the question text`
+          message: `Question ${qNum} is missing the question text`,
         });
       }
 
       // Validate sample inputs and outputs
-      if (!qData.sampleInputs || !Array.isArray(qData.sampleInputs) || qData.sampleInputs.length === 0) {
+      if (
+        !qData.sampleInputs ||
+        !Array.isArray(qData.sampleInputs) ||
+        qData.sampleInputs.length === 0
+      ) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have at least one sample input`
+          message: `Question ${qNum} must have at least one sample input`,
         });
       }
 
-      if (!qData.sampleOutputs || !Array.isArray(qData.sampleOutputs) || qData.sampleOutputs.length === 0) {
+      if (
+        !qData.sampleOutputs ||
+        !Array.isArray(qData.sampleOutputs) ||
+        qData.sampleOutputs.length === 0
+      ) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have at least one sample output`
+          message: `Question ${qNum} must have at least one sample output`,
         });
       }
 
       if (qData.sampleInputs.length !== qData.sampleOutputs.length) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have matching number of sample inputs and outputs`
+          message: `Question ${qNum} must have matching number of sample inputs and outputs`,
         });
       }
 
       // Check that at least one sample input/output pair is not empty
-      const hasValidSample = qData.sampleInputs.some(input => input && input.trim() !== '') &&
-                            qData.sampleOutputs.some(output => output && output.trim() !== '');
+      const hasValidSample =
+        qData.sampleInputs.some((input) => input && input.trim() !== '') &&
+        qData.sampleOutputs.some((output) => output && output.trim() !== '');
       if (!hasValidSample) {
         return res.status(400).json({
           success: false,
-          message: `Question ${qNum} must have at least one valid sample input/output pair`
+          message: `Question ${qNum} must have at least one valid sample input/output pair`,
         });
       }
     }
@@ -404,7 +422,7 @@ export const updateCodingExam = async (req, res) => {
     if (status && !['draft', 'published', 'archived'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid status. Must be one of: draft, published, archived'
+        message: 'Invalid status. Must be one of: draft, published, archived',
       });
     }
 
@@ -414,13 +432,13 @@ export const updateCodingExam = async (req, res) => {
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found'
+        message: 'Coding exam not found',
       });
     }
 
     // Convert questionData to Map
     const questionsMap = new Map();
-    Object.keys(questionData).forEach(key => {
+    Object.keys(questionData).forEach((key) => {
       questionsMap.set(key, questionData[key]);
     });
 
@@ -449,22 +467,21 @@ export const updateCodingExam = async (req, res) => {
         courseName: exam.courseName,
         totalQuestions: exam.totalQuestions,
         status: exam.status,
-        updatedAt: exam.updatedAt
-      }
+        updatedAt: exam.updatedAt,
+      },
     });
-
   } catch (error) {
     console.error('Error updating coding exam:', error);
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
-        message: 'An exam with this name already exists'
+        message: 'An exam with this name already exists',
       });
     }
     res.status(500).json({
       success: false,
       message: 'Failed to update coding exam',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -479,7 +496,7 @@ export const deleteCodingExam = async (req, res) => {
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found'
+        message: 'Coding exam not found',
       });
     }
 
@@ -487,16 +504,15 @@ export const deleteCodingExam = async (req, res) => {
       success: true,
       message: 'Coding exam deleted successfully',
       data: {
-        examName: exam.examName
-      }
+        examName: exam.examName,
+      },
     });
-
   } catch (error) {
     console.error('Error deleting coding exam:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to delete coding exam',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -510,7 +526,8 @@ export const runCode = async (req, res) => {
     if (!examId || !questionId || !code || !language) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: examId, questionId, code, and language are required'
+        message:
+          'Missing required fields: examId, questionId, code, and language are required',
       });
     }
 
@@ -519,7 +536,8 @@ export const runCode = async (req, res) => {
     if (!validLanguages.includes(language)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid language. Must be one of: c, cpp, java, python, javascript'
+        message:
+          'Invalid language. Must be one of: c, cpp, java, python, javascript',
       });
     }
 
@@ -528,7 +546,7 @@ export const runCode = async (req, res) => {
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found'
+        message: 'Coding exam not found',
       });
     }
 
@@ -537,7 +555,7 @@ export const runCode = async (req, res) => {
     if (!question) {
       return res.status(404).json({
         success: false,
-        message: 'Question not found'
+        message: 'Question not found',
       });
     }
 
@@ -552,15 +570,14 @@ export const runCode = async (req, res) => {
 
     res.json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error) {
     console.error('Error running code:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to run code',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -575,7 +592,8 @@ export const submitCodingExam = async (req, res) => {
     if (!examId || !submissions || !Array.isArray(submissions)) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required fields: examId and submissions array are required'
+        message:
+          'Missing required fields: examId and submissions array are required',
       });
     }
 
@@ -584,7 +602,7 @@ export const submitCodingExam = async (req, res) => {
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found'
+        message: 'Coding exam not found',
       });
     }
 
@@ -600,7 +618,7 @@ export const submitCodingExam = async (req, res) => {
       if (!questionId || !code || !language) {
         return res.status(400).json({
           success: false,
-          message: `Invalid submission for question ${questionId}: missing questionId, code, or language`
+          message: `Invalid submission for question ${questionId}: missing questionId, code, or language`,
         });
       }
 
@@ -609,7 +627,7 @@ export const submitCodingExam = async (req, res) => {
       if (!question) {
         return res.status(404).json({
           success: false,
-          message: `Question ${questionId} not found`
+          message: `Question ${questionId} not found`,
         });
       }
 
@@ -623,7 +641,8 @@ export const submitCodingExam = async (req, res) => {
       );
 
       // Calculate marks for this question based on passed test cases
-      const marks = (result.passedCount / result.totalTests) * maxMarksPerQuestion;
+      const marks =
+        (result.passedCount / result.totalTests) * maxMarksPerQuestion;
       totalMarks += marks;
 
       // Save submission
@@ -635,10 +654,11 @@ export const submitCodingExam = async (req, res) => {
         language,
         verdict: result.overallVerdict,
         marks: Math.round(marks),
-        executionTime: result.results.length > 0 ? result.results[0].executionTime : '0.00s',
+        executionTime:
+          result.results.length > 0 ? result.results[0].executionTime : '0.00s',
         memory: result.results.length > 0 ? result.results[0].memory : '0MB',
         output: result.results.length > 0 ? result.results[0].output : '',
-        error: result.results.length > 0 ? result.results[0].error : ''
+        error: result.results.length > 0 ? result.results[0].error : '',
       });
 
       await submissionRecord.save();
@@ -650,8 +670,9 @@ export const submitCodingExam = async (req, res) => {
         passedTests: result.passedCount,
         totalTests: result.totalTests,
         successRate: result.successRate,
-        executionTime: result.results.length > 0 ? result.results[0].executionTime : '0.00s',
-        memory: result.results.length > 0 ? result.results[0].memory : '0MB'
+        executionTime:
+          result.results.length > 0 ? result.results[0].executionTime : '0.00s',
+        memory: result.results.length > 0 ? result.results[0].memory : '0MB',
       });
     }
 
@@ -660,16 +681,15 @@ export const submitCodingExam = async (req, res) => {
       message: 'Coding exam submitted successfully',
       data: {
         totalMarks: Math.round(totalMarks),
-        results
-      }
+        results,
+      },
     });
-
   } catch (error) {
     console.error('Error submitting coding exam:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to submit coding exam',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -678,37 +698,88 @@ export const submitCodingExam = async (req, res) => {
 export const getCodingExamsForManager = async (req, res) => {
   try {
     const managerId = req.user.id; // from JWT middleware
-    console.log("managerId",managerId)
+    console.log('managerId', managerId);
 
     // 1. Get manager with assigned course list
-    const manager = await User.findById(managerId).select("assignedCourses");
+    const manager = await User.findById(managerId).select('assignedCourses');
 
     if (!manager) {
-      return res.status(404).json({ success: false, message: "Manager not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: 'Manager not found' });
     }
 
     // 2. Fetch exams only for those courses
     const exams = await NGCodingExamWithQuestions.find({
-      courseId: { $in: manager.assignedCourses }
+      courseId: { $in: manager.assignedCourses },
     })
-    .populate("courseId", "name") // optional
-    .sort({ createdAt: -1 });
+      .populate('courseId', 'name') // optional
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      data: { exams }
+      data: { exams },
     });
-
   } catch (error) {
     console.error(error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch exams",
-      error: error.message
+      message: 'Failed to fetch exams',
+      error: error.message,
     });
   }
 };
 
+// GET /api/nextgen/codingExams/all-submissions
+// Get all coding exam submissions with student and exam details
+export const getAllSubmissions = async (req, res) => {
+  try {
+    console.log('📊 Fetching all coding exam submissions...');
+
+    // Fetch all submissions with populated student and exam data
+    const submissions = await NGSubmissionCodingExams.find()
+      .populate({
+        path: 'student_id',
+        select: 'fullName full_name email student_id',
+      })
+      .populate({
+        path: 'exam_id',
+        select: 'examName courseName totalQuestions status',
+      })
+      .sort({ submitted_at: -1 })
+      .lean();
+
+    console.log(`✅ Found ${submissions.length} submissions`);
+
+    // Filter out submissions with deleted exams or students
+    const validSubmissions = submissions.filter((sub) => {
+      if (!sub.exam_id) {
+        console.warn(`⚠️ Submission ${sub._id} has no valid exam_id`);
+        return false;
+      }
+      if (!sub.student_id) {
+        console.warn(`⚠️ Submission ${sub._id} has no valid student_id`);
+        return false;
+      }
+      return true;
+    });
+
+    console.log(`✅ Valid submissions: ${validSubmissions.length}`);
+
+    return res.json({
+      success: true,
+      data: validSubmissions,
+      count: validSubmissions.length,
+    });
+  } catch (error) {
+    console.error('❌ Error fetching all submissions:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch coding exam submissions',
+      error: error.message,
+    });
+  }
+};
 
 export default {
   createCodingExam,
@@ -720,5 +791,6 @@ export default {
   deleteCodingExam,
   runCode,
   submitCodingExam,
-  getCodingExamsForManager
+  getCodingExamsForManager,
+  getAllSubmissions,
 };
