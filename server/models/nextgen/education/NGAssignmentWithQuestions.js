@@ -12,8 +12,12 @@ const ngAssignmentWithQuestionsSchema = new mongoose.Schema(
     },
     courseName: {
       type: String,
-      required: true,
+      
       trim: true,
+    },
+    courseId:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'NG_Course', 
     },
     order: {
       type: Number,
