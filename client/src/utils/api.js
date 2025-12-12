@@ -211,6 +211,22 @@ async getStudentAttendanceByDate(courseId, date, token) {
     }
   );
 }
+async getAssignedCourses(managerId, token) {
+
+  console.log(managerId);
+  return this.request(
+    `/attendance/getCourse/${managerId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
+
+
 
   async getNextGenLectureVideos(studentId, courseId, token) {
     console.log(studentId, courseId, 'api lecture student & course id');
