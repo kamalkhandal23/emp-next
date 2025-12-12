@@ -57,7 +57,7 @@ export default function StudentExams() {
         // Thoda normalize kar lete hain
         const normalized = rawExams.map((exam) => ({
           _id: exam._id,
-          title: exam.title || exam.examName || 'Untitled Exam',
+          title: exam.title || exam.examName || exam.name || 'Untitled Exam',
           courseName:
             exam.courseName ||
             exam.course?.title ||
@@ -70,6 +70,8 @@ export default function StudentExams() {
           isLocked: exam.isLocked || false,
           isCompleted: exam.isCompleted || false,
           submission: exam.submission || null,
+          // keep raw for passing to next page
+          raw: exam,
         }));
 
         setExams(normalized);
@@ -240,7 +242,6 @@ export default function StudentExams() {
           <div
             style={{
               background: '#fef2f2',
-              
               padding: '1rem',
               marginBottom: '2rem',
             }}>
@@ -463,7 +464,11 @@ export default function StudentExams() {
                       disabled={isLocked}
                       onClick={() => {
                         if (!isLocked) {
-                          navigate(`/nextgen/exam?examId=${exam._id}`);
+                          // Pass exam object in navigation state so Exam page can render immediately
+                          navigate({
+                            pathname: '/nextgen/exam',
+                            search: `?examId=${encodeURIComponent(exam._id)}`,
+                          }, { state: { exam } });
                         }
                       }}>
                       {isCompleted ? 'Retake Exam' : 'Start Exam'}
@@ -472,9 +477,10 @@ export default function StudentExams() {
                       className='btn-outline'
                       style={{ width: '100%' }}
                       onClick={() => {
-                        navigate(
-                          `/nextgen/exam?examId=${exam._id}&view=details`
-                        );
+                        navigate({
+                          pathname: '/nextgen/exam',
+                          search: `?examId=${encodeURIComponent(exam._id)}&view=details`,
+                        }, { state: { exam } });
                       }}>
                       View Details
                     </button>
@@ -507,7 +513,6 @@ export default function StudentExams() {
             marginTop: '3rem',
             padding: '1.5rem',
             background: '#f0f9ff',
-            
           }}>
           <h3
             style={{

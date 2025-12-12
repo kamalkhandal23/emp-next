@@ -259,5 +259,43 @@ router.get("/coding/stats/:studentId", async (req, res) => {
   }
 });
 
+// ================================================
+// GET SPECIFIC EXAM QUESTIONS (DYNAMIC QUESTIONS)
+// ================================================
+router.get("/student/exams/:examId/questions", async (req, res) => {
+  try {
+    const { examId } = req.params;
+
+    // Fetch exam by ID
+    const exam = await NgExam.findById(examId)
+      .populate("courseId", "title"); // <-- for course name
+
+    if (!exam) {
+      return res.status(404).json({
+        success: false,
+        message: "Exam not found",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        examId: exam._id,
+        title: exam.examName,
+        courseName: exam.courseId?.title || "Unknown",
+        totalQuestions: exam.totalQuestions,
+        questions: exam.questions,   // <-- ALL QUESTIONS COME FROM HERE
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching exam questions:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch exam questions",
+    });
+  }
+});
+
+
 
 export default router;
