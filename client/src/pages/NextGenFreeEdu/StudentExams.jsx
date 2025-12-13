@@ -241,10 +241,6 @@ export default function StudentExams() {
           <div
             style={{
               background: '#fef2f2',
-<<<<<<< HEAD
-=======
-
->>>>>>> 660ec3f6c48d8df416cf3d2b7a30cf3fd5272935
               padding: '1rem',
               marginBottom: '2rem',
             }}>
