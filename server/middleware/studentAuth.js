@@ -7,10 +7,8 @@ import NG_Approved_Students from '../models/nextgen/core/NG_ApprovedStudents.js'
  */
 export const studentAuth = async (req, res, next) => {
   try {
-    console.log('RAW HEADERS:', req.headers);
     let authHeader = req.headers.authorization || req.header('Authorization');
-    console.log('RAW HEADERS:', req.headers);
-    console.log('AUTH HEADER:', req.headers.authorization);
+   
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({

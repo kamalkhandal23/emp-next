@@ -12,16 +12,42 @@ import apiClient from '../../utils/api';
  * - Approve/Reject calls point to /nextgen/admin/registrations/:id/review
  */
 
+/* ---------------- Helper Functions ---------------- */
+
+const safeRender = (val) => {
+  if (val === null || val === undefined) return 'N/A';
+  if (typeof val === 'object') {
+    // If it's an encrypted object { c, iv, tag }
+    if (val.c && val.iv && val.tag) return '[Encrypted Data]';
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return '[Invalid Object]';
+    }
+  }
+  return String(val);
+};
+
 export default function CourseManagerPortal() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('🚀 CourseManagerPortal component mounted');
     const authToken = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
+    console.log(
+      '🔐 Auth check - Token exists:',
+      !!authToken,
+      'Role:',
+      userRole
+    );
 
     if (!authToken || !userRole) {
+      console.warn('⚠️ No auth token or role - redirecting to login');
       navigate('/login', { replace: true });
+    } else {
+      console.log('✅ Auth verified - staying on CourseManagerPortal');
     }
   }, []);
 
@@ -33,7 +59,6 @@ export default function CourseManagerPortal() {
   const [courses, setCourses] = useState([]);
   const [courseManagerData, setCourseManagerData] = useState(null);
   const [courseIDForAtt, setcourseIDForAtt] = useState(null);
-
 
   // Filter state
   const [courseFilter, setCourseFilter] = useState({
@@ -48,6 +73,10 @@ export default function CourseManagerPortal() {
   const [showEditCourse, setShowEditCourse] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [showCourseDetails, setShowCourseDetails] = useState(false);
+  const [showRegistrationDetails, setShowRegistrationDetails] = useState(false);
+  const [selectedRegistration, setSelectedRegistration] = useState(null);
+  const [showDocumentsModal, setShowDocumentsModal] = useState(false);
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [editCourse, setEditCourse] = useState({
     slug: '',
     title: '',
@@ -213,6 +242,7 @@ export default function CourseManagerPortal() {
   );
 
   useEffect(() => {
+    console.log('📞 Calling fetchRegistrations and fetchCourses');
     fetchRegistrations();
     fetchCourses();
   }, []);
@@ -222,20 +252,28 @@ export default function CourseManagerPortal() {
       fetchCourseManagerData();
     }
   }, [courses]);
-  
+
   // Fetch registrations from API
   const fetchRegistrations = async (status = 'all') => {
     try {
+      console.log('🔍 Fetching registrations with status:', status);
       const response = await apiClient.getRegistrations(status);
-      console.log('Fetched registrations:', response);
+      console.log('📥 Registrations response:', response);
+
       if (response.success && response.data) {
-        // console.log("registration",response.data.registrations)
+        console.log('✅ Registrations data:', response.data);
+        console.log(
+          '📊 Number of registrations:',
+          response.data.registrations?.length || 0
+        );
+        console.log('📄 Pagination:', response.data.pagination);
         setStudentRegistrations(response.data.registrations || []);
       } else {
+        console.warn('⚠️ No success or data in response');
         setStudentRegistrations([]);
       }
     } catch (error) {
-      console.error('Error fetching registrations:', error);
+      console.error('❌ Error fetching registrations:', error);
       setStudentRegistrations([]);
     }
   };
@@ -265,7 +303,10 @@ export default function CourseManagerPortal() {
       const userResponse = await apiClient.getCurrentUser();
       console.log('Fetched user data:', userResponse);
 
-      let user = userResponse.success && userResponse.data ? userResponse.user || userResponse.data : null;
+      let user =
+        userResponse.success && userResponse.data
+          ? userResponse.user || userResponse.data
+          : null;
 
       // If API fails, try to get from localStorage
       if (!user) {
@@ -283,7 +324,9 @@ export default function CourseManagerPortal() {
       // If user doesn't have assignedCourses, try to fetch from ng_users using username
       if (!user.assignedCourses && user.username) {
         try {
-          const fullUserResponse = await apiClient.getUserByUsername(user.username);
+          const fullUserResponse = await apiClient.getUserByUsername(
+            user.username
+          );
           console.log('Fetched full user data:', fullUserResponse);
           if (fullUserResponse.success && fullUserResponse.data) {
             user = { ...user, ...fullUserResponse.data };
@@ -296,25 +339,31 @@ export default function CourseManagerPortal() {
       // Debug logging
       console.log('User', user);
       console.log('User assignedCourses:', user.assignedCourses);
-      console.log('Available courses:', courses.map(c => ({ id: c._id, title: c.title })));
+      console.log(
+        'Available courses:',
+        courses.map((c) => ({ id: c._id, title: c.title }))
+      );
 
       // Filter courses assigned to this course manager
-      const assignedCourses = (user.assignedCourses && Array.isArray(user.assignedCourses))
-        ? courses
-            .filter(course => {
-              const isAssigned = user.assignedCourses.includes(course._id);
-              console.log(`Checking course ${course.title} (${course._id}): ${isAssigned}`);
-              return isAssigned;
-            })
-            .map(course => course.title)
-            .join(', ') || 'No courses assigned'
-        : 'No courses assigned';
+      const assignedCourses =
+        user.assignedCourses && Array.isArray(user.assignedCourses)
+          ? courses
+              .filter((course) => {
+                const isAssigned = user.assignedCourses.includes(course._id);
+                console.log(
+                  `Checking course ${course.title} (${course._id}): ${isAssigned}`
+                );
+                return isAssigned;
+              })
+              .map((course) => course.title)
+              .join(', ') || 'No courses assigned'
+          : 'No courses assigned';
 
       console.log('Final assignedCourses:', assignedCourses);
 
       const courseManagerInfo = {
         ...user,
-        assignedCourses: assignedCourses
+        assignedCourses: assignedCourses,
       };
 
       setCourseManagerData(courseManagerInfo);
@@ -333,10 +382,11 @@ export default function CourseManagerPortal() {
 
       const courseManagerInfo = {
         ...user,
-        assignedCourses: courses
-          .filter(course => user.assignedCourses?.includes(course._id))
-          .map(course => course.title)
-          .join(', ') || 'No courses assigned'
+        assignedCourses:
+          courses
+            .filter((course) => user.assignedCourses?.includes(course._id))
+            .map((course) => course.title)
+            .join(', ') || 'No courses assigned',
       };
       setCourseManagerData(courseManagerInfo);
     }
@@ -377,25 +427,8 @@ export default function CourseManagerPortal() {
   };
 
   const handleViewDetails = (registration) => {
-    const name = registration?.full_name || registration?.fullName || 'Unnamed';
-    const course =
-      registration?.course_id?.title || registration?.course || 'N/A';
-    const phone = registration?.phone || 'N/A';
-    const address = registration?.address || 'N/A';
-    const documents = Array.isArray(registration?.documents)
-      ? registration.documents.join(', ')
-      : 'N/A';
-    const registrationDate = registration?.created_at
-      ? new Date(registration.created_at).toLocaleDateString()
-      : registration?.registrationDate || 'N/A';
-
-    alert(
-      `Registration Details:\n\nName: ${name}\nEmail: ${
-        registration?.email || 'N/A'
-      }\nPhone: ${phone}\nCourse: ${course}\nAddress: ${address}\nDocuments: ${documents}\nRegistration Date: ${registrationDate}\nStatus: ${
-        registration?.status || 'N/A'
-      }`
-    );
+    setSelectedRegistration(registration);
+    setShowRegistrationDetails(true);
   };
 
   const handleLogout = () => {
@@ -495,6 +528,9 @@ export default function CourseManagerPortal() {
     if (action === 'Manage Coding Exams') {
       navigate('/portal/coursemanager/managecodingexams');
     }
+    if (action === 'Coding exams Results') {
+      navigate('/portal/coursemanager/codingexamresults');
+    }
     if (action === 'Manage Assignments') {
       navigate('/portal/coursemanager/manageassignments');
     }
@@ -509,6 +545,15 @@ export default function CourseManagerPortal() {
     }
     if (action === 'Manage Lecture') {
       navigate('/portal/coursemanager/managelecture');
+    }
+    if (action === 'Add Class Link') {
+      navigate('/portal/coursemanager/addclasslink');
+    }
+    if (action === 'Manage Class Links') {
+      navigate('/portal/coursemanager/manageclasslinks');
+    }
+    if (action === 'Student Attendance') {
+      navigate('/portal/coursemanager/studentattendance');
     }
   };
 
@@ -555,7 +600,9 @@ export default function CourseManagerPortal() {
 
   const handleChangePassword = async (newPassword) => {
     try {
-      const response = await apiClient.updatePassword({ password: newPassword });
+      const response = await apiClient.updatePassword({
+        password: newPassword,
+      });
       if (response.success) {
         alert('Password updated successfully!');
       } else {
@@ -568,20 +615,6 @@ export default function CourseManagerPortal() {
   };
 
   /* ---------------- UI Sections ---------------- */
-
-  const safeRender = (val) => {
-    if (val === null || val === undefined) return 'N/A';
-    if (typeof val === 'object') {
-      // If it's an encrypted object { c, iv, tag }
-      if (val.c && val.iv && val.tag) return '[Encrypted Data]';
-      try {
-        return JSON.stringify(val);
-      } catch {
-        return '[Invalid Object]';
-      }
-    }
-    return String(val);
-  };
 
   return (
     <div className='portal-layout'>
@@ -634,7 +667,7 @@ export default function CourseManagerPortal() {
 
       <div className='portal-content'>
         <div className='container'>
-           {/* DASHBOARD */}
+          {/* DASHBOARD */}
           {activeTab === 'dashboard' && (
             <section>
               <h2 style={{ marginBottom: '2rem', color: 'black' }}>
@@ -651,19 +684,29 @@ export default function CourseManagerPortal() {
                   <div
                     className='portal-card-header'
                     style={{ padding: '1rem 1.5rem' }}>
-                    <h3 className='portal-card-title' style={{color:''}}>Course Manager Profile</h3>
+                    <h3 className='portal-card-title' style={{ color: '' }}>
+                      Course Manager Profile
+                    </h3>
                   </div>
                   <div style={{ padding: '1rem' }}>
                     {courseManagerData ? (
                       <div style={{ display: 'grid', gap: '1rem' }}>
                         <div>
-                          <strong>Full Name:</strong> {courseManagerData.full_name || courseManagerData.fullName || 'N/A'}
+                          <strong>Full Name:</strong>{' '}
+                          {courseManagerData.full_name ||
+                            courseManagerData.fullName ||
+                            'N/A'}
                         </div>
                         <div>
-                          <strong>Assigned Course:</strong> {courseManagerData.assignedCourses}
+                          <strong>Assigned Course:</strong>{' '}
+                          {courseManagerData.assignedCourses}
                         </div>
                         <div>
-                          <strong>Password:</strong> {courseManagerData.password || courseManagerData.password_hash ? '••••••••' : 'Not set'}
+                          <strong>Password:</strong>{' '}
+                          {courseManagerData.password ||
+                          courseManagerData.password_hash
+                            ? '••••••••'
+                            : 'Not set'}
                         </div>
                         <button
                           className='btn-primary'
@@ -682,12 +725,10 @@ export default function CourseManagerPortal() {
                     )}
                   </div>
                 </div>
-
-                
               </div>
             </section>
           )}
-         
+
           {/* STUDENT MANAGEMENT */}
           {activeTab === 'employees' && (
             <section>
@@ -708,7 +749,7 @@ export default function CourseManagerPortal() {
                 <div
                   className='table-row'
                   style={{
-                    gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
+                    gridTemplateColumns: '2fr 1fr 1fr auto',
                     fontWeight: 600,
                     background: '#f8fafc',
                   }}>
@@ -716,40 +757,39 @@ export default function CourseManagerPortal() {
                   <div>Course</div>
                   <div>Status</div>
                   <div>Join Date</div>
-                  <div>Actions</div>
                 </div>
 
                 {studentRegistrations.map((s, i) => {
                   // 1. Create a Date object from the API string
-                  const date = new Date(s.updated_at); 
+                  const date = new Date(s.updated_at);
 
                   // 2. Format the date using the Indian locale (en-IN)
                   // This will output the date in DD/MM/YYYY format.
-                  const formattedDate = date.toLocaleDateString('en-IN'); 
+                  const formattedDate = date.toLocaleDateString('en-IN');
 
                   return (
-                      <div
-                          key={i}
-                          className='table-row'
-                          style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
-                          <div style={{ fontWeight: 500 }}>{s.full_name}</div>
-                          <div>{s.course_id.title}</div>
-                          <div>
-                              <span className={`status-badge status-${s.status}`}>
-                                  {s.status}
-                              </span>
-                          </div>
-                          
-                          {/* 3. Use the formatted date here */}
-                          <div>{formattedDate}</div> 
-                          
-                          <div style={{ display: 'flex', gap: '0.5rem' }}>
-                              <button className='action-button'>Edit</button>
-                              <button className='action-button'>View</button>
-                          </div>
+                    <div
+                      key={i}
+                      className='table-row'
+                      style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
+                      <div style={{ fontWeight: 500 }}>{s.full_name}</div>
+                      <div>{s.course_id.title}</div>
+                      <div>
+                        <span className={`status-badge status-${s.status}`}>
+                          {s.status}
+                        </span>
                       </div>
+
+                      {/* 3. Use the formatted date here */}
+                      <div>{formattedDate}</div>
+
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className='action-button'>Edit</button>
+                        <button className='action-button'>View</button>
+                      </div>
+                    </div>
                   );
-              })}
+                })}
               </div>
             </section>
           )}
@@ -1041,7 +1081,7 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Assignments' style={{ color: 'black' }}>
+                <Card title='Assignments' style={{ textColor: 'white' }}>
                   <ActionList
                     actions={[
                       'Create Assignments',
@@ -1264,9 +1304,10 @@ export default function CourseManagerPortal() {
                           {docs.length > 0 && (
                             <button
                               className='action-button'
-                              onClick={() =>
-                                alert(`Documents:\n${docs.join('\n')}`)
-                              }
+                              onClick={() => {
+                                setSelectedDocuments(docs);
+                                setShowDocumentsModal(true);
+                              }}
                               style={{
                                 fontSize: '0.75rem',
                                 padding: '0.25rem 0.5rem',
@@ -1519,26 +1560,19 @@ export default function CourseManagerPortal() {
                 }}>
                 <Card title='Course Management'>
                   <ActionList
-                    actions={[
-                      'Add Lectures to Course',
-                      'Manage Lecture'
-                    ]}
+                    actions={['Add Lectures to Course', 'Manage Lecture']}
                     onActionClick={handleActionClick}
                   />
                 </Card>
                 <Card title='Online Classes'>
                   <ActionList
-                    actions={[
-                      'Add Class Link',
-                      'Manage Class Links'
-                    ]}
+                    actions={['Add Class Link', 'Manage Class Links']}
+                    onActionClick={handleActionClick}
                   />
                 </Card>
                 <Card title='Attendances'>
                   <ActionList
-                    actions={[
-                      'Student Attendance',
-                    ]}
+                    actions={['Student Attendance']}
                     onActionClick={(action) => {
                       if (action === 'Student Attendance') {
                         navigate('/portal/coursemanager/attendance');
@@ -1551,6 +1585,98 @@ export default function CourseManagerPortal() {
           )}
         </div>
       </div>
+
+      {/* Registration Details Modal */}
+      {showRegistrationDetails && selectedRegistration && (
+        <Modal
+          title='Student Registration Details'
+          onClose={() => {
+            setShowRegistrationDetails(false);
+            setSelectedRegistration(null);
+          }}>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <KV
+              label='Full Name'
+              value={
+                selectedRegistration?.full_name ||
+                selectedRegistration?.fullName ||
+                'N/A'
+              }
+            />
+            <KV label='Email' value={selectedRegistration?.email || 'N/A'} />
+            <KV label='Phone' value={selectedRegistration?.phone || 'N/A'} />
+            <KV
+              label='Course'
+              value={
+                selectedRegistration?.course_id?.title ||
+                selectedRegistration?.course ||
+                'N/A'
+              }
+            />
+            <KV
+              label='Address'
+              value={selectedRegistration?.address || 'N/A'}
+            />
+            <KV
+              label='Registration Date'
+              value={
+                selectedRegistration?.created_at
+                  ? new Date(
+                      selectedRegistration.created_at
+                    ).toLocaleDateString()
+                  : selectedRegistration?.registrationDate || 'N/A'
+              }
+            />
+            <KV label='Status' value={selectedRegistration?.status || 'N/A'} />
+            <KV
+              label='Documents'
+              value={
+                Array.isArray(selectedRegistration?.documents)
+                  ? selectedRegistration.documents.join(', ')
+                  : 'N/A'
+              }
+            />
+            {selectedRegistration?.notes && (
+              <KV label='Notes' value={selectedRegistration.notes} />
+            )}
+            {selectedRegistration?.rejectionReason && (
+              <KV
+                label='Rejection Reason'
+                value={selectedRegistration.rejectionReason}
+              />
+            )}
+            {selectedRegistration?.reviewed_at && (
+              <KV
+                label='Reviewed At'
+                value={new Date(
+                  selectedRegistration.reviewed_at
+                ).toLocaleDateString()}
+              />
+            )}
+            {selectedRegistration?.reviewed_by?.full_name && (
+              <KV
+                label='Reviewed By'
+                value={selectedRegistration.reviewed_by.full_name}
+              />
+            )}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginTop: '2rem',
+            }}>
+            <button
+              className='btn-secondary'
+              onClick={() => {
+                setShowRegistrationDetails(false);
+                setSelectedRegistration(null);
+              }}>
+              Close
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {/* Add Course Modal (logged-in view) */}
       {showAddCourse && (
@@ -1900,6 +2026,52 @@ export default function CourseManagerPortal() {
           </div>
         </Modal>
       )}
+
+      {/* Documents Modal */}
+      {showDocumentsModal && selectedDocuments.length > 0 && (
+        <Modal
+          title='Student Documents'
+          onClose={() => {
+            setShowDocumentsModal(false);
+            setSelectedDocuments([]);
+          }}>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {selectedDocuments.map((doc, index) => (
+              <div key={index} style={{ textAlign: 'center' }}>
+                <h4 style={{ marginBottom: '0.5rem', color: '#374151' }}>
+                  Document {index + 1}
+                </h4>
+                <img
+                  src={doc}
+                  alt={`Document ${index + 1}`}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '400px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginTop: '2rem',
+            }}>
+            <button
+              className='btn-secondary'
+              onClick={() => {
+                setShowDocumentsModal(false);
+                setSelectedDocuments([]);
+              }}>
+              Close
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
@@ -1923,7 +2095,6 @@ function Card({ title, children }) {
         style={{
           textAlign: 'center',
           paddingBottom: '1rem',
-          color: 'black',
         }}>
         {title}
       </h3>

@@ -11,6 +11,7 @@ const router = express.Router();
 import bcrypt from 'bcryptjs';
 import { sendWelcomeEmail } from '../../../utils/mailer.js';
 import { sendRejectionEmail } from '../../../utils/mailer.js';
+import { decrypt } from '../../../utils/crypto.js';
 
 /* -------------------- Helper Middleware -------------------- */
 const ensureAdminOrManager = (req, res, next) => {
@@ -222,16 +223,22 @@ router.get('/', auth, ensureAdminOrManager, async (req, res) => {
     // 1️⃣ Filter by assigned courses if role = course_manager
     // -------------------------------
     if (req.user.role === "course_manager") {
+      console.log('🔍 Course Manager detected. User ID:', req.user.id);
       const manager = await User.findById(req.user.id).select("assignedCourses");
 
       if (!manager) {
+        console.error('❌ Course Manager not found in database');
         return res.status(404).json({
           success: false,
           message: "Course Manager not found",
         });
       }
 
+      console.log('📋 Manager assignedCourses:', manager.assignedCourses);
+      console.log('📊 Number of assigned courses:', manager.assignedCourses?.length || 0);
+
       if (!manager.assignedCourses || manager.assignedCourses.length === 0) {
+        console.warn('⚠️ Course Manager has NO assigned courses - returning empty array');
         return res.json({
           success: true,
           data: {
@@ -243,6 +250,7 @@ router.get('/', auth, ensureAdminOrManager, async (req, res) => {
 
       // filter based on assigned courses
       query.course_id = { $in: manager.assignedCourses };
+      console.log('✅ Query filter applied:', query);
     }
 
     // -------------------------------
@@ -260,6 +268,9 @@ router.get('/', auth, ensureAdminOrManager, async (req, res) => {
     // -------------------------------
     // 3️⃣ Fetch with pagination
     // -------------------------------
+    console.log('🔎 Executing query with filters:', JSON.stringify(query, null, 2));
+    console.log('📄 Pagination:', { page, limit, sortBy, sortOrder });
+    
     const registrations = await Registration.find(query)
       .populate("course_id", "title slug")
       .populate("reviewed_by", "full_name email role")
@@ -267,12 +278,29 @@ router.get('/', auth, ensureAdminOrManager, async (req, res) => {
       .limit(Number(limit))
       .skip((page - 1) * limit);
 
+    console.log('📊 Found registrations:', registrations.length);
+
+    // Decrypt phone numbers for display
+    const decryptedRegistrations = registrations.map(reg => {
+      const regObj = reg.toObject();
+      if (regObj.phone && typeof regObj.phone === 'object' && regObj.phone.c) {
+        try {
+          regObj.phone = decrypt(regObj.phone);
+        } catch (error) {
+          console.warn('Failed to decrypt phone for registration:', regObj._id);
+          regObj.phone = 'N/A';
+        }
+      }
+      return regObj;
+    });
+
     const total = await Registration.countDocuments(query);
+    console.log('📈 Total registrations matching query:', total);
 
     res.json({
       success: true,
       data: {
-        registrations,
+        registrations: decryptedRegistrations,
         pagination: {
           total,
           page: Number(page),

@@ -103,6 +103,7 @@ import ManageExams from './pages/NextGenFreeEdu/ManageExams';
 import ManageAssignments from './pages/NextGenFreeEdu/ManageAssignments';
 import CreateCodingExam from './pages/NextGenFreeEdu/CreateCodingExam';
 import ManageCodingExams from './pages/NextGenFreeEdu/ManageCodingExams';
+import CodingExamResults from './pages/Portal/CodingExamResults';
 import AvailableLectures from './pages/NextGenFreeEdu/AvailableLectures';
 import Leaderboard from './pages/NextGenFreeEdu/Leaderboard';
 import ClassLink from './pages/NextGenFreeEdu/LecturePage';
@@ -115,6 +116,8 @@ import CodingExamsList from './pages/NextGenFreeEdu/CodingExamsList';
 import CodingExam from './pages/NextGenFreeEdu/CodingExam';
 import CourseLecture from "./pages/NextGenFreeEdu/CourseLecture";
 import ManageLecture from './pages/NextGenFreeEdu/ManageLecture';
+import ClassLinks from './pages/NextGenFreeEdu/ClassLinks';
+import ManageClassLinks from './pages/NextGenFreeEdu/ManageClassLinks';
 
 import CourseAttendance from './pages/Portal/CourseManagerStudentAtten';
 
@@ -259,6 +262,10 @@ function AppRoutes() {
         element={<ManageCodingExams />}
       />
       <Route
+        path='portal/coursemanager/codingexamresults'
+        element={<CodingExamResults />}
+      />
+      <Route
         path='portal/coursemanager/manageassignments'
         element={<ManageAssignments />}
       />
@@ -341,6 +348,10 @@ export default function App() {
               element={<ManageCodingExams />}
             />
             <Route
+              path='/portal/coursemanager/codingexamresults'
+              element={<CodingExamResults />}
+            />
+            <Route
               path='/portal/coursemanager/manageassignments'
               element={<ManageAssignments />}
             />
@@ -361,6 +372,14 @@ export default function App() {
               element={<ManageLecture />}
             />
             <Route
+              path='/portal/coursemanager/addclasslink'
+              element={<ClassLinks />}
+            />
+            <Route
+              path='/portal/coursemanager/manageclasslinks'
+              element={<ManageClassLinks />}
+            />
+               <Route
                 path="/portal/coursemanager/attendance"
                 element={<CourseAttendance />}
               />

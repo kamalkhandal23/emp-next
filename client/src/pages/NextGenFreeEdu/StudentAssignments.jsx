@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../../utils/api';
+import StudentProfileNav from '../../components/StudentProfileNav';
 
 export default function StudentAssignments() {
   const navigate = useNavigate();
@@ -143,6 +144,7 @@ export default function StudentAssignments() {
       className='container'
       style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <StudentProfileNav />
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <div

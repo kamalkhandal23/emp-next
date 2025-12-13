@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 // Import the NG_Course model
-import Course from '../models/nextgen/education/Course.js';
+import Course from '../models/education/NG_Courses.js';
 
 dotenv.config();
 
