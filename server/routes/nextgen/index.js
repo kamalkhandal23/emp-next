@@ -1,4 +1,3 @@
-// NextGen Routes Index
 import express from 'express';
 import studentRoutes from './student/index.js';
 import adminRoutes from './admin/index.js';
@@ -13,9 +12,6 @@ import notificationRoutes from './notificationRoutes.js';
 import editdeleteRoutes from './editdeleteLecture.js';
 import classLinksRoutes from './classLinks.js';
 const router = express.Router();
-
-// Mount NextGen routes
-// path base /api/nextgen
 router.use('/student', studentRoutes);
 router.use('/admin', adminRoutes);
 router.use('/courses', coursesRoutes);

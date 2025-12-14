@@ -18,7 +18,6 @@ export default function CodingExam() {
   const [examSubmitted, setExamSubmitted] = useState(false);
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
-    //Full screen mode handler
   const [showTopMessage, setShowTopMessage] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [countdown, setCountdown] = useState(30);
@@ -137,33 +136,41 @@ int main() {
   }
 
   const submitExam = async () => {
-    setSubmitting(true)
+    setSubmitting(true);
+  
     try {
-      const submissions = Object.keys(exam.questions).map(key => ({
+      const token = localStorage.getItem("authToken");
+  
+      if (!token) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+  
+      const submissions = Object.keys(exam.questions).map((key) => ({
         questionId: key,
-        code: codes[key] || '',
-        language: questionLanguages[key] || 'javascript'
-      }))
-
+        code: codes[key] || "",
+        language: questionLanguages[key] || "javascript",
+      }));
+  
       const response = await apiClient.submitCodingExam({
         examId: id,
-        submissions
-      })
-
+        submissions,
+      });
+  
       if (response.success) {
-        // Navigate to results page
         exitFullscreen();
-        navigate('/nextgen/results')
+        navigate("/nextgen/results");
       } else {
-        throw new Error(response.message || 'Failed to submit exam')
+        throw new Error(response.message || "Failed to submit exam");
       }
     } catch (err) {
-      console.error('Error submitting exam:', err)
-      alert('Failed to submit exam: ' + err.message)
+      console.error("Error submitting exam:", err);
+      alert("Failed to submit exam: " + err.message);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
+  
 
   const nextQuestion = () => {
     if (currentQuestion < Object.keys(exam.questions).length - 1) {
@@ -176,22 +183,18 @@ int main() {
       setCurrentQuestion(currentQuestion - 1)
     }
   }
-  // ENTER FULLSCREEN
       const enterFullscreen = () => {
           const elem = document.documentElement;
           if (elem.requestFullscreen) elem.requestFullscreen();
           else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
           else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
       };
-  
-      // EXIT FULLSCREEN
       const exitFullscreen = () => {
           if (document.fullscreenElement) {
               document.exitFullscreen().catch(() => {});
           }
       };
-  
-      // BLUR + FULLSCREEN EXIT DETECT
+
       useEffect(() => {
           const handleBlur = () => {
               if(!showPopup){
@@ -234,8 +237,7 @@ int main() {
   
           return () => clearInterval(interval);
       }, [showPopup, countdown]);
-  
-      // PROCEED BUTTON → RE-ENTER FULLSCREEN
+
       const handleOk = () => {
           enterFullscreen();
           setShowPopup(false);
@@ -243,7 +245,7 @@ int main() {
           setCountdown(30);
       };
       const handleCancel = () => {
-          if (document.fullscreenElement) exitFullscreen();  // only exit if fullscreen
+          if (document.fullscreenElement) exitFullscreen(); 
           setExamSubmitted(true);
           submitExam();
           setShowPopup(false);

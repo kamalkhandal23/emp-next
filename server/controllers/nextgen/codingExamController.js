@@ -3,12 +3,10 @@ import NGSubmissionCodingExams from '../../models/nextgen/education/NGSubmission
 import { executeCodeMultipleTests } from '../../services/codeExecutionService.js';
 import User from '../../models/core/User.js';
 
-// Create a new coding exam with all questions
 export const createCodingExam = async (req, res) => {
   try {
     const { examName, courseName, totalQuestions, questionData } = req.body;
 
-    // Validate required fields
     if (!examName || !courseName || !totalQuestions || !questionData) {
       return res.status(400).json({
         success: false,
@@ -17,7 +15,6 @@ export const createCodingExam = async (req, res) => {
       });
     }
 
-    // Validate that examName is not empty
     if (examName.trim() === '') {
       return res.status(400).json({
         success: false,
@@ -25,7 +22,6 @@ export const createCodingExam = async (req, res) => {
       });
     }
 
-    // Validate that courseName is not empty
     if (courseName.trim() === '') {
       return res.status(400).json({
         success: false,
@@ -33,7 +29,6 @@ export const createCodingExam = async (req, res) => {
       });
     }
 
-    // Check if exam with same name already exists
     const existingExam = await NGCodingExamWithQuestions.findOne({
       examName: examName.trim(),
     });
@@ -46,7 +41,6 @@ export const createCodingExam = async (req, res) => {
       });
     }
 
-    // Validate that questionData matches totalQuestions
     const questionCount = Object.keys(questionData).length;
     if (questionCount !== parseInt(totalQuestions)) {
       return res.status(400).json({
@@ -55,7 +49,6 @@ export const createCodingExam = async (req, res) => {
       });
     }
 
-    // Validate each question has required fields and is coding type
     for (const [qNum, qData] of Object.entries(questionData)) {
       if (!qData.type || qData.type !== 'Coding') {
         return res.status(400).json({
@@ -71,7 +64,6 @@ export const createCodingExam = async (req, res) => {
         });
       }
 
-      // Validate sample inputs and outputs
       if (
         !qData.sampleInputs ||
         !Array.isArray(qData.sampleInputs) ||
@@ -101,7 +93,6 @@ export const createCodingExam = async (req, res) => {
         });
       }
 
-      // Check that at least one sample input/output pair is not empty
       const hasValidSample =
         qData.sampleInputs.some((input) => input && input.trim() !== '') &&
         qData.sampleOutputs.some((output) => output && output.trim() !== '');
@@ -113,7 +104,7 @@ export const createCodingExam = async (req, res) => {
       }
     }
 
-    // Create the exam using the static method
+
     const exam = await NGCodingExamWithQuestions.createFromFrontend(
       examName.trim(),
       courseName.trim(),
@@ -582,27 +573,48 @@ export const runCode = async (req, res) => {
   }
 };
 
-// Submit coding exam
+
+// helper: verdict mapping (MODEL SAFE)
+const mapVerdict = (result) => {
+  if (result.compilationError) return "Compilation Error";
+  if (result.runtimeError) return "Runtime Error";
+  if (result.timeLimitExceeded) return "Time Limit Exceeded";
+  if (result.memoryLimitExceeded) return "Memory Limit Exceeded";
+
+  if (result.passedCount === result.totalTests && result.totalTests > 0) {
+    return "Accepted";
+  }
+
+  return "Wrong Answer";
+};
+
+// Submit coding exam (FINAL FIXED)
 export const submitCodingExam = async (req, res) => {
   try {
     const { examId, submissions } = req.body;
-    const studentId = req.user?.id; // Assuming auth middleware sets req.user
 
-    // Validate required fields
-    if (!examId || !submissions || !Array.isArray(submissions)) {
-      return res.status(400).json({
+    const studentId =
+      req.user?.userId || req.user?.id || req.user?._id;
+
+    if (!studentId) {
+      return res.status(401).json({
         success: false,
-        message:
-          'Missing required fields: examId and submissions array are required',
+        message: "Student not authenticated",
       });
     }
 
-    // Get exam
+    if (!examId || !Array.isArray(submissions)) {
+      return res.status(400).json({
+        success: false,
+        message: "examId and submissions array are required",
+      });
+    }
+
     const exam = await NGCodingExamWithQuestions.findById(examId);
     if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'Coding exam not found',
+        message: "Coding exam not found",
       });
     }
 
@@ -610,19 +622,16 @@ export const submitCodingExam = async (req, res) => {
     let totalMarks = 0;
     const maxMarksPerQuestion = 100 / exam.totalQuestions;
 
-    // Process each submission
     for (const submission of submissions) {
       const { questionId, code, language } = submission;
 
-      // Validate submission
       if (!questionId || !code || !language) {
         return res.status(400).json({
           success: false,
-          message: `Invalid submission for question ${questionId}: missing questionId, code, or language`,
+          message: "Invalid submission payload",
         });
       }
 
-      // Get question
       const question = exam.questions.get(questionId);
       if (!question) {
         return res.status(404).json({
@@ -631,68 +640,92 @@ export const submitCodingExam = async (req, res) => {
         });
       }
 
-      // Execute code on hidden test cases
+      // ✅ SAFE FALLBACK FOR HIDDEN TESTS
+      const hiddenInputs =
+        question.hiddenInputs?.length > 0
+          ? question.hiddenInputs
+          : question.sampleInputs;
+
+      const hiddenOutputs =
+        question.hiddenOutputs?.length > 0
+          ? question.hiddenOutputs
+          : question.sampleOutputs;
+
       const result = await executeCodeMultipleTests(
         code,
         language,
-        question.hiddenInputs,
-        question.hiddenOutputs,
-        true // hidden
+        hiddenInputs,
+        hiddenOutputs,
+        true
       );
 
-      // Calculate marks for this question based on passed test cases
+      // ✅ SAFE MARKS CALCULATION
       const marks =
-        (result.passedCount / result.totalTests) * maxMarksPerQuestion;
+        result.totalTests > 0
+          ? (result.passedCount / result.totalTests) * maxMarksPerQuestion
+          : 0;
+
       totalMarks += marks;
 
-      // Save submission
-      const submissionRecord = new NGSubmissionCodingExams({
-        student_id: studentId,
-        exam_id: examId,
-        question_id: questionId,
-        code,
-        language,
-        verdict: result.overallVerdict,
-        marks: Math.round(marks),
-        executionTime:
-          result.results.length > 0 ? result.results[0].executionTime : '0.00s',
-        memory: result.results.length > 0 ? result.results[0].memory : '0MB',
-        output: result.results.length > 0 ? result.results[0].output : '',
-        error: result.results.length > 0 ? result.results[0].error : '',
-      });
+      const verdict = mapVerdict(result);
+      const firstResult = result.results?.[0] || {};
 
-      await submissionRecord.save();
+      // ✅ UPSERT (NO DUPLICATE KEY ERROR)
+      await NGSubmissionCodingExams.findOneAndUpdate(
+        {
+          exam_id: examId,
+          student_id: studentId,
+          question_id: questionId,
+        },
+        {
+          exam_id: examId,
+          student_id: studentId,
+          question_id: questionId,
+          code,
+          language,
+          verdict,
+          marks: Math.round(marks),
+          executionTime: firstResult.executionTime || "0.00s",
+          memory: firstResult.memory || "0MB",
+          output: firstResult.output || "",
+          error: firstResult.error || "",
+          submitted_at: new Date(),
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+        }
+      );
 
       results.push({
         questionId,
-        verdict: result.overallVerdict,
+        verdict,
         marks: Math.round(marks),
         passedTests: result.passedCount,
         totalTests: result.totalTests,
         successRate: result.successRate,
-        executionTime:
-          result.results.length > 0 ? result.results[0].executionTime : '0.00s',
-        memory: result.results.length > 0 ? result.results[0].memory : '0MB',
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
-      message: 'Coding exam submitted successfully',
+      message: "Coding exam submitted successfully",
       data: {
         totalMarks: Math.round(totalMarks),
         results,
       },
     });
   } catch (error) {
-    console.error('Error submitting coding exam:', error);
-    res.status(500).json({
+    console.error("❌ Error submitting coding exam:", error);
+    return res.status(500).json({
       success: false,
-      message: 'Failed to submit coding exam',
+      message: "Failed to submit coding exam",
       error: error.message,
     });
   }
 };
+
 
 // GET /api/nextgen/codingExams/my-codingexam
 export const getCodingExamsForManager = async (req, res) => {

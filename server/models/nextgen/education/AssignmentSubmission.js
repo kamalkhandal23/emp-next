@@ -17,7 +17,6 @@ const assignmentSubmissionSchema = new mongoose.Schema(
     },
     courseName: {
       type: String,
-      required: true,
       trim: true,
     },
     answers: {

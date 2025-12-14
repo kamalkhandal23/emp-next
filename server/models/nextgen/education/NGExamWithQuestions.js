@@ -10,6 +10,11 @@ const ngExamWithQuestionsSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    courseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Ng_Courses', // Reference to course collection
+      required: true,
+    },
     totalQuestions: {
       type: Number,
       required: true,
