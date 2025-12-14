@@ -53,7 +53,6 @@ const courseSchema = new mongoose.Schema(
       {
         title: { type: String, required: true },
         description: { type: String, required: true },
-          topic: { type: String, required: true },
         videoURL: { type: String },
         pdfURL: { type: String },
         created_at: { type: Date, default: Date.now },
