@@ -1,4 +1,4 @@
-import AssignmentSubmission from '../../models/nextgen/education/AssignmentSubmission.js';
+import NGSubmissionAssignment from '../../models/nextgen/education/NGSubmissionAssignment.js';
 import NGAssignmentWithQuestions from '../../models/nextgen/education/NGAssignmentWithQuestions.js';
 import Student from '../../models/nextgen/student-management/Student.js';
 import { sendGradedAssignmentEmail } from '../../services/emailService.js';
@@ -78,7 +78,7 @@ export const submitAssignment = async (req, res) => {
     }
 
     // Find existing submission or create new one
-    let submission = await AssignmentSubmission.findOne({
+    let submission = await NGSubmissionAssignment.findOne({
       assignment_id: assignmentId,
       student_id: studentId,
     });
@@ -108,7 +108,7 @@ export const submitAssignment = async (req, res) => {
       submission.status = 'submitted';
     } else {
       // Create new submission
-      submission = new AssignmentSubmission({
+      submission = new NGSubmissionAssignment({
         assignment_id: assignmentId,
         student_id: studentId,
         courseName: assignment.courseName,
@@ -171,7 +171,7 @@ export const getSubmission = async (req, res) => {
   try {
     const { assignmentId, studentId } = req.params;
 
-    const submission = await AssignmentSubmission.findOne({
+    const submission = await NGSubmissionAssignment.findOne({
       assignment_id: assignmentId,
       student_id: studentId,
     }).populate('assignment_id', 'assignmentName courseName');
@@ -208,7 +208,7 @@ export const getAssignmentSubmissions = async (req, res) => {
       query.status = status;
     }
 
-    const submissions = await AssignmentSubmission.find(query)
+    const submissions = await NGSubmissionAssignment.find(query)
       .populate('student_id', 'fullName email student_id')
       .populate('assignment_id', 'assignmentName courseName')
       .sort({ submitted_at: -1 });
@@ -243,7 +243,7 @@ export const gradeSubmission = async (req, res) => {
       });
     }
 
-    const submission = await AssignmentSubmission.findById(submissionId)
+    const submission = await NGSubmissionAssignment.findById(submissionId)
       .populate('student_id', 'fullName email')
       .populate('assignment_id', 'assignmentName');
 
@@ -304,7 +304,7 @@ export const getStudentSubmissions = async (req, res) => {
     if (status) query.status = status;
     if (courseName) query.courseName = courseName;
 
-    const submissions = await AssignmentSubmission.find(query)
+    const submissions = await NGSubmissionAssignment.find(query)
       .populate('assignment_id', 'assignmentName courseName totalQuestions')
       .sort({ submitted_at: -1 });
 
@@ -347,7 +347,7 @@ export const saveQuestionAnswer = async (req, res) => {
     }
 
     // Find or create submission
-    let submission = await AssignmentSubmission.findOne({
+    let submission = await NGSubmissionAssignment.findOne({
       assignment_id: assignmentId,
       student_id: studentId,
     });
@@ -368,7 +368,7 @@ export const saveQuestionAnswer = async (req, res) => {
       }
     } else {
       // Create new in-progress submission
-      submission = new AssignmentSubmission({
+      submission = new NGSubmissionAssignment({
         assignment_id: assignmentId,
         student_id: studentId,
         courseName: assignment.courseName,

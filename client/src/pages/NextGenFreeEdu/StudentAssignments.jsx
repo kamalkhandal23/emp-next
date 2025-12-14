@@ -439,6 +439,20 @@ export default function StudentAssignments() {
                             gap: '0.5rem',
                             marginBottom: '0.5rem',
                           }}>
+                          <span>🗓️</span>
+                          <span>
+                            Feedback :{' '}
+                            {assignment.submission.feedback ||
+                              'No feedback provided'}
+                          </span>
+                        </div>
+                        {/* <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            marginBottom: '0.5rem',
+                          }}>
                           <span>📄</span>
                           <span
                             style={{ fontSize: '0.875rem', color: '#6b7280' }}>
@@ -447,10 +461,10 @@ export default function StudentAssignments() {
                               assignment.submission.submissionId ||
                               'N/A'}
                           </span>
-                        </div>
+                        </div> */}
                       </>
                     )}
-                    <div
+                    {/* <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -459,7 +473,7 @@ export default function StudentAssignments() {
                       }}>
                       <span>📅</span>
                       <span>Created: {formatDate(assignment.createdAt)}</span>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Lock Message */}
@@ -490,12 +504,12 @@ export default function StudentAssignments() {
                       className='btn-primary'
                       style={{
                         width: '100%',
-                        opacity: isLocked ? 0.5 : 1,
-                        cursor: isLocked ? 'not-allowed' : 'pointer',
+                        opacity: (isLocked || isCompleted) ? 0.5 : 1,
+                        cursor: (isLocked || isCompleted) ? 'not-allowed' : 'pointer',
                       }}
-                      disabled={isLocked}
+                      disabled={isLocked || isCompleted}
                       onClick={() => {
-                        if (!isLocked) {
+                        if (!(isLocked || isCompleted)) {
                           navigate(
                             `/nextgen/assignments/${assignment._id}/submit`
                           );

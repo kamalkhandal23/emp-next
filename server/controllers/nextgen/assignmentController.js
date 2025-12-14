@@ -1,8 +1,7 @@
 import NGAssignmentWithQuestions from '../../models/nextgen/education/NGAssignmentWithQuestions.js';
-import AssignmentSubmission from '../../models/nextgen/education/AssignmentSubmission.js';
+import NGSubmissionAssignment from '../../models/nextgen/education/NGSubmissionAssignment.js';
 import Student from '../../models/nextgen/student-management/Student.js';
 import { sendNewAssignmentEmail } from '../../services/emailService.js';
-import NGSubmissionAssignment from '../../models/nextgen/education/NGSubmissionAssignment.js';
 import NG_Courses from '../../models/nextgen/education/Course.js';
 import User from '../../models/core/User.js';
 
@@ -20,8 +19,7 @@ export const createAssignment = async (req, res) => {
           'Missing required fields: assignmentName, courseName, totalQuestions, and questionData are required',
       });
     }
-    const courseId = req.body.courseName;
-    const course = await NG_Courses.findById(courseId);
+    const course = await NG_Courses.findOne({ title: courseName.trim() });
     if (!course) {
       return res.status(404).json({
         success: false,
@@ -113,6 +111,7 @@ export const createAssignment = async (req, res) => {
     const assignment = new NGAssignmentWithQuestions({
       assignmentName: assignmentName.trim(),
       courseName: courseName.trim(),
+      courseId: course._id,
       totalQuestions: parseInt(totalQuestions),
       questions: questionsMap,
       order: assignmentOrder,
@@ -538,7 +537,7 @@ export const getAssignmentsWithLockStatus = async (req, res) => {
       .lean();
 
     // Get all submissions for this student
-    const submissions = await AssignmentSubmission.find({
+    const submissions = await NGSubmissionAssignment.find({
       student_id: studentId,
       status: { $in: ['submitted', 'graded'] },
     }).lean();
@@ -658,10 +657,10 @@ export const getSubmissionsForAssignment = async (req, res) => {
                  email: sub.student_id.email,
                }
              : null,
-          submission_data: sub.submission_data,
+          answers: sub.answers ? Object.fromEntries(sub.answers) : {},
           submitted_at: sub.submitted_at,
           status: sub.status,
-          grade: sub.grade,
+          score: sub.score,
           feedback: sub.feedback,
         })),
       },

@@ -77,6 +77,12 @@ export default function CourseManagerPortal() {
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [showDocumentsModal, setShowDocumentsModal] = useState(false);
   const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [changePasswordData, setChangePasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [editCourse, setEditCourse] = useState({
     slug: '',
     title: '',
@@ -321,49 +327,35 @@ export default function CourseManagerPortal() {
         user = { full_name: 'Course Manager', assignedCourses: [] };
       }
 
-      // If user doesn't have assignedCourses, try to fetch from ng_users using username
-      if (!user.assignedCourses && user.username) {
-        try {
-          const fullUserResponse = await apiClient.getUserByUsername(
-            user.username
-          );
-          console.log('Fetched full user data:', fullUserResponse);
-          if (fullUserResponse.success && fullUserResponse.data) {
-            user = { ...user, ...fullUserResponse.data };
-          }
-        } catch (e) {
-          console.error('Error fetching full user data:', e);
+      console.log('User:', user);
+      console.log('User assignedCourses:', user.assignedCourses);
+
+      // Format assigned courses - handle both array of objects and array of IDs
+      let assignedCoursesText = 'No courses assigned';
+      
+      if (user.assignedCourses && Array.isArray(user.assignedCourses)) {
+        if (user.assignedCourses.length > 0) {
+          // Check if assignedCourses are objects (populated) or strings/IDs
+          const courseNames = user.assignedCourses.map((course) => {
+            if (typeof course === 'object' && course.title) {
+              return course.title;
+            }
+            // If it's just an ID, try to find from courses array
+            const foundCourse = courses.find(
+              (c) => c._id?.toString() === course?.toString()
+            );
+            return foundCourse ? foundCourse.title : 'Unknown Course';
+          });
+          
+          assignedCoursesText = courseNames.join(', ');
         }
       }
 
-      // Debug logging
-      console.log('User', user);
-      console.log('User assignedCourses:', user.assignedCourses);
-      console.log(
-        'Available courses:',
-        courses.map((c) => ({ id: c._id, title: c.title }))
-      );
-
-      // Filter courses assigned to this course manager
-      const assignedCourses =
-        user.assignedCourses && Array.isArray(user.assignedCourses)
-          ? courses
-              .filter((course) => {
-                const isAssigned = user.assignedCourses.includes(course._id);
-                console.log(
-                  `Checking course ${course.title} (${course._id}): ${isAssigned}`
-                );
-                return isAssigned;
-              })
-              .map((course) => course.title)
-              .join(', ') || 'No courses assigned'
-          : 'No courses assigned';
-
-      console.log('Final assignedCourses:', assignedCourses);
+      console.log('Final assignedCourses:', assignedCoursesText);
 
       const courseManagerInfo = {
         ...user,
-        assignedCourses: assignedCourses,
+        assignedCourses: assignedCoursesText,
       };
 
       setCourseManagerData(courseManagerInfo);
@@ -380,13 +372,24 @@ export default function CourseManagerPortal() {
         }
       }
 
+      let assignedCoursesText = 'No courses assigned';
+      if (user.assignedCourses && Array.isArray(user.assignedCourses) && user.assignedCourses.length > 0) {
+        const courseNames = user.assignedCourses.map((course) => {
+          if (typeof course === 'object' && course.title) {
+            return course.title;
+          }
+          const foundCourse = courses.find(
+            (c) => c._id?.toString() === course?.toString()
+          );
+          return foundCourse ? foundCourse.title : 'Unknown Course';
+        });
+        
+        assignedCoursesText = courseNames.join(', ');
+      }
+
       const courseManagerInfo = {
         ...user,
-        assignedCourses:
-          courses
-            .filter((course) => user.assignedCourses?.includes(course._id))
-            .map((course) => course.title)
-            .join(', ') || 'No courses assigned',
+        assignedCourses: assignedCoursesText,
       };
       setCourseManagerData(courseManagerInfo);
     }
@@ -598,19 +601,48 @@ export default function CourseManagerPortal() {
     }
   };
 
-  const handleChangePassword = async (newPassword) => {
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    // Validate inputs
+    if (!changePasswordData.newPassword.trim()) {
+      alert('Please enter a new password');
+      return;
+    }
+
+    if (changePasswordData.newPassword.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+
+    if (changePasswordData.newPassword !== changePasswordData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
     try {
       const response = await apiClient.updatePassword({
-        password: newPassword,
+        password: changePasswordData.newPassword,
       });
+      
       if (response.success) {
         alert('Password updated successfully!');
+        setShowChangePasswordModal(false);
+        // Reset form
+        setChangePasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
       } else {
-        alert('Failed to update password');
+        alert(response.message || 'Failed to update password');
       }
     } catch (error) {
       console.error('Error changing password:', error);
       alert('Error changing password: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -684,7 +716,7 @@ export default function CourseManagerPortal() {
                   <div
                     className='portal-card-header'
                     style={{ padding: '1rem 1.5rem' }}>
-                    <h3 className='portal-card-title' style={{ color: '' }}>
+                    <h3 className='portal-card-title' style={{ color: 'black' }}>
                       Course Manager Profile
                     </h3>
                   </div>
@@ -697,25 +729,20 @@ export default function CourseManagerPortal() {
                             courseManagerData.fullName ||
                             'N/A'}
                         </div>
-                        <div>
-                          <strong>Assigned Course:</strong>{' '}
-                          {courseManagerData.assignedCourses}
-                        </div>
+                        {/* <div>
+                          <strong>Assigned Courses:</strong>{' '}
+                          {courseManagerData.assignedCourses &&
+                          courseManagerData.assignedCourses !== 'No courses assigned'
+                            ? courseManagerData.assignedCourses
+                            : 'No courses assigned'}
+                        </div> */}
                         <div>
                           <strong>Password:</strong>{' '}
-                          {courseManagerData.password ||
-                          courseManagerData.password_hash
-                            ? '••••••••'
-                            : 'Not set'}
+                          {'••••••••'}
                         </div>
                         <button
                           className='btn-primary'
-                          onClick={() => {
-                            const newPassword = prompt('Enter new password:');
-                            if (newPassword) {
-                              handleChangePassword(newPassword);
-                            }
-                          }}
+                          onClick={() => setShowChangePasswordModal(true)}
                           style={{ marginTop: '1rem' }}>
                           Change Password
                         </button>
@@ -749,7 +776,7 @@ export default function CourseManagerPortal() {
                 <div
                   className='table-row'
                   style={{
-                    gridTemplateColumns: '2fr 1fr 1fr auto',
+                    gridTemplateColumns: '1fr 1fr 1fr auto',
                     fontWeight: 600,
                     background: '#f8fafc',
                   }}>
@@ -771,7 +798,7 @@ export default function CourseManagerPortal() {
                     <div
                       key={i}
                       className='table-row'
-                      style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr auto' }}>
+                      style={{ gridTemplateColumns: '1fr 1fr 1fr auto' }}>
                       <div style={{ fontWeight: 500 }}>{s.full_name}</div>
                       <div>{s.course_id.title}</div>
                       <div>
@@ -782,11 +809,6 @@ export default function CourseManagerPortal() {
 
                       {/* 3. Use the formatted date here */}
                       <div>{formattedDate}</div>
-
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className='action-button'>Edit</button>
-                        <button className='action-button'>View</button>
-                      </div>
                     </div>
                   );
                 })}
@@ -944,7 +966,7 @@ export default function CourseManagerPortal() {
                         fontSize: '0.875rem',
                         background: 'white',
                       }}>
-                      <option value='all'>All Statuses</option>
+                      <option value='all'>All Status</option>
                       <option value='draft'>Draft</option>
                       <option value='coming_soon'>Coming Soon</option>
                       <option value='registration_not_started'>
@@ -954,7 +976,6 @@ export default function CourseManagerPortal() {
                       <option value='registration_closed'>
                         Registration Closed
                       </option>
-                      <option value='closed'>Closed</option>
                     </select>
                   </div>
                 </div>
@@ -1002,7 +1023,7 @@ export default function CourseManagerPortal() {
                 <div
                   className='table-row'
                   style={{
-                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1fr auto',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto',
                     fontWeight: 600,
                     background: '#f8fafc',
                     color: 'black',
@@ -1011,8 +1032,6 @@ export default function CourseManagerPortal() {
                   <div>Subtitle</div>
                   <div>Duration</div>
                   <div>Visibility</div>
-                  <div>Status</div>
-                  <div>Enrollments</div>
                   <div>Rating</div>
                   <div>Actions</div>
                 </div>
@@ -1022,7 +1041,7 @@ export default function CourseManagerPortal() {
                     key={course?._id || idx}
                     className='table-row'
                     style={{
-                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1fr auto',
+                      gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto',
                     }}>
                     <div style={{ fontWeight: 500 }}>
                       {course?.icon} {course?.title}
@@ -1039,17 +1058,7 @@ export default function CourseManagerPortal() {
                         {course?.visibility}
                       </span>
                     </div>
-                    <div>
-                      {course?.courseStatus && (
-                        <span
-                          className={
-                            getStatusStyle(course.courseStatus).className
-                          }>
-                          {getStatusStyle(course.courseStatus).text}
-                        </span>
-                      )}
-                    </div>
-                    <div>{course?.enrolled_count || 0}</div>
+                    
                     <div>{course?.rating || 0} / 5</div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
@@ -1081,7 +1090,7 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Assignments' style={{ textColor: 'white' }}>
+                <Card title={<span style={{ color: 'black' }}>Assignments</span>}>
                   <ActionList
                     actions={[
                       'Create Assignments',
@@ -1091,13 +1100,13 @@ export default function CourseManagerPortal() {
                     onActionClick={handleActionClick}
                   />
                 </Card>
-                <Card title='Exams'>
+                <Card title={<span style={{ color: 'black' }}>Exams</span>}>
                   <ActionList
                     actions={['Create exams', 'Manage Exams', 'Grade Exams']}
                     onActionClick={handleActionClick}
                   />
                 </Card>
-                <Card title='Coding exams'>
+                <Card  title={<span style={{ color: 'black' }}>Coding Exams</span>}>
                   <ActionList
                     actions={[
                       'Create Coding exams',
@@ -1558,19 +1567,19 @@ export default function CourseManagerPortal() {
                   gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
                   gap: '2rem',
                 }}>
-                <Card title='Course Management'>
+                <Card title={<span style={{ color: 'black' }}>Course Management</span>}>
                   <ActionList
                     actions={['Add Lectures to Course', 'Manage Lecture']}
                     onActionClick={handleActionClick}
                   />
                 </Card>
-                <Card title='Online Classes'>
+                <Card  title={<span style={{ color: 'black' }}>Online Classes</span>}>
                   <ActionList
                     actions={['Add Class Link', 'Manage Class Links']}
                     onActionClick={handleActionClick}
                   />
                 </Card>
-                <Card title='Attendances'>
+                <Card  title={<span style={{ color: 'black' }}>Attendances</span>}>
                   <ActionList
                     actions={['Student Attendance']}
                     onActionClick={(action) => {
@@ -1808,6 +1817,72 @@ export default function CourseManagerPortal() {
               <button type='submit' className='btn-primary' disabled={loading}>
                 {loading ? 'Adding...' : 'Add Course'}
               </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePasswordModal && (
+        <Modal
+          title='Change Password'
+          onClose={() => {
+            setShowChangePasswordModal(false);
+            setChangePasswordData({
+              currentPassword: '',
+              newPassword: '',
+              confirmPassword: '',
+            });
+          }}>
+          <form onSubmit={handleChangePassword}>
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <TextField
+                label='New Password'
+                type='password'
+                value={changePasswordData.newPassword}
+                onChange={(v) =>
+                  setChangePasswordData((p) => ({ ...p, newPassword: v }))
+                }
+                placeholder='Enter new password'
+                required
+              />
+              <TextField
+                label='Confirm Password'
+                type='password'
+                value={changePasswordData.confirmPassword}
+                onChange={(v) =>
+                  setChangePasswordData((p) => ({ ...p, confirmPassword: v }))
+                }
+                placeholder='Confirm new password'
+                required
+              />
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  justifyContent: 'flex-end',
+                  marginTop: '2rem',
+                }}>
+                <button
+                  type='button'
+                  onClick={() => {
+                    setShowChangePasswordModal(false);
+                    setChangePasswordData({
+                      currentPassword: '',
+                      newPassword: '',
+                      confirmPassword: '',
+                    });
+                  }}
+                  className='btn-secondary'>
+                  Cancel
+                </button>
+                <button
+                  type='submit'
+                  className='btn-primary'
+                  disabled={loading}>
+                  {loading ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
             </div>
           </form>
         </Modal>
