@@ -3,6 +3,7 @@ import { addLectureToCourse } from "../../controllers/nextgen/addLectureControll
 const router = Router()
 
 //http://localhost:5002/api/nextgen/addLecture/add-lectures
+console.log("In addLecture.js route");
 router.post("/add-lectures",addLectureToCourse)
 
 

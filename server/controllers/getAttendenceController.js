@@ -9,10 +9,12 @@ import { response } from "express";
  * Helper: Get class name from course.classLinks
  */
 const getClassName = (course) => {
+    
     if (!course?.classLinks || course.classLinks.length === 0) {
-        return "Introduction";
+        console.log("Course in getClassName true:", course) ;
+        return "-";
     }
-    return course.classLinks[0]?.title || "Introduction";
+    return course.classLinks[0]?.title || "-";
 };
 
 //Get the assigned course
@@ -165,7 +167,7 @@ export const getAllAttendance = async (req, res) => {
             const studentInfo = await NG_Approved_Students.findById(doc.student);
             if (!studentInfo) continue;
 
-            const className = getClassName(doc.course);
+            const className = "-";
 
             results.push({
                 studentId: studentInfo.student_id,

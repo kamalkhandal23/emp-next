@@ -10,6 +10,7 @@ export const addClassLinkToCourse = async (req, res) => {
         message: "Course ID is required"
       });
     }
+    console.log("Received classLinks:", classLinks);
 
     if (!Array.isArray(classLinks) || classLinks.length === 0) {
       return res.status(400).json({

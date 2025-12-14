@@ -23,6 +23,7 @@ export const getProfileData = async (req, res) => {
 
         const completedAssignments = student?.noOfCompletedAssignments;
         const classAttenended = await NGStudentAttencendance.findOne({student : student._id});
+        console.log("Class Attended Data:", classAttenended);
 
         return res.status(200).json({
             Data:

@@ -10,7 +10,7 @@ function ClassLinks() {
   const [selectedCourse, setSelectedCourse] = useState("");
 
   const [classLinks, setClassLinks] = useState([
-    { title: "", date: "", time: "", ClassURL: "" }
+    { title: "", date: "", time: "", videoURL: "" }
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +58,7 @@ function ClassLinks() {
   const addNewClassLink = () => {
     setClassLinks([
       ...classLinks,
-      { title: "", date: "", time: "", ClassURL: "" }
+      { title: "", date: "", time: "", videoURL: "" }
     ]);
   };
 
@@ -196,9 +196,9 @@ function ClassLinks() {
             <input
               className="w-full mt-3 border px-4 py-2 rounded"
               placeholder="Class Video URL"
-              value={link.ClassURL}
+              value={link.videoURL}
               onChange={(e) =>
-                handleClassLinkChange(index, "ClassURL", e.target.value)
+                handleClassLinkChange(index, "videoURL", e.target.value)
               }
             />
           </div>

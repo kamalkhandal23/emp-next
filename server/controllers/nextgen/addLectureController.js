@@ -3,7 +3,7 @@ import NG_Courses from "../../models/education/NG_Courses.js"
 export const addLectureToCourse = async (req, res) => {
   try {
     const { courseId, lectures } = req.body;
-
+    console.log("Received addLectureToCourse request:", req.body);
     if (!courseId) {
       return res.status(400).json({
         success: false,

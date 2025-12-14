@@ -120,15 +120,23 @@ export default function App() {
                 studentInfo?.id;
 
             const courseId = studentInfo?.course?._id;
-
-            const response = await apiClient.post(
-                `/nextgen/studentData/add-activity?studentId=${studentId}&courseId=${courseId}`,
-                {
-                    lectureId: classLink?._id,
-                    activityType: "Joined Lecture",
-                    description: `Joined lecture: ${classLink.title}`,
-                }
-            );
+            console.log("Updating activity for student:", studentId, "course:", courseId);
+            const response = await fetch(
+        `/api/nextgen/studentData/add-activity?studentId=${studentId}&courseId=${courseId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            activityType: 'Joined Lecture',
+            description: `Joined class - ${classLink.title}`,
+            lectureId: classLink._id,
+          }),
+        }
+      );
+      
 
             console.log("Activity Updated:", response.data);
         } catch (err) {
@@ -192,7 +200,7 @@ export default function App() {
                         <div
                             key={classLink._id || index}
                             style={{
-                                background: "linear-gradient(135deg, #dadeffff, #174c8dff)",
+                                background: "linear-gradient(135deg, #fbfbffff, #588bd7ff)",
                                 padding: "30px",
                                 borderRadius: "18px",
                                 border: "1px solid #dbeafe",
