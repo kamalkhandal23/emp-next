@@ -5,13 +5,13 @@ import { useNavigate } from "react-router-dom";
 function SubmissionDetailsModal({ details, onClose, onGrade, isGrading, assignmentId }) {
     if (!details) return null;
 
-    const [grade, setGrade] = useState(details.submission.grade || '');
+    const [grade, setGrade] = useState(details.submission.score || '');
     const [feedback, setFeedback] = useState(details.submission.feedback || '');
     
     // Check if the submission is currently being graded (to disable button)
     const isCurrentSubmissionGrading = isGrading[details.submission.id];
 
-    const questionKeys = Object.keys(details.questions).sort(); // Sort keys (q1, q2, etc.)
+    const questionKeys = Object.keys(details.questions || {}).sort(); // Sort keys (q1, q2, etc.)
 
     const handleSubmit = () => {
         // Simple validation check
@@ -38,12 +38,12 @@ function SubmissionDetailsModal({ details, onClose, onGrade, isGrading, assignme
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
                     <h3 style={{ margin: 0 }}>
-                        Review Submission: <span style={{ color: '#3b82f6' }}>{details.submission.student ? details.submission.student.fullName : 'Unknown Student'}</span>
+                       <span style={{ color: 'black' }}>Review Submission:</span> <span style={{ color: '#3b82f6' }}>{details.submission.student ? details.submission.student.fullName : 'Unknown Student'}</span>
                     </h3>
                     <button 
                         className="btn-close" 
                         onClick={onClose}
-                        style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+                        style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color:'red'}}
                     >&times;</button>
                 </div>
 
@@ -59,7 +59,7 @@ function SubmissionDetailsModal({ details, onClose, onGrade, isGrading, assignme
                                 whiteSpace: 'pre-wrap', fontFamily: 'monospace', margin: 0, 
                                 border: '1px solid #e0e0e0'
                             }}>
-                                {details.submission.submission_data[qKey] || '*No Answer Submitted*'}
+                                {details.submission.answers && details.submission.answers[qKey] ? details.submission.answers[qKey] : '*No Answer Submitted*'}
                             </pre>
                         </div>
                     ))}
@@ -67,11 +67,11 @@ function SubmissionDetailsModal({ details, onClose, onGrade, isGrading, assignme
                 
                 {/* Grading Controls */}
                 <div style={{ borderTop: '2px solid #3b82f6', paddingTop: '1rem', marginTop: '1rem' }}>
-                    <h4>Current Grade & Feedback</h4>
+                    <h4><span style={{color:'black'}}>Current Grade & Feedback</span></h4>
                     <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '1rem' }}>
-                                **Grade (0-100):**
+                                Grade (0-100):
                                 <input 
                                     type="number" 
                                     value={grade} 
@@ -87,7 +87,7 @@ function SubmissionDetailsModal({ details, onClose, onGrade, isGrading, assignme
                         </div>
                         <div style={{ flex: 3 }}>
                             <label style={{ display: 'block', marginBottom: '1rem' }}>
-                                **Feedback:**
+                                Feedback:
                                 <textarea 
                                     value={feedback} 
                                     onChange={(e) => setFeedback(e.target.value)} 
@@ -187,14 +187,13 @@ export default function GradeAssignments() {
         setGrading(prev => ({ ...prev, [submissionId]: true }));
         try {
             const token = localStorage.getItem("authToken");
-            // NOTE: Assuming VITE_API_URL is configured correctly.
-            const res = await fetch(`http://localhost:5002/api/nextgen/assignments/${submissionId}/grade`, {
-                method: "PUT",
+            const res = await fetch(`http://localhost:5002/api/nextgen/assignment-submissions/${submissionId}/grade`, {
+                method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ grade: parseInt(grade), feedback }),
+                body: JSON.stringify({ score: parseInt(grade), feedback }),
             });
 
             if (res.ok) {
@@ -336,7 +335,7 @@ export default function GradeAssignments() {
                                                 <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>{submission.student ? submission.student.email : 'N/A'}</div>
                                             </div>
                                             <div>{submission.submitted_at ? new Date(submission.submitted_at).toLocaleDateString() : 'N/A'}</div>
-                                            <div>{submission.grade !== null ? submission.grade : "N/A"}</div>
+                                            <div>{submission.score !== null && submission.score !== undefined ? submission.score : "N/A"}</div>
                                             <div>
                                                 <span className={`status-badge status-${submission.status === "graded" ? "active" : "pending"}`}>
                                                     {submission.status}

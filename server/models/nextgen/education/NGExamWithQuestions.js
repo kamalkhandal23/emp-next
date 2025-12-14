@@ -98,7 +98,8 @@ ngExamWithQuestionsSchema.methods.getExamData = function () {
 ngExamWithQuestionsSchema.statics.createFromFrontend = async function (
   examName,
   totalQuestions,
-  questionData
+  questionData,
+  courseId
 ) {
   const questionsMap = new Map();
 
@@ -111,6 +112,7 @@ ngExamWithQuestionsSchema.statics.createFromFrontend = async function (
     examName,
     totalQuestions,
     questions: questionsMap,
+    courseId,
   });
 
   return await exam.save();

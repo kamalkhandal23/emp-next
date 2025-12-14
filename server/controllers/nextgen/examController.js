@@ -71,7 +71,7 @@ export const createExam = async (req, res) => {
     const exam = await NGExamWithQuestions.createFromFrontend(
       examName.trim(),
       parseInt(totalQuestions),
-      questionData
+      questionData, req.body.courseId
     );
 
     // Return success response

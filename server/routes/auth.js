@@ -198,4 +198,49 @@ router.post("/refresh", authenticate, (req, res) => {
   }
 });
 
+/* ------------------------------------------------------------- */
+/* UPDATE PASSWORD                                               */
+/* ------------------------------------------------------------- */
+router.put(
+  "/update-password",
+  authenticate,
+  [
+    body("password")
+      .trim()
+      .notEmpty()
+      .withMessage("Password is required")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters"),
+  ],// UPDATE PASSWORD
+   async (req, res) => {
+  try {
+    const { password } = req.body;
+    const userId = req.user.id;
+
+    if (!password || password.trim().length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(password.trim(), 10);
+
+    // Update the user's password
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { password_hash: hashedPassword },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    return res.json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Update password error:", error);
+    return res.status(500).json({ success: false, message: "Server error during password update" });
+  }
+}
+);
+
 export default router;

@@ -308,13 +308,17 @@ export default function App() {
               <Route path='coding-exam/:id' element={<CodingExam />} />
               <Route path='coding-practice' element={<CodingPractice />} />
               <Route path='assignments' element={<StudentAssignments />} />
-              <Route path='lectures' element={<AvailableLectures />} />
-                <Route path='class-link' element={<ClassLink />} />
-                <Route path='leaderboard' element={<Leaderboard/>} />
+              <Route
+                path='assignments/:assignmentId'
+                element={<AssignmentDetails />}
+              />
               <Route
                 path='assignments/:assignmentId/submit'
                 element={<SubmitAssignment />}
               />
+              <Route path='lectures' element={<AvailableLectures />} />
+                <Route path='class-link' element={<ClassLink />} />
+                <Route path='leaderboard' element={<Leaderboard/>} />
               <Route path='privacy-policy' element={<PrivacyPolicy />} />
               <Route path='terms-of-service' element={<TermsOfService />} />
             </Route>

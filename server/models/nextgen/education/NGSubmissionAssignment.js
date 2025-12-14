@@ -13,30 +13,62 @@ const ngSubmissionAssignmentSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  submission_data: {
-    type: Object,
-    required: true
-  },
-  submitted_at: {
-    type: Date,
-    default: Date.now
-  },
-  status: {
-    type: String,
-    enum: ['submitted', 'graded', 'pending'],
-    default: 'submitted'
-  },
-  grade: {
-    type: Number,
-    min: 0,
-    max: 100,
-    default: null
-  },
-  feedback: {
-    type: String,
-    default: ''
-  }
-}, {
+      courseName: {
+        type: String,
+        trim: true,
+      },
+      answers: {
+        type: Map,
+        of: mongoose.Schema.Types.Mixed, // Store answers for each question
+        default: {},
+      },
+      textSubmission: {
+        type: String,
+        default: '',
+      },
+      fileSubmissions: [
+        {
+          filename: String,
+          originalName: String,
+          path: String,
+          url: String, // Supabase Storage URL
+          mimetype: String,
+          size: Number,
+          uploadedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+      started_at: {
+        type: Date,
+        default: Date.now,
+      },
+      submitted_at: {
+        type: Date,
+      },
+      score: {
+        type: Number,
+        min: 0,
+        max: 100,
+      },
+      status: {
+        type: String,
+        enum: ['in-progress', 'submitted', 'graded'],
+        default: 'in-progress',
+      },
+      feedback: {
+        type: String,
+        default: '',
+      },
+      graded_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      graded_at: {
+        type: Date,
+      },
+    },{
   timestamps: true,
   collection: 'ng_submission_assignments'
 });
