@@ -1,5 +1,7 @@
-import express from 'express';
-import { auth,authorize } from '../../middleware/auth.js';
+import express from "express";
+import { auth, authorize } from "../../middleware/auth.js";
+import verifyStudentToken from "../../middleware/verifyStudentToken.js"; 
+
 import {
   createCodingExam,
   getAllCodingExams,
@@ -11,43 +13,83 @@ import {
   runCode,
   submitCodingExam,
   getCodingExamsForManager,
-  getAllSubmissions
-} from '../../controllers/nextgen/codingExamController.js';
+  getAllSubmissions,
+} from "../../controllers/nextgen/codingExamController.js";
 
 const router = express.Router();
 
-// geta coding exam on the basis of course assingned to the course manager
 
-router.get("/my-codingexam",auth,authorize(["course_manager","admin"]),getCodingExamsForManager)
 
-// Get all submissions (for course managers/admins)
-router.get('/all-submissions', getAllSubmissions);
+// Get coding exams assigned to course manager
+router.get(
+  "/my-codingexam",
+  auth,
+  authorize(["course_manager", "admin"]),
+  getCodingExamsForManager
+);
 
-// Create a new coding exam
-router.post('/create', createCodingExam);
+// Get all submissions (manager/admin only)
+router.get(
+  "/all-submissions",
+  auth,
+  authorize(["course_manager", "admin"]),
+  getAllSubmissions
+);
 
-// Get all coding exams (with optional filters)
-router.get('/', getAllCodingExams);
-
-// Get coding exam by ID
-router.get('/id/:id', getCodingExamById);
-
-// Get coding exam by name
-router.get('/name/:examName', getCodingExamByName);
+// Create a new coding exam (admin/manager)
+router.post(
+  "/create",
+  auth,
+  authorize(["course_manager", "admin"]),
+  createCodingExam
+);
 
 // Update coding exam status
-router.patch('/:id/status', updateCodingExamStatus);
+router.patch(
+  "/:id/status",
+  auth,
+  authorize(["course_manager", "admin"]),
+  updateCodingExamStatus
+);
 
 // Update entire coding exam
-router.put('/:id', updateCodingExam);
+router.put(
+  "/:id",
+  auth,
+  authorize(["course_manager", "admin"]),
+  updateCodingExam
+);
 
 // Delete coding exam
-router.delete('/:id', deleteCodingExam);
+router.delete(
+  "/:id",
+  auth,
+  authorize(["course_manager", "admin"]),
+  deleteCodingExam
+);
 
-// Run code on sample inputs
-router.post('/run-code', runCode);
 
-// Submit coding exam
-router.post('/submit', submitCodingExam);
+
+// Get all coding exams
+router.get("/", getAllCodingExams);
+
+// Get coding exam by ID
+router.get("/id/:id", getCodingExamById);
+
+// Get coding exam by name
+router.get("/name/:examName", getCodingExamByName);
+
+
+router.post(
+  "/run-code",
+  verifyStudentToken,
+  runCode
+);
+
+router.post(
+  "/submit",
+  verifyStudentToken,   
+  submitCodingExam
+);
 
 export default router;
