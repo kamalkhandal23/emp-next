@@ -2,6 +2,8 @@ import NGCodingExamWithQuestions from '../../models/nextgen/education/NGCodingEx
 import NGSubmissionCodingExams from '../../models/nextgen/education/NGSubmissionCodingExams.js';
 import { executeCodeMultipleTests } from '../../services/codeExecutionService.js';
 import User from '../../models/core/User.js';
+import NG_Approved_Students from '../../models/nextgen/core/NG_ApprovedStudents.js';
+import addActivity from '../../services/addActivityServiceImpl.js';
 
 export const createCodingExam = async (req, res) => {
   try {
@@ -707,7 +709,16 @@ export const submitCodingExam = async (req, res) => {
         successRate: result.successRate,
       });
     }
-
+    await addActivity(studentId, "Coding Exam ", `Completed ${exam.examName} - marks: ${totalMarks}`, {Date: new Date()});
+    const student = await NG_Approved_Students.findById(studentId);
+    if (student) {
+  // 👉 Check if assignment already exists
+          student.leaderboardValue.score += 20;
+          // 👉 Add new assignment     
+        
+        await student.save();
+      }
+        
     return res.json({
       success: true,
       message: "Coding exam submitted successfully",

@@ -200,7 +200,7 @@ export default function App() {
                         <div
                             key={classLink._id || index}
                             style={{
-                                background: "linear-gradient(135deg, #727ed7ff, #174c8dff)",
+                                background: "linear-gradient(135deg, #fbfbffff, #588bd7ff)",
                                 padding: "30px",
                                 borderRadius: "18px",
                                 border: "1px solid #dbeafe",
