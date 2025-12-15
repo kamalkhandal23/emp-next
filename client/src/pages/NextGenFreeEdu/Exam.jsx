@@ -32,7 +32,7 @@ export default function Exam() {
   // Fullscreen + blur detection popup
   const [showTopMessage, setShowTopMessage] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(20);
 
   // Student info
   const getStudentData = () => {
@@ -269,14 +269,14 @@ export default function Exam() {
       if (!showPopup) {
         setShowTopMessage(true);
         setShowPopup(true);
-        setCountdown(30);
+        setCountdown(20);
       }
     };
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement && !showPopup && examStarted && !examSubmitted) {
         setShowTopMessage(true);
         setShowPopup(true);
-        setCountdown(30);
+        setCountdown(20);
       }
     };
 
@@ -295,7 +295,7 @@ export default function Exam() {
       interval = setInterval(() => setCountdown((c) => c - 1), 1000);
     }
     if (showPopup && countdown === 0) {
-      setExamSubmitted(true);
+      handleSubmitExam();
       setShowPopup(false);
     }
     return () => clearInterval(interval);
@@ -305,11 +305,11 @@ export default function Exam() {
     enterFullscreen();
     setShowPopup(false);
     setShowTopMessage(false);
-    setCountdown(30);
+    setCountdown(20);
   };
   const handleCancel = () => {
     if (document.fullscreenElement) exitFullscreen();
-    setExamSubmitted(true);
+    handleSubmitExam();
     setShowPopup(false);
     setShowTopMessage(false);
   };

@@ -20,6 +20,7 @@ import { executeCode } from "../services/codeExecutionService.js";
 import ngApprovedStudent from "../models/nextgen/core/NG_ApprovedStudents.js";
 import addActivity from "../services/addActivityServiceImpl.js";
 import ng_exams from "../models/nextgen/education/ng_exams.js";
+import NG_Approved_Students from "../models/nextgen/core/NG_ApprovedStudents.js";
 
 const router = express.Router();
 // 🔥 Helper: streak + total_solved update
@@ -169,6 +170,20 @@ router.post("/student/exams/:examId/submit", async (req, res) => {
     if (feedback) {
       submissionPayload.feedback = feedback;
     }
+    //Update score and recent Activity
+    const student = await ngApprovedStudent.findById(studentId);
+    const examForUpdate = await ng_exams.findById(examId);
+    const existingSubmission = await NgExamSubmission.findOne({ exam_id: examId, student_id: studentId });
+    if( !existingSubmission){
+      const student = await  NG_Approved_Students.findOne({ _id: studentId });
+      student.leaderboardValue.score += 15;
+      student.save();
+      await addActivity(student._id, "Exam submission", `Submited ${examForUpdate.examName} exam`, {Date: new Date()});
+    }
+    else{
+      await addActivity(student._id, "Exam submission", `Resubmited ${examForUpdate.examName} exam`, {Date: new Date()});
+
+    }
 
     // ✅ Unique index (exam_id + student_id) ke hisaab se upsert
     const submission = await NgExamSubmission.findOneAndUpdate(
@@ -188,13 +203,6 @@ router.post("/student/exams/:examId/submit", async (req, res) => {
       grade: submission.grade
     });
     console.log('=== END SUBMISSION DEBUG ===');
-    
-    //Update score and recent Activity
-    const student = await ngApprovedStudent.findById(studentId);
-    const examForUpdate = await ng_exams.findById(examId);
-    student.leaderboardValue.score +=25;
-    student.save();
-    await addActivity(student._id, "Exam submission", `Submited ${examForUpdate.examName} exam`, {Date: new Date()});
 
     return res.status(201).json({
       success: true,
