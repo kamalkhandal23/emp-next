@@ -256,7 +256,7 @@ export default function Enrollment() {
                 </div>
               </div>
 
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label className="form-label">Passport Size Photo (JPEG/PNG, max 2MB)</label>
                 <input type="file" accept="image/png,image/jpeg" onChange={handleFileChange} className="form-input" />
                 {formData.passportPhoto && (
@@ -275,7 +275,7 @@ export default function Enrollment() {
                   onChange={(e) => setFormData(prev => ({ ...prev, documents: e.target.files }))}
                   className="form-input"
                 />
-              </div>
+              </div> */}
             </div>
 
           )}

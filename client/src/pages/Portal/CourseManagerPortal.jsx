@@ -1219,14 +1219,13 @@ export default function CourseManagerPortal() {
                 <div
                   className='table-row'
                   style={{
-                    gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 2fr',
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto',
                     fontWeight: 600,
                     background: '#f8fafc',
                   }}>
                   <div>Student Details</div>
                   <div>Course</div>
                   <div>Registration Date</div>
-                  <div>Documents</div>
                   <div>Status</div>
                   <div>Actions</div>
                   <div>Notes</div>
@@ -1251,9 +1250,9 @@ export default function CourseManagerPortal() {
                     const dateStr = dateVal
                       ? new Date(dateVal).toLocaleDateString()
                       : 'N/A';
-                    const docs = Array.isArray(registration?.documents)
-                      ? registration.documents
-                      : [];
+                    // const docs = Array.isArray(registration?.documents)
+                    //   ? registration.documents
+                    //   : [];
                     const status = registration?.status || 'pending';
                     const notes =
                       registration?.notes ||
@@ -1272,7 +1271,7 @@ export default function CourseManagerPortal() {
                         key={registration?._id || registration?.id}
                         className='table-row'
                         style={{
-                          gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr 1fr 2fr',
+                          gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr auto',
                         }}>
                         {/* Student Info */}
                         <div>
@@ -1306,7 +1305,7 @@ export default function CourseManagerPortal() {
                         <div>{dateStr}</div>
 
                         {/* Docs */}
-                        <div>
+                        {/* <div>
                           <div style={{ fontSize: '0.875rem' }}>
                             {docs.length > 0 ? `${docs.length} docs` : '0 docs'}
                           </div>
@@ -1324,7 +1323,7 @@ export default function CourseManagerPortal() {
                               View
                             </button>
                           )}
-                        </div>
+                        </div> */}
 
                         {/* Status */}
                         <div>
@@ -1622,10 +1621,10 @@ export default function CourseManagerPortal() {
                 'N/A'
               }
             />
-            <KV
+            {/* <KV
               label='Address'
               value={selectedRegistration?.address || 'N/A'}
-            />
+            /> */}
             <KV
               label='Registration Date'
               value={
@@ -1637,14 +1636,14 @@ export default function CourseManagerPortal() {
               }
             />
             <KV label='Status' value={selectedRegistration?.status || 'N/A'} />
-            <KV
+            {/* <KV
               label='Documents'
               value={
                 Array.isArray(selectedRegistration?.documents)
                   ? selectedRegistration.documents.join(', ')
                   : 'N/A'
               }
-            />
+            /> */}
             {selectedRegistration?.notes && (
               <KV label='Notes' value={selectedRegistration.notes} />
             )}
