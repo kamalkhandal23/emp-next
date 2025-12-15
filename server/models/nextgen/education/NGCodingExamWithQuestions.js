@@ -24,6 +24,15 @@ const ngCodingExamWithQuestionsSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
+    startTime:{
+      type: Date,
+      required: true 
+    },
+    endTime:{
+      type: Date,
+      required: true 
+    },
+
 
     // Questions stored as Map
     questions: {
@@ -127,9 +136,12 @@ ngCodingExamWithQuestionsSchema.methods.getCodingExamData = function () {
  --------------------------------*/
 ngCodingExamWithQuestionsSchema.statics.createFromFrontend = async function (
   examName,
+  courseName,
   courseId,
   totalQuestions,
-  questionData
+  questionData,
+  startTime,
+  endTime
 ) {
   const questionsMap = new Map();
 
@@ -142,6 +154,8 @@ ngCodingExamWithQuestionsSchema.statics.createFromFrontend = async function (
     courseId,
     totalQuestions,
     questions: questionsMap,
+    startTime,
+    endTime
   });
 
   return await exam.save();

@@ -4,7 +4,7 @@ const ngSubmissionCodingExamsSchema = new mongoose.Schema(
   {
     student_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "NG_User",
+      ref: "ng_approved_students",
       required: true,
       index: true,
     },

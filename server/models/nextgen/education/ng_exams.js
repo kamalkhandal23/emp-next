@@ -25,6 +25,14 @@ const examSchema = new mongoose.Schema(
       type: Object,
       default: {},
     },
+    startTime:{
+      type: Date,
+      required: true
+    },
+    endTime:{
+      type: Date,
+      required: true
+    },
     status: {
       type: String,
       enum: ['draft', 'published'],

@@ -5,145 +5,186 @@ import User from '../../models/core/User.js';
 import NG_Approved_Students from '../../models/nextgen/core/NG_ApprovedStudents.js';
 import addActivity from '../../services/addActivityServiceImpl.js';
 
+
+// Ensure NGCodingExamWithQuestions is imported here
+// import NGCodingExamWithQuestions from '../models/NGCodingExamWithQuestions'; 
+
 export const createCodingExam = async (req, res) => {
-  try {
-    const { examName, courseName, totalQuestions, questionData } = req.body;
+    try {
+        // 1. Destructure the new required fields (startTime, endTime) from the request body
+        const { 
+            examName, 
+            courseName, 
+            totalQuestions, 
+            questionData, 
+            courseId,
+            startTime, // <--- ADDED
+            endTime    // <--- ADDED
+        } = req.body;
 
-    if (!examName || !courseName || !totalQuestions || !questionData) {
-      return res.status(400).json({
-        success: false,
-        message:
-          'Missing required fields: examName, courseName, totalQuestions, and questionData are required',
-      });
-    }
+        // 2. Add validation for the new required fields
+        if (!examName || !courseId || !totalQuestions || !questionData || !courseName || !startTime || !endTime) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    'Missing required fields: examName, courseName, totalQuestions, questionData, startTime, and endTime are required.',
+            });
+        }
+        
+        // Input trimming and basic validation (existing logic retained)
+        if (examName.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: 'Exam name cannot be empty',
+            });
+        }
 
-    if (examName.trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: 'Exam name cannot be empty',
-      });
-    }
+        if (courseName.trim() === '') {
+            return res.status(400).json({
+                success: false,
+                message: 'Course name cannot be empty',
+            });
+        }
 
-    if (courseName.trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: 'Course name cannot be empty',
-      });
-    }
+        // Validate time sequence
+        if (new Date(startTime) >= new Date(endTime)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Exam end time must be after the start time.',
+            });
+        }
 
-    const existingExam = await NGCodingExamWithQuestions.findOne({
-      examName: examName.trim(),
-    });
-
-    if (existingExam) {
-      return res.status(409).json({
-        success: false,
-        message:
-          'An exam with this name already exists. Please choose a different name.',
-      });
-    }
-
-    const questionCount = Object.keys(questionData).length;
-    if (questionCount !== parseInt(totalQuestions)) {
-      return res.status(400).json({
-        success: false,
-        message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`,
-      });
-    }
-
-    for (const [qNum, qData] of Object.entries(questionData)) {
-      if (!qData.type || qData.type !== 'Coding') {
-        return res.status(400).json({
-          success: false,
-          message: `Question ${qNum} must be of type 'Coding'`,
+        // Check for existing exam (existing logic retained)
+        const existingExam = await NGCodingExamWithQuestions.findOne({
+            examName: examName.trim(),
         });
-      }
 
-      if (!qData.question || qData.question.trim() === '') {
-        return res.status(400).json({
-          success: false,
-          message: `Question ${qNum} is missing the question text`,
-        });
-      }
+        if (existingExam) {
+            return res.status(409).json({
+                success: false,
+                message:
+                    'An exam with this name already exists. Please choose a different name.',
+            });
+        }
 
-      if (
-        !qData.sampleInputs ||
-        !Array.isArray(qData.sampleInputs) ||
-        qData.sampleInputs.length === 0
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: `Question ${qNum} must have at least one sample input`,
-        });
-      }
+        // Question count validation (existing logic retained)
+        const questionCount = Object.keys(questionData).length;
+        if (questionCount !== parseInt(totalQuestions)) {
+            return res.status(400).json({
+                success: false,
+                message: `Question count mismatch. Expected ${totalQuestions} questions but received ${questionCount}`,
+            });
+        }
 
-      if (
-        !qData.sampleOutputs ||
-        !Array.isArray(qData.sampleOutputs) ||
-        qData.sampleOutputs.length === 0
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: `Question ${qNum} must have at least one sample output`,
-        });
-      }
+        // Detailed question validation (existing logic retained)
+        for (const [qNum, qData] of Object.entries(questionData)) {
+            if (!qData.type || qData.type !== 'Coding') {
+                return res.status(400).json({
+                    success: false,
+                    message: `Question ${qNum} must be of type 'Coding'`,
+                });
+            }
 
-      if (qData.sampleInputs.length !== qData.sampleOutputs.length) {
-        return res.status(400).json({
-          success: false,
-          message: `Question ${qNum} must have matching number of sample inputs and outputs`,
-        });
-      }
+            if (!qData.question || qData.question.trim() === '') {
+                return res.status(400).json({
+                    success: false,
+                    message: `Question ${qNum} is missing the question text`,
+                });
+            }
 
-      const hasValidSample =
-        qData.sampleInputs.some((input) => input && input.trim() !== '') &&
-        qData.sampleOutputs.some((output) => output && output.trim() !== '');
-      if (!hasValidSample) {
-        return res.status(400).json({
-          success: false,
-          message: `Question ${qNum} must have at least one valid sample input/output pair`,
+            if (
+                !qData.sampleInputs ||
+                !Array.isArray(qData.sampleInputs) ||
+                qData.sampleInputs.length === 0
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Question ${qNum} must have at least one sample input`,
+                });
+            }
+
+            if (
+                !qData.sampleOutputs ||
+                !Array.isArray(qData.sampleOutputs) ||
+                qData.sampleOutputs.length === 0
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Question ${qNum} must have at least one sample output`,
+                });
+            }
+
+            if (qData.sampleInputs.length !== qData.sampleOutputs.length) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Question ${qNum} must have matching number of sample inputs and outputs`,
+                });
+            }
+
+            const hasValidSample =
+                qData.sampleInputs.some((input) => input && input.trim() !== '') &&
+                qData.sampleOutputs.some((output) => output && output.trim() !== '');
+            if (!hasValidSample) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Question ${qNum} must have at least one valid sample input/output pair`,
+                });
+            }
+        }
+
+        // 3. Pass startTime and endTime to the creation method
+        const exam = await NGCodingExamWithQuestions.createFromFrontend(
+            examName.trim(),
+            courseName.trim(),
+            courseId,
+            parseInt(totalQuestions),
+            questionData,
+            startTime, // <--- PASSED
+            endTime    // <--- PASSED
+        );
+
+        // Return success response
+        res.status(201).json({
+            success: true,
+            message: 'Coding exam created successfully',
+            data: {
+                id: exam._id,
+                examName: exam.examName,
+                courseName: exam.courseName,
+                totalQuestions: exam.totalQuestions,
+                status: exam.status,
+                startTime: exam.startTime, // Optional: return times in response
+                endTime: exam.endTime,     // Optional: return times in response
+                createdAt: exam.createdAt,
+            },
         });
-      }
+    } catch (error) {
+        console.error('Error creating coding exam:', error);
+
+        // Handle Mongoose Validation Errors (which includes the missing startTime/endTime error)
+        if (error.name === 'ValidationError') {
+             // Extract specific required field messages if needed, or use a generic one
+             return res.status(400).json({
+                success: false,
+                message: 'Validation failed on required fields (e.g., startTime, endTime). Check your request data.',
+                errors: error.errors
+            });
+        }
+        
+        // Handle duplicate key error
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: 'An exam with this name already exists',
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Failed to create coding exam',
+            error: error.message,
+        });
     }
-
-
-    const exam = await NGCodingExamWithQuestions.createFromFrontend(
-      examName.trim(),
-      courseName.trim(),
-      parseInt(totalQuestions),
-      questionData
-    );
-
-    // Return success response
-    res.status(201).json({
-      success: true,
-      message: 'Coding exam created successfully',
-      data: {
-        id: exam._id,
-        examName: exam.examName,
-        courseName: exam.courseName,
-        totalQuestions: exam.totalQuestions,
-        status: exam.status,
-        createdAt: exam.createdAt,
-      },
-    });
-  } catch (error) {
-    console.error('Error creating coding exam:', error);
-
-    // Handle duplicate key error
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'An exam with this name already exists',
-      });
-    }
-
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create coding exam',
-      error: error.message,
-    });
-  }
 };
 
 // Get all coding exams
@@ -776,53 +817,108 @@ export const getCodingExamsForManager = async (req, res) => {
 
 // GET /api/nextgen/codingExams/all-submissions
 // Get all coding exam submissions with student and exam details
+// NOTE: You must uncomment and ensure these imports are correct in your file
+// import NGManager from '../models/ngManagerModel'; 
+// import NGCodingExamWithQuestions from '../models/NGCodingExamWithQuestions';
+// import NGSubmissionCodingExams from '../models/ngSubmissionCodingExamsModel'; // Assuming this is your submission model
+
 export const getAllSubmissions = async (req, res) => {
-  try {
-    console.log('📊 Fetching all coding exam submissions...');
+    try {
+        console.log('📊 Fetching coding exam submissions for assigned courses...');
+        
+        // 1. Get the authenticated Course Manager's MongoDB ID
+        // 🛑 IMPORTANT: Confirm req.user.id is the correct path for the manager's MongoDB ID
+        const courseManagerMongoId = req.user.id; 
 
-    // Fetch all submissions with populated student and exam data
-    const submissions = await NGSubmissionCodingExams.find()
-      .populate({
-        path: 'student_id',
-        select: 'fullName full_name email student_id',
-      })
-      .populate({
-        path: 'exam_id',
-        select: 'examName courseName totalQuestions status',
-      })
-      .sort({ submitted_at: -1 })
-      .lean();
+        // --- STEP 1: Find the courses assigned to the manager ---
+        
+        const manager = await User.findById(courseManagerMongoId)
+            .select('assignedCourses')
+            .lean();
 
-    console.log(`✅ Found ${submissions.length} submissions`);
+        if (!manager || manager.assignedCourses.length === 0) {
+            console.log(`⚠️ Manager ${courseManagerMongoId} found but has no assigned courses.`);
+            return res.json({ success: true, data: [], count: 0 });
+        }
 
-    // Filter out submissions with deleted exams or students
-    const validSubmissions = submissions.filter((sub) => {
-      if (!sub.exam_id) {
-        console.warn(`⚠️ Submission ${sub._id} has no valid exam_id`);
-        return false;
-      }
-      if (!sub.student_id) {
-        console.warn(`⚠️ Submission ${sub._id} has no valid student_id`);
-        return false;
-      }
-      return true;
-    });
+        // Extract the list of Course IDs assigned to the manager
+        const managedCourseIds = manager.assignedCourses;
 
-    console.log(`✅ Valid submissions: ${validSubmissions.length}`);
+        // --- STEP 2: Find all Exams associated with these Course IDs ---
 
-    return res.json({
-      success: true,
-      data: validSubmissions,
-      count: validSubmissions.length,
-    });
-  } catch (error) {
-    console.error('❌ Error fetching all submissions:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch coding exam submissions',
-      error: error.message,
-    });
-  }
+        const managedExams = await NGCodingExamWithQuestions.find({
+            courseId: { $in: managedCourseIds }
+        }).select('_id').lean();
+        
+        const managedExamIds = managedExams.map(exam => exam._id);
+
+        if (managedExamIds.length === 0) {
+            console.log(`⚠️ No exams found for the assigned courses.`);
+            return res.json({ success: true, data: [], count: 0 });
+        }
+
+        // --- STEP 3: Filter the Submissions by the managed Exam IDs and Populate Course Title ---
+
+        const submissionFilter = {
+            exam_id: { $in: managedExamIds }
+        };
+
+        const submissions = await NGSubmissionCodingExams.find(submissionFilter)
+            .populate({
+                path: 'student_id',
+                select: 'fullName  email student_id',
+            })
+            // Use nested populate to get the Course Title for the frontend
+            .populate({
+                path: 'exam_id',
+                select: 'examName courseId totalQuestions status',
+                populate: {
+                    path: 'courseId', // The field in the exam schema
+                    model: 'Ng_Courses', // Assuming this is your Course model name
+                    select: 'title', // Fetch the 'title' field (which acts as courseName)
+                }
+            })
+            .sort({ submitted_at: -1 })
+            .lean();
+
+        console.log(`✅ Found ${submissions.length} submissions for assigned courses.`);
+
+        // --- STEP 4: Format and Validation ---
+        
+        const validSubmissions = submissions.filter((sub) => {
+            if (!sub.exam_id || !sub.student_id) {
+                console.warn(`⚠️ Submission ${sub._id} has incomplete data.`);
+                return false;
+            }
+            return true;
+        }).map(sub => {
+            // Map the Course Title to the 'courseName' property expected by the frontend
+            const exam = sub.exam_id;
+            return {
+                ...sub,
+                exam_id: {
+                    ...exam,
+                    // Inject the course title as 'courseName' for frontend compatibility
+                    courseName: exam.courseId ? exam.courseId.title : 'N/A',
+                }
+            };
+        });
+
+        console.log(`✅ Valid submissions: ${validSubmissions.length}`);
+
+        return res.json({
+            success: true,
+            data: validSubmissions,
+            count: validSubmissions.length,
+        });
+    } catch (error) {
+        console.error('❌ Error fetching all submissions:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch coding exam submissions',
+            error: error.message,
+        });
+    }
 };
 
 export default {

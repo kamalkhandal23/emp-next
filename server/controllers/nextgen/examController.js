@@ -5,10 +5,10 @@ import User from '../../models/core/User.js';
 // Create a new exam with all questions
 export const createExam = async (req, res) => {
   try {
-    const { examName, totalQuestions, questionData } = req.body;
+    const { examName, totalQuestions, questionData,courseId,startTime,endTime } = req.body;
 
     // Validate required fields
-    if (!examName || !totalQuestions || !questionData) {
+    if (!examName || !totalQuestions || !questionData || !courseId || !startTime || !endTime) {
       return res.status(400).json({
         success: false,
         message:
@@ -71,7 +71,10 @@ export const createExam = async (req, res) => {
     const exam = await NGExamWithQuestions.createFromFrontend(
       examName.trim(),
       parseInt(totalQuestions),
-      questionData, req.body.courseId
+      questionData,
+      courseId,
+      startTime,
+      endTime
     );
 
     // Return success response

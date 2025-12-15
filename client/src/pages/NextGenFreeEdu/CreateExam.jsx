@@ -16,6 +16,7 @@ function CreateExam() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [courseId,setCourseId] = useState(null)
   const [courses, setCourses] = useState([]);
   const [loadingExams, setLoadingExams] = useState(false);
 
@@ -34,6 +35,7 @@ function CreateExam() {
         const res = await response.json()
         console.log("res",res)
         if (res.success && res.data) {
+
           setCourses(res.data.courses || []);
         }
       } catch (error) {
@@ -51,6 +53,20 @@ function CreateExam() {
     if (num > 0 && !isNaN(num)) {
       setTotalQuestions(num);
       setSubmitted(true);
+    }
+  };
+
+  // Add this new function inside your CreateExam component
+  const handleCourseSelect = (selectedCourseId) => {
+    const selectedCourse = courses.find(course => course._id === selectedCourseId);
+  
+    if (selectedCourse) {
+      setCourseId(selectedCourseId);
+      setCourseName(selectedCourse.title);
+    } else {
+      // Handle the case where the "Select a course" option might be chosen
+      setCourseId(null);
+      setCourseName('');
     }
   };
 
@@ -143,6 +159,7 @@ function CreateExam() {
         totalQuestions: parseInt(totalQuestions),
         startTime: startTime,
         endTime: endTime,
+        courseId : courseId,
         questionData: questionData,
       };
 
@@ -211,12 +228,13 @@ function CreateExam() {
           <div className='max-w-md mx-auto p-8 bg-blue-50 border border-blue-200 rounded-lg shadow-lg'>
             <form onSubmit={handleSubmit} className='flex flex-col gap-6'>
               <label className='text-lg text-gray-700 font-medium text-left'>
-                Exam
+                Select a Course
               </label>
 
               <select
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
+                value={courseId || ""}
+                onChange={(e) => handleCourseSelect(e.target.value)}
+                
                 className='border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm'
                 style={{
                   appearance: 'none',
@@ -231,8 +249,9 @@ function CreateExam() {
                   {loadingExams ? 'Loading courses...' : 'Select a course'}
                 </option>
                 {courses.map((course, index) => (
-                  <option key={index} value={course.title}>
+                  <option key={index} value={course._id}>
                     {course.title}
+                    
                   </option>
                 ))}
               </select>
@@ -306,6 +325,7 @@ function CreateExam() {
                   }
                   className='flex-1 bg-blue-400 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 shadow-md'>
                   Start Designing
+                  
                 </button>
               </div>
             </form>

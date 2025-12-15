@@ -15,33 +15,34 @@ function CreateCodingExam() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [courses, setCourses] = useState([]);
+  const [courseId, setCourseId] = useState(null);
+  const [startTime, setStartTime] = useState(null); // State for start time
+  const [endTime, setEndTime] = useState(null);   // State for end time
   const [loadingCourses, setLoadingCourses] = useState(false);
 
   useEffect(() => {
     const fetchCourses = async () => {
       setLoadingCourses(true);
       try {
-          const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem("authToken");
 
-          const response = await fetch("http://localhost:5002/api/nextgen/courses/my-courses", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+        const response = await fetch("http://localhost:5002/api/nextgen/courses/my-courses", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-          const res = await response.json();
+        const res = await response.json();
 
-          if (res.success) {
-            console.log(res)
-            setCourses(res.data.courses)
-            // setCourses(data.data.courses);
-          }
+        if (res.success) {
+          console.log(res)
+          setCourses(res.data.courses)
+        }
 
-            
-      }catch (e) {
-          console.log("Error fetching courses", e);
-          alert("error in fetching courses",e.message)
-      }finally {
+      } catch (e) {
+        console.log("Error fetching courses", e);
+        alert("error in fetching courses", e.message)
+      } finally {
         setLoadingCourses(false);
       }
     };
@@ -51,9 +52,29 @@ function CreateCodingExam() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const num = parseInt(totalQuestions);
+
+    // Basic validation for course, exam name, times, and question count
+    if (!courseId) {
+        alert('⚠️ Please select a course.');
+        return;
+    }
+    if (!examName || examName.trim() === '') {
+        alert('⚠️ Please provide an exam name.');
+        return;
+    }
+    if (!startTime || !endTime) {
+        alert('⚠️ Please select both exam start and end times.');
+        return;
+    }
+    if (new Date(startTime) >= new Date(endTime)) {
+        alert('⚠️ End time must be after the start time.');
+        return;
+    }
     if (num > 0 && !isNaN(num)) {
       setTotalQuestions(num);
       setSubmitted(true);
+    } else {
+        alert('⚠️ Please enter a valid number of questions (1 or more).');
     }
   };
 
@@ -92,6 +113,19 @@ function CreateCodingExam() {
       };
     });
   };
+  
+  const handleCourseSelect = (selectedCourseId) => {
+    const selectedCourse = courses.find(course => course._id === selectedCourseId)
+    
+    if (selectedCourse) {
+      setCourseName(selectedCourse.title)
+      setCourseId(selectedCourse._id)
+
+    } else {
+      setCourseId(null)
+      setCourseName('')
+    }
+  }
 
   const handleSampleOutputChange = (qNum, index, value) => {
     setQuestionData((prev) => {
@@ -140,90 +174,107 @@ function CreateCodingExam() {
     Object.keys(questionTypes).length === totalQuestions;
 
   const handleFinalizeCodingExam = async () => {
-    // Validate all questions are filled
-    const allQuestionsFilled = Object.keys(questionData).every((qNum) => {
-      const q = questionData[qNum];
-      if (!q.question || q.question.trim() === '') return false;
+    // 1. Validate all questions are filled
+    const allQuestionsFilled = Object.keys(questionData).length === parseInt(totalQuestions) &&
+        Object.keys(questionData).every((qNum) => {
+            const q = questionData[qNum];
+            if (!q.question || q.question.trim() === '') return false;
 
-      if (q.type !== 'Coding') return false;
+            // Check for sample inputs and outputs existence
+            if (!q.sampleInputs || !q.sampleOutputs) return false;
+            
+            // Check for matching lengths
+            if (q.sampleInputs.length !== q.sampleOutputs.length) return false;
 
-      // Check for sample inputs and outputs
-      if (!q.sampleInputs || !Array.isArray(q.sampleInputs) || q.sampleInputs.length === 0) return false;
-      if (!q.sampleOutputs || !Array.isArray(q.sampleOutputs) || q.sampleOutputs.length === 0) return false;
-      if (q.sampleInputs.length !== q.sampleOutputs.length) return false;
-
-      // Check that at least one sample pair is not empty
-      const hasValidSample = q.sampleInputs.some(input => input && input.trim() !== '') &&
-                            q.sampleOutputs.some(output => output && output.trim() !== '');
-      if (!hasValidSample) return false;
-
-      return true;
-    });
+            // Check that at least one sample pair is non-empty/valid
+            const hasValidSample = q.sampleInputs.some(input => input && input.trim() !== '') &&
+                                    q.sampleOutputs.some(output => output && output.trim() !== '');
+            if (q.sampleInputs.length > 0 && !hasValidSample) return false;
+            
+            return true;
+        });
 
     if (!allQuestionsFilled) {
-      alert(
-        '⚠️ Please fill in all question details including at least one sample input/output pair for each coding question before finalizing the coding exam.'
-      );
-      return;
+        alert(
+            '⚠️ Please ensure ALL questions are fully defined, including a question title and at least one non-empty sample input/output pair for each coding question.'
+        );
+        return;
     }
 
+    // 2. Validate exam name, course details, and times
     if (!examName || examName.trim() === '') {
-      alert('⚠️ Please provide an exam name.');
-      return;
+        alert('⚠️ Please provide an exam name.');
+        return;
     }
-
-    if (!courseName || courseName.trim() === '') {
-      alert('⚠️ Please provide a course name.');
-      return;
+    if (!courseName || !courseId) {
+        alert('⚠️ Please select a course.');
+        return;
+    }
+    if (!startTime || !endTime) {
+        alert('⚠️ Please provide both exam start and end times.');
+        return;
+    }
+    if (new Date(startTime) >= new Date(endTime)) {
+        alert('⚠️ End time must be after the start time.');
+        return;
     }
 
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      const examData = {
-        examName: examName.trim(),
-        courseName: courseName.trim(),
-        totalQuestions: parseInt(totalQuestions),
-        questionData: questionData,
-      };
+        const examData = {
+            examName: examName.trim(),
+            courseName: courseName.trim(),
+            courseId: courseId,
+            totalQuestions: parseInt(totalQuestions),
+            questionData: questionData,
+            // 💡 ADDED START/END TIME TO PAYLOAD
+            startTime: startTime, 
+            endTime: endTime,
+        };
 
-      console.log('Submitting coding exam data:', examData);
+        console.log('Submitting coding exam data:', examData);
 
-      const response = await apiClient.createNextGenCodingExam(examData);
+        // Assuming apiClient.createNextGenCodingExam handles the API call
+        const response = await apiClient.createNextGenCodingExam(examData); 
 
-      if (response.success) {
-        setSubmitSuccess(true);
-        alert(
-          `✅ Coding exam "${examName}" created successfully!\n\nExam ID: ${response.data.id}`
-        );
+        if (response.success) {
+            setSubmitSuccess(true);
+            alert(
+                `✅ Coding exam "${examName}" created successfully!\n\nExam ID: ${response.data.id}`
+            );
 
-        // Reset form after successful submission
-        setTimeout(() => {
-          setTotalQuestions('');
-          setSubmitted(false);
-          setExamName('');
-          setCourseName('');
-          setSelectedQuestion(null);
-          setQuestionTypes({});
-          setQuestionData({});
-          setSubmitSuccess(false);
-        }, 2000);
-      } else {
-        throw new Error(response.message || 'Failed to create coding exam');
-      }
+            // Reset form after successful submission
+            setTimeout(() => {
+                setTotalQuestions('');
+                setSubmitted(false);
+                setExamName('');
+                setCourseName('');
+                setCourseId(null); // Reset course ID
+                setStartTime(null); // Reset start time
+                setEndTime(null);   // Reset end time
+                setSelectedQuestion(null);
+                setQuestionTypes({});
+                setQuestionData({});
+                setSubmitSuccess(false);
+                navigate('/portal/coursemanager'); // Optionally navigate away
+            }, 2000);
+        } else {
+            throw new Error(response.message || 'Failed to create coding exam');
+        }
     } catch (error) {
-      console.error('Error creating coding exam:', error);
-      setSubmitError(
-        error.message || 'Failed to create coding exam. Please try again.'
-      );
-      alert(
-        `❌ Error: ${
-          error.message || 'Failed to create coding exam. Please try again.'
-        }`
-      );
+        console.error('Error creating coding exam:', error);
+        setSubmitError(
+            error.message || 'Failed to create coding exam. Please try again.'
+        );
+        alert(
+            `❌ Error: ${
+                error.message || 'Failed to create coding exam. Please try again.'
+            }`
+        );
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
 
@@ -255,8 +306,8 @@ function CreateCodingExam() {
               </label>
 
               <select
-                value={courseName}
-                onChange={(e) => setCourseName(e.target.value)}
+                value={courseId || ''} // Use courseId to control select value
+                onChange={(e) => handleCourseSelect(e.target.value)}
                 className='border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm'
                 style={{
                   appearance: 'none',
@@ -272,8 +323,8 @@ function CreateCodingExam() {
                     ? 'Loading courses...'
                     : 'Select a course'}
                 </option>
-                {courses.map((course, index) => (
-                  <option key={index} value={course.title}>
+                {courses.map((course) => (
+                  <option key={course._id} value={course._id}>
                     {course.title}
                   </option>
                 ))}
@@ -289,6 +340,30 @@ function CreateCodingExam() {
                 onChange={(e) => setExamName(e.target.value)}
                 className='border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm'
                 placeholder='e.g, React coding fundamentals'
+                required
+              />
+
+              <label className='text-lg text-gray-700 font-medium text-left'>
+                Exam Start Time
+              </label>
+
+              <input
+                type='datetime-local'
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className='border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm'
+                required
+              />
+
+              <label className='text-lg text-gray-700 font-medium text-left'>
+                Exam End Time
+              </label>
+
+              <input
+                type='datetime-local'
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className='border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-3 text-xl text-black transition duration-200 shadow-sm'
                 required
               />
 
@@ -316,7 +391,7 @@ function CreateCodingExam() {
                 <button
                   type='submit'
                   disabled={
-                    totalQuestions < 1 || !examName.trim() || !courseName.trim()
+                    totalQuestions < 1 || !examName.trim() || !courseId
                   }
                   className='flex-1 bg-blue-400 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-200 disabled:opacity-50 shadow-md'>
                   Start Designing
