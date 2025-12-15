@@ -16,8 +16,8 @@ const userSchema = new mongoose.Schema({}, { strict: false });
 const User = mongoose.model("NG_User_temp_for_pw", userSchema, "ng_users");
 
 const resets = [
-  { login_id: "neha", plain: "Neha@123" },
-  { login_id: "rohan", plain: "Rohan@123" },
+  // { login_id: "neha", plain: "Neha@123" },
+  // { login_id: "rohan", plain: "Rohan@123" },
   { login_id: "simran", plain: "Simran@123" },
 ];
 
