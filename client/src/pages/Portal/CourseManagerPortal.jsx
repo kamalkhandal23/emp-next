@@ -1468,7 +1468,7 @@ export default function CourseManagerPortal() {
 
                   <div
                     style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <button
+                    {/* <button
                       className='btn-primary'
                       onClick={() => {
                         const pendingCount = (
@@ -1511,7 +1511,7 @@ export default function CourseManagerPortal() {
                         }
                       }}>
                       Approve All Pending
-                    </button>
+                    </button> */}
 
                     <button
                       className='btn-secondary'
