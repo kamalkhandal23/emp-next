@@ -1,6 +1,6 @@
 const API_BASE_URL =
   process.env.NODE_ENV === 'production'
-    ? 'https://emp-hee877vkc-teamoflifeboxs-projects.vercel.app/api'
+    ? 'https://emp-new-2.onrender.com/api'
     : 'http://localhost:5002/api';
 
 
