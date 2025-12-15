@@ -8,6 +8,7 @@ export const addRecentActivity = async (req, res) => {
     try {
         const resBody = req.body;
         const { studentId, courseId } = req.query;
+        const lectureId = resBody.lectureId;
 
         const student = await ng_student.findOne({ student_id: studentId });
         if (!student) {
@@ -18,67 +19,88 @@ export const addRecentActivity = async (req, res) => {
         if (!course) {
             return res.status(404).json({ error: "Course not found" });
         }
-
-        console.log("Recent Activity Request Body:", resBody);
-
-        await addActivity(
-            student._id,
-            resBody.activityType,
-            resBody.description,
-            { Date: new Date() }
-        );
+        //JOINED LECTURE
         if (resBody.activityType === 'Joined Lecture') {
-            console.log("Marking attendance for lecture:", resBody.lectureId);
             const today = new Date();
 
-            // Find student attendance document for this course
-        const attendanceDoc = await NGStudentAttencendance.findOne({
-            student: student._id,
-            course: course._id
-        });
-
-        if (attendanceDoc) {
-        // Check if lecture already marked
-        console.log("Existing attendance document found:", attendanceDoc);
-            const alreadyMarked = attendanceDoc.attendance.some(
-            (a) => a.classId.toString() === resBody.lectureId
-        );
-
-        if (!alreadyMarked) {
-            attendanceDoc.attendance.push({
-                classId: resBody.lectureId,
-                date: today,
-                status: "Present"
+            let attendanceDoc = await NGStudentAttencendance.findOne({
+                student: student._id,
+                course: course._id
             });
-            await attendanceDoc.save();
+
+            if (!attendanceDoc) {
+                attendanceDoc = new NGStudentAttencendance({
+                    student: student._id,
+                    course: course._id,
+                    attendance: []
+                });
+            }
+
+            const alreadyMarked = attendanceDoc.attendance.some(
+                a => a.classId.toString() === resBody.lectureId
+            );
+
+            if (!alreadyMarked) {
+                attendanceDoc.attendance.push({classId: resBody.lectureId, date: today, status: "Present"});
+                await attendanceDoc.save();
+                student.leaderboardValue.score += 20;
+                await addActivity(student._id, resBody.activityType, resBody.description, { date: new Date() });
+            }
+            else{
+                await addActivity(student._id, resBody.activityType, `Rejoined - ${resBody.description}`, { date: new Date() });
+            }
+
         }
-    } else {
-        // Create a new attendance doc if not exists
-        const newAttendance = new NGStudentAttencendance({
-            student: student._id,
-            course: course._id,
-            attendance: [{
-                classId: resBody.lectureId,
-                date: today,
-                status: "Present"
-            }]
-        });
-        await newAttendance.save();
-    }
-}
+
+        /*WATCHED VIDEO LECTURE */
+        if (resBody.activityType === 'Watched Lecture Video') {
+
+            // Defensive init (for old records)
+            if (!Array.isArray(student.videoLectureWatched)) {
+                student.videoLectureWatched = [];
+            }
+
+            const alreadyWatched = student.videoLectureWatched.some(
+                v =>
+                    v?.video_id &&
+                    v.video_id.toString() === resBody.lectureId
+            );
+
+            if (!alreadyWatched) {
+                student.videoLectureWatched.push({
+                    video_id: resBody.lectureId,
+                    watchedAt: new Date()
+                });
+
+                student.leaderboardValue.score += 5;
 
 
+                await addActivity(
+                    student._id,
+                    "Watched Lecture Video",
+                    resBody.description,
+                    { date: new Date() }
+                );
+            } else {
+                await addActivity(
+                    student._id,
+                    "Rewatched Lecture Video",
+                    `Rewatched - ${resBody.description}`,
+                    { date: new Date() }
+                );
+            }
+        }
 
-        // Sample update
-        student.leaderboardValue.score += 10;
+
         await student.save();
 
-
+        // Optional leaderboard resort
+        await updateScoreAndSort(course._id);
 
         return res.status(200).json({ message: "Activity added successfully" });
 
     } catch (error) {
-        console.error("Error fetching profile:", error);
+        console.error("Error adding activity:", error);
         return res.status(500).json({ error: "Internal server error" });
     }
 };

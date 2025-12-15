@@ -712,6 +712,39 @@ export const submitCodingExam = async (req, res) => {
 
       const verdict = mapVerdict(result);
       const firstResult = result.results?.[0] || {};
+      const student = await NG_Approved_Students.findById(studentId);
+      if (!student) return;
+
+      const existingExam = await NGSubmissionCodingExams.findOne({
+        exam_id: examId,
+        student_id: studentId,
+        question_id: questionId
+      });
+
+      console.log('existingExam', existingExam);
+
+      if (!existingExam) {
+        // First-time submission
+        student.leaderboardValue.score += 20;
+
+        await addActivity(
+            studentId,
+            "Coding Exam",
+            `Completed - ${exam.examName} ${questionId} - marks: ${totalMarks}`,
+            { date: new Date() }
+        );
+      } else {
+        //  Resubmission (NO score increment)
+        await addActivity(
+            studentId,
+            "Coding Exam",
+            `Resubmitted - ${exam.examName} ${questionId} - marks: ${totalMarks}`,
+            { date: new Date() }
+        );
+      }
+
+      await student.save();
+
 
       // ✅ UPSERT (NO DUPLICATE KEY ERROR)
       await NGSubmissionCodingExams.findOneAndUpdate(
@@ -750,16 +783,6 @@ export const submitCodingExam = async (req, res) => {
         successRate: result.successRate,
       });
     }
-    await addActivity(studentId, "Coding Exam ", `Completed ${exam.examName} - marks: ${totalMarks}`, {Date: new Date()});
-    const student = await NG_Approved_Students.findById(studentId);
-    if (student) {
-  // 👉 Check if assignment already exists
-          student.leaderboardValue.score += 20;
-          // 👉 Add new assignment     
-        
-        await student.save();
-      }
-        
     return res.json({
       success: true,
       message: "Coding exam submitted successfully",
