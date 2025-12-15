@@ -41,12 +41,12 @@ function ExamDetailsModal({ details, onClose, onGrade, isGrading }) {
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
                     <h3 style={{ margin: 0 }}>
-                        Review Exam: <span style={{ color: '#ef4444' }}>{details.examName}</span>
+                        <span style={{color:'black'}}>Review Exam:</span> <span style={{ color: '#ef4444' }}>{details.examName}</span>
                     </h3>
                     <button 
                         className="btn-close" 
                         onClick={onClose}
-                        style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}
+                        style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color:'red' }}
                     >&times;</button>
                 </div>
 
@@ -97,11 +97,11 @@ function ExamDetailsModal({ details, onClose, onGrade, isGrading }) {
                 
                 {/* Grading Controls */}
                 <div style={{ borderTop: '2px solid #ef4444', paddingTop: '1rem', marginTop: '1rem' }}>
-                    <h4>Grade & Feedback</h4>
+                    <h4 style={{color:"black"}}>Grade & Feedback</h4>
                     <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start' }}>
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', marginBottom: '1rem' }}>
-                                **Grade (0-100):**
+                                Grade (0-100):
                                 <input 
                                     type="number" 
                                     value={grade} 
@@ -117,7 +117,7 @@ function ExamDetailsModal({ details, onClose, onGrade, isGrading }) {
                         </div>
                         <div style={{ flex: 3 }}>
                             <label style={{ display: 'block', marginBottom: '1rem' }}>
-                                **Feedback:**
+                                Feedback:
                                 <textarea 
                                     value={feedback} 
                                     onChange={(e) => setFeedback(e.target.value)} 
