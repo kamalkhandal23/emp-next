@@ -19,7 +19,7 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5002',
+        target: 'https://emp-new-2.onrender.com/api',
         changeOrigin: true,
         secure: false,
       }

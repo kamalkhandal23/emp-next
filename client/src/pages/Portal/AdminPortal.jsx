@@ -76,7 +76,7 @@ export default function AdminPortal() {
     try {
       const token = localStorage.getItem('authToken');
       const res = await axios.get(
-        'http://localhost:5002/api/nextgen/registrations',
+        'https://emp-new-2.onrender.com/api/nextgen/registrations',
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -110,7 +110,7 @@ export default function AdminPortal() {
         return;
       }
 
-      const url = `http://localhost:5002/api/nextgen/admin/registrations/${id}/approve`;
+      const url = `https://emp-new-2.onrender.com/api/nextgen/admin/registrations/${id}/approve`;
       console.log('🔹 Requesting:', url);
 
       const res = await axios.put(
@@ -159,7 +159,7 @@ export default function AdminPortal() {
     try {
       const res = await fetch(
         `${
-          import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+          import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'
         }/nextgen/admin/students/${editingStudent._id}`,
         {
           method: 'PUT',
@@ -227,7 +227,7 @@ export default function AdminPortal() {
     try {
       const token = localStorage.getItem("authToken");
       const res = await fetch(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5002/api"}/nextgen/admin/registrations/${registrationId}`,
+        `${import.meta.env.VITE_API_URL || "https://emp-new-2.onrender.com/api"}/nextgen/admin/registrations/${registrationId}`,
         {
           method: "DELETE",
           headers: {

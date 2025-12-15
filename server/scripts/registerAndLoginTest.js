@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 
-const API = process.env.API_BASE || 'http://localhost:5002/api'
+const API = process.env.API_BASE || 'https://emp-new-2.onrender.com/api'
 
 async function run() {
   const testUser = {

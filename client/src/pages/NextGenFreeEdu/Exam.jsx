@@ -81,7 +81,7 @@ export default function Exam() {
     const fetchExamQuestions = async () => {
       try {
         setCheckingAvailability(true);
-        const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+        const baseUrl = import.meta.env.VITE_API_URL || "https://emp-new-2.onrender.com/api";
         const token = localStorage.getItem("authToken");
 
         // If token missing, log and still try (backend might allow public access)
@@ -199,7 +199,7 @@ export default function Exam() {
 
     const checkAvailability = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+        const baseUrl = import.meta.env.VITE_API_URL || "https://emp-new-2.onrender.com/api";
         const res = await fetch(`${baseUrl}/nextgen/exams/${examId}/availability`);
         const data = await res.json().catch(() => null);
         if (res.ok && data && data.success) {
@@ -351,7 +351,7 @@ export default function Exam() {
 
       const score = calculateScore();
 
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://emp-new-2.onrender.com/api";
       const token = localStorage.getItem("authToken");
 
       const res = await fetch(`${baseUrl}/nextgen/student/exams/${examId}/submit`, {

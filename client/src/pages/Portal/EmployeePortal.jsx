@@ -452,7 +452,7 @@ export default function EmployeePortal() {
                     : 'No'}
                   <br />
                   API Base:{' '}
-                  {import.meta.env.VITE_API_URL || 'http://localhost:5002/api'}
+                  {import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'}
                 </div>
               )}
 

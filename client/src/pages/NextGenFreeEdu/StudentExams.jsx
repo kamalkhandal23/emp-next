@@ -29,7 +29,7 @@ export default function StudentExams() {
         setError(null);
 
         const baseUrl =
-          import.meta.env.VITE_API_URL || 'http://localhost:5002/api';
+          import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api';
 
         // ✅ Ab courseName ke hisaab se exams fetch kar rahe hain
         const params =

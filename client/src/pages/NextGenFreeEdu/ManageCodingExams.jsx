@@ -49,7 +49,7 @@ export default function ManageCodingExams() {
     try {
       setLoading(true);
       const token = localStorage.getItem("authToken")
-      const response = await fetch("http://localhost:5002/api/nextgen/codingExams/my-codingexam",{
+      const response = await fetch("https://emp-new-2.onrender.com/api/nextgen/codingExams/my-codingexam",{
         method : "GET",
         headers :{
           "Content-Type" : "application/json",
