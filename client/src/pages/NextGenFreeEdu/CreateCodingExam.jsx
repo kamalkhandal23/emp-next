@@ -26,7 +26,7 @@ function CreateCodingExam() {
       try {
         const token = localStorage.getItem("authToken");
 
-        const response = await fetch("http://localhost:5002/api/nextgen/courses/my-courses", {
+        const response = await fetch("https://emp-new-2.onrender.com/api/nextgen/courses/my-courses", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
