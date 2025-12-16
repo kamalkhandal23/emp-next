@@ -1,9 +1,4 @@
-const API_BASE_URL =
-  process.env.NODE_ENV === 'production'
-    ? 'https://emp-hee877vkc-teamoflifeboxs-projects.vercel.app/api'
-    : 'http://localhost:5002/api';
-
-
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 class ApiClient {
   constructor() {
     this.baseURL = API_BASE_URL;

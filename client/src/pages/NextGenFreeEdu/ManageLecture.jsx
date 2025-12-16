@@ -18,7 +18,7 @@ function ManageLecture() {
       try {
           const token = localStorage.getItem("authToken");
 
-          const response = await fetch("http://localhost:5002/api/nextgen/courses/my-courses", {
+          const response = await fetch("https://emp-new-2.onrender.com/api/nextgen/courses/my-courses", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -51,7 +51,7 @@ function ManageLecture() {
     const fetchLectures = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5002/api/nextgen/courses/${selectedCourse}`
+          `https://emp-new-2.onrender.com/api/nextgen/courses/${selectedCourse}`
         );
         const data = await response.json();
         console.log('data',data)
@@ -85,7 +85,7 @@ function ManageLecture() {
     try {
       const token = localStorage.getItem("authToken")
       const response = await fetch(
-        `http://localhost:5002/api/nextgen/lectures/${lectureId}`,
+        `https://emp-new-2.onrender.com/api/nextgen/lectures/${lectureId}`,
         { 
           method: "DELETE",
           headers: { 
@@ -113,7 +113,7 @@ function ManageLecture() {
     try {
       const token = localStorage.getItem("authToken");
       const response = await fetch(
-        `http://localhost:5002/api/nextgen/lectures/${lecture._id}`,
+        `https://emp-new-2.onrender.com/api/nextgen/lectures/${lecture._id}`,
         {
           method: "PUT",
           headers: { 

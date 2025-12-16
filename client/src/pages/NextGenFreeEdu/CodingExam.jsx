@@ -20,7 +20,7 @@ export default function CodingExam() {
   const [warningMessage, setWarningMessage] = useState('');
   const [showTopMessage, setShowTopMessage] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(20);
 
   const languages = [
     { value: 'c', label: 'C' },
@@ -201,7 +201,7 @@ int main() {
                   console.log(showPopup);
                   setShowTopMessage(true);
                   setShowPopup(true);
-                  setCountdown(30);
+                  setCountdown(15);
               }
           };
   
@@ -209,7 +209,7 @@ int main() {
               if (!document.fullscreenElement && !showPopup) {
                   setShowTopMessage(true);
                   setShowPopup(true);
-                  setCountdown(30);
+                  setCountdown(15);
               }
           };
   
@@ -220,7 +220,7 @@ int main() {
               window.removeEventListener("blur", handleBlur);
               document.removeEventListener("fullscreenchange", handleFullscreenChange);
           };
-      }, []);
+      }, [showPopup, examSubmitted]);
       // COUNTDOWN LOGIC
       useEffect(() => {
           let interval;
@@ -242,7 +242,7 @@ int main() {
           enterFullscreen();
           setShowPopup(false);
           setShowTopMessage(false);
-          setCountdown(30);
+          setCountdown(20);
       };
       const handleCancel = () => {
           if (document.fullscreenElement) exitFullscreen(); 

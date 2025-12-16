@@ -32,7 +32,7 @@ export default function Exam() {
   // Fullscreen + blur detection popup
   const [showTopMessage, setShowTopMessage] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(20);
 
   // Student info
   const getStudentData = () => {
@@ -81,7 +81,7 @@ export default function Exam() {
     const fetchExamQuestions = async () => {
       try {
         setCheckingAvailability(true);
-        const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+        const baseUrl = import.meta.env.VITE_API_URL || "https://emp-new-2.onrender.com/api";
         const token = localStorage.getItem("authToken");
 
         // If token missing, log and still try (backend might allow public access)
@@ -199,7 +199,7 @@ export default function Exam() {
 
     const checkAvailability = async () => {
       try {
-        const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+        const baseUrl = import.meta.env.VITE_API_URL || "https://emp-new-2.onrender.com/api";
         const res = await fetch(`${baseUrl}/nextgen/exams/${examId}/availability`);
         const data = await res.json().catch(() => null);
         if (res.ok && data && data.success) {
@@ -269,14 +269,14 @@ export default function Exam() {
       if (!showPopup) {
         setShowTopMessage(true);
         setShowPopup(true);
-        setCountdown(30);
+        setCountdown(20);
       }
     };
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement && !showPopup && examStarted && !examSubmitted) {
         setShowTopMessage(true);
         setShowPopup(true);
-        setCountdown(30);
+        setCountdown(20);
       }
     };
 
@@ -295,7 +295,7 @@ export default function Exam() {
       interval = setInterval(() => setCountdown((c) => c - 1), 1000);
     }
     if (showPopup && countdown === 0) {
-      setExamSubmitted(true);
+      handleSubmitExam();
       setShowPopup(false);
     }
     return () => clearInterval(interval);
@@ -305,11 +305,11 @@ export default function Exam() {
     enterFullscreen();
     setShowPopup(false);
     setShowTopMessage(false);
-    setCountdown(30);
+    setCountdown(20);
   };
   const handleCancel = () => {
     if (document.fullscreenElement) exitFullscreen();
-    setExamSubmitted(true);
+    handleSubmitExam();
     setShowPopup(false);
     setShowTopMessage(false);
   };
@@ -351,7 +351,7 @@ export default function Exam() {
 
       const score = calculateScore();
 
-      const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
+      const baseUrl = import.meta.env.VITE_API_URL || "https://emp-new-2.onrender.com/api";
       const token = localStorage.getItem("authToken");
 
       const res = await fetch(`${baseUrl}/nextgen/student/exams/${examId}/submit`, {

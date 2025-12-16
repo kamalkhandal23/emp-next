@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 
 async function run() {
   try {
-    const res = await fetch('http://localhost:5002/api/nextgen/courses')
+    const res = await fetch('https://emp-new-2.onrender.com/api/nextgen/courses')
     console.log('Status:', res.status)
     const text = await res.text()
     console.log('Body:', text)

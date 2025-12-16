@@ -34,7 +34,7 @@ export default function CodingExamResults() {
       // Fetch all coding exam submissions
       const submissionsResponse = await fetch(
         `${
-          import.meta.env.VITE_API_URL || 'http://localhost:5002/api'
+          import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'
         }/nextgen/codingExams/all-submissions`,
         {
           headers: {

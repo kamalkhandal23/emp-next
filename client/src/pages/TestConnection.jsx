@@ -16,7 +16,7 @@ export default function TestConnection() {
       setError(null)
       
       // Test basic server connection
-      const response = await fetch('http://localhost:5002/health')
+      const response = await fetch('https://emp-new-2.onrender.com/api')
       const data = await response.json()
       
       setServerInfo(data)
@@ -108,7 +108,7 @@ export default function TestConnection() {
         <ol>
           <li>Make sure the server is running on port 5002</li>
           <li>Run: <code>cd server && npm run dev</code></li>
-          <li>The server should be accessible at http://localhost:5002</li>
+          <li>The server should be accessible at https://emp-new-2.onrender.com/api</li>
           <li>Test the connection using the button above</li>
           <li>If successful, test the login with demo credentials</li>
         </ol>

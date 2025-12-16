@@ -53,7 +53,7 @@ export default function AvailableLectures() {
 
     fetchLectures();
   }, [id]);
-  const updateActivity = async (lectureTitle) => {
+  const updateActivity = async (lectureId,lectureTitle) => {
     try {
       const raw = localStorage.getItem('studentInfo');
       let studentInfo = null;
@@ -82,8 +82,10 @@ export default function AvailableLectures() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
+            type:"video",
             activityType: 'Watched Lecture Video',
             description: `Watched a lecture video of ${lectureTitle}`,
+            lectureId: lectureId
           }),
         }
       );
@@ -221,7 +223,7 @@ export default function AvailableLectures() {
               <button
                 style={styles.btn}
                 onClick={() => {
-                  updateActivity(lec.title);
+                  updateActivity(lec._id,lec.title);
                   window.open(lec.videoURL, '_blank');
                 }}>
                 ▶ Watch Video
