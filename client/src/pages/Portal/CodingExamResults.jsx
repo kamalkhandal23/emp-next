@@ -34,7 +34,7 @@ export default function CodingExamResults() {
       // Fetch all coding exam submissions
       const submissionsResponse = await fetch(
         `${
-          import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'
+          import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api'
         }/nextgen/codingExams/all-submissions`,
         {
           headers: {

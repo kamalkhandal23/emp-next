@@ -71,7 +71,7 @@ export default function ManageAssignments() {
     const token = localStorage.getItem("authToken");
 
     const response = await fetch(
-      "https://emp-new-2.onrender.com/api/nextgen/assignments/my-assignments",
+      "https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/assignments/my-assignments",
       {
         method: "GET",
         headers: {

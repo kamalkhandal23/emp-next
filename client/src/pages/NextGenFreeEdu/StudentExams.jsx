@@ -29,7 +29,7 @@ export default function StudentExams() {
         setError(null);
 
         const baseUrl =
-          import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api';
+          import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api';
 
         // ✅ Ab courseName ke hisaab se exams fetch kar rahe hain
         const params =

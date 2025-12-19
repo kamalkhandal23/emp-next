@@ -11,7 +11,7 @@ export default function PaymentCheckout() {
   const handleSimulatePay = async () => {
     setStatus('processing')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'}/nextgen/student/payment/callback`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api'}/nextgen/student/payment/callback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: session || 'mock', status: 'SUCCESS', registrationId })

@@ -30,7 +30,7 @@ export default function StudentLogin() {
       if (!studentId) return;
 
       const baseUrl =
-        import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api';
+        import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api';
 
       fetch(`${baseUrl}/nextgen/coding/stats/${studentId}`)
         .then((res) => res.json())
@@ -94,7 +94,7 @@ export default function StudentLogin() {
     try {
       const response = await fetch(
         `${
-          import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'
+          import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api'
         }/nextgen/student/login`,
         {
           method: 'POST',

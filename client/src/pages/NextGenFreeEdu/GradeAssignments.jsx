@@ -133,7 +133,7 @@ export default function GradeAssignments() {
         try {
             const token = localStorage.getItem("authToken");
             // NOTE: Check this URL, it seems to have double slashes '//'
-            const res = await fetch(`https://emp-new-2.onrender.com/api/nextgen/assignments/my-assignments`, {
+            const res = await fetch(`https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/assignments/my-assignments`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -158,7 +158,7 @@ export default function GradeAssignments() {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
-            const res = await fetch(`https://emp-new-2.onrender.com/api/nextgen/assignments/${assignmentId}/submissions`, {
+            const res = await fetch(`https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/assignments/${assignmentId}/submissions`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -187,7 +187,7 @@ export default function GradeAssignments() {
         setGrading(prev => ({ ...prev, [submissionId]: true }));
         try {
             const token = localStorage.getItem("authToken");
-            const res = await fetch(`https://emp-new-2.onrender.com/api/nextgen/assignment-submissions/${submissionId}/grade`, {
+            const res = await fetch(`https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/assignment-submissions/${submissionId}/grade`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,

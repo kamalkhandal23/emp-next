@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 
-const API = process.env.API_BASE || 'https://emp-new-2.onrender.com/api'
+const API = process.env.API_BASE || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api'
 
 async function run() {
   const testUser = {

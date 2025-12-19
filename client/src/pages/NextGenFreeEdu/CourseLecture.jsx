@@ -23,7 +23,7 @@ function CourseLecture() {
       try {
           const token = localStorage.getItem("authToken");
 
-          const response = await fetch("https://emp-new-2.onrender.com/api/nextgen/courses/my-courses", {
+          const response = await fetch("https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/courses/my-courses", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -98,7 +98,7 @@ function CourseLecture() {
       console.log("Payload:", payload);
 
       const response = await fetch(
-        "https://emp-new-2.onrender.com/api/nextgen/addLecture/add-lectures",
+        "https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/addLecture/add-lectures",
         {
           method: "POST",
           headers: {

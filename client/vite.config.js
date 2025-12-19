@@ -19,7 +19,7 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api': {
-        target: 'https://emp-new-2.onrender.com/api',
+        target: 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api',
         changeOrigin: true,
         secure: false,
       }
