@@ -59,7 +59,7 @@ export default function ManageExams() {
     const token = localStorage.getItem("authToken");
 
     const response = await fetch(
-      "https://emp-new-2.onrender.com/api/nextgen/exams/my-exams",
+      "https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/exams/my-exams",
       {
         method: "GET",
         headers: {

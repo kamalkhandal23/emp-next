@@ -163,7 +163,7 @@ export default function GradeExams() {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
-            const res = await fetch(`https://emp-new-2.onrender.com/api/nextgen/exams/my-exams`, {
+            const res = await fetch(`https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/exams/my-exams`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -189,7 +189,7 @@ export default function GradeExams() {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
-            const res = await fetch(`https://emp-new-2.onrender.com/api/nextgen/exams/${examId}/submissions`, {
+            const res = await fetch(`https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/exams/${examId}/submissions`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -216,7 +216,7 @@ export default function GradeExams() {
         setGrading(prev => ({ ...prev, [submissionId]: true }));
         try {
             const token = localStorage.getItem("authToken");
-            const res = await fetch(`https://emp-new-2.onrender.com/api/nextgen/exams/grade/${submissionId}`, {
+            const res = await fetch(`https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api/nextgen/exams/grade/${submissionId}`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,

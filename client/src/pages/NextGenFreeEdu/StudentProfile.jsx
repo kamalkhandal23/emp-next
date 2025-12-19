@@ -97,7 +97,7 @@ export default function StudentProfile() {
 
       // 🔹 ab backend se fresh profile try karte hain (optional)
       const baseUrl =
-        import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api';
+        import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api';
 
       const response = await fetch(`${baseUrl}/nextgen/student/profile`, {
         headers: {
@@ -155,7 +155,7 @@ export default function StudentProfile() {
     try {
       const token = localStorage.getItem('authToken');
       const baseUrl =
-        import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api';
+        import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api';
 
       const response = await fetch(`${baseUrl}/nextgen/student/profile`, {
         method: 'PUT',
@@ -247,7 +247,7 @@ export default function StudentProfile() {
     try {
       const token = localStorage.getItem('authToken');
       const baseUrl =
-        import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api';
+        import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api';
 
       const response = await fetch(
         `${baseUrl}/nextgen/student/profile/change-password`,

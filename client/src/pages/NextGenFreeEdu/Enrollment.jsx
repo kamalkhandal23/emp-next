@@ -33,7 +33,7 @@ export default function Enrollment() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'}/nextgen/courses`)
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api'}/nextgen/courses`)
         if (!res.ok) throw new Error('Failed to fetch courses')
         const json = await res.json()
         const apiCourses = json?.data?.courses || json?.courses || json
@@ -127,7 +127,7 @@ export default function Enrollment() {
       }
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'https://emp-new-2.onrender.com/api'}/nextgen/register`,
+        `${import.meta.env.VITE_API_URL || 'https://emp-new-iksg-git-main-teamoflifeboxs-projects.vercel.app/api'}/nextgen/register`,
         {
           method: 'POST',
           body: formDataToSend
