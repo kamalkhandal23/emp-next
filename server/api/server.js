@@ -168,4 +168,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 /* -------------------- EXPORT (IMPORTANT) -------------------- */
-export default app;
+export default function handler(req, res) {
+  return app(req, res);
+}
+
