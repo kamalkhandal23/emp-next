@@ -86,3 +86,4 @@ tmp/
 
 # Test coverage
 coverage/
+.vercel
